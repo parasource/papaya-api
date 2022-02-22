@@ -42,6 +42,12 @@ var rootCmd = &cobra.Command{
 			logrus.Fatalf("error starting dutchman: %v", err)
 		}
 
-		println("success")
+		printWelcome()
 	},
+}
+
+func printWelcome() {
+	text := "    ____  __  ________________  ____  ______    _   __\n   / __ \\/ / / /_  __/ ____/ / / /  |/  /   |  / | / /\n  / / / / / / / / / / /   / /_/ / /|_/ / /| | /  |/ / \n / /_/ / /_/ / / / / /___/ __  / /  / / ___ |/ /|  /  \n/_____/\\____/ /_/  \\____/_/ /_/_/  /_/_/  |_/_/ |_/   \n                                                      "
+
+	println(text)
 }
