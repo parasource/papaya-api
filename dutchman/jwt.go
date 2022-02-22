@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt"
 	"github.com/lightswitch/dutchman-backend/dutchman/models"
+	"time"
 )
 
 var (
 	ErrInvalid = errors.New("invalid token")
+
+	accessSecret  = "__access__"
+	refreshSecret = "__refresh__"
 )
 
 type Claims struct {
@@ -20,11 +24,13 @@ type Claims struct {
 func GenerateToken(user *models.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":    user.ID,
-		"email": user.Email,
+		"id":         user.ID,
+		"name":       user.Name,
+		"email":      user.Email,
+		"expires_at": time.Now().Add(time.Minute * 15).Unix(),
 	})
 
-	str, err := token.SignedString([]byte("abracadabra"))
+	str, err := token.SignedString([]byte(accessSecret))
 	if err != nil {
 		return "", err
 	}
@@ -38,7 +44,40 @@ func ParseToken(accessToken string) (jwt.MapClaims, error) {
 			return nil, errors.New(fmt.Sprintf("unexpected signing method: %v", token.Header["alg"]))
 		}
 
-		return []byte("abracadabra"), nil
+		return []byte(accessSecret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, ErrInvalid
+}
+
+func GenerateRefreshToken(id string) (string, error) {
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id": id,
+	})
+
+	str, err := token.SignedString([]byte(refreshSecret))
+	if err != nil {
+		return "", err
+	}
+
+	return str, nil
+}
+
+func ParseRefreshToken(refreshToken string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New(fmt.Sprintf("unexpected signing method: %v", token.Header["alg"]))
+		}
+
+		return []byte(refreshSecret), nil
 	})
 	if err != nil {
 		return nil, err

@@ -12,6 +12,7 @@ import (
 func (d *Dutchman) registerRoutes(r *gin.Engine) {
 	r.POST("/api/auth/register", d.HandleRegister)
 	r.POST("/api/auth/login", d.HandleLogin)
+	r.POST("/api/auth/refresh", d.AuthMiddleware, d.HandleRefresh)
 	r.GET("/api/auth/user", d.AuthMiddleware, d.HandleUser)
 }
 
@@ -41,11 +42,17 @@ func (d *Dutchman) HandleRegister(c *gin.Context) {
 		c.AbortWithStatus(500)
 		return
 	}
+	refreshToken, err := GenerateRefreshToken(user.ID)
+	if err != nil {
+		logrus.Errorf("error generating refresh token: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
 
 	c.JSON(200, gin.H{
-		"success": true,
-		"token":   token,
-		"user":    user,
+		"success":       true,
+		"token":         token,
+		"refresh_token": refreshToken,
 	})
 }
 
@@ -75,11 +82,57 @@ func (d *Dutchman) HandleLogin(c *gin.Context) {
 		c.AbortWithStatus(500)
 		return
 	}
+	refreshToken, err := GenerateRefreshToken(user.ID)
+	if err != nil {
+		logrus.Errorf("error generating refresh token: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
 
 	c.JSON(200, gin.H{
-		"success": true,
-		"token":   token,
-		"user":    user,
+		"success":       true,
+		"token":         token,
+		"refresh_token": refreshToken,
+	})
+}
+
+func (d *Dutchman) HandleRefresh(c *gin.Context) {
+	refreshToken := c.PostForm("refresh_token")
+
+	if refreshToken == "" {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	claims, err := ParseRefreshToken(refreshToken)
+	if err != nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	id := claims["id"].(string)
+	user := d.db.GetUser(id)
+	if user == nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	// Now we generate a new token for user
+	token, err := GenerateToken(user)
+	if err != nil {
+		c.AbortWithStatus(500)
+		return
+	}
+	refreshTokenNew, err := GenerateRefreshToken(user.ID)
+	if err != nil {
+		c.AbortWithStatus(500)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"success":       true,
+		"token":         token,
+		"refresh_token": refreshTokenNew,
 	})
 }
 
