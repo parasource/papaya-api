@@ -2,7 +2,7 @@ package dutchman
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/dutchman-backend/dutchman/models"
+	"github.com/lightswitch/dutchman-backend/dutchman/database"
 	"github.com/sirupsen/logrus"
 	"net"
 )
@@ -15,50 +15,31 @@ type Config struct {
 
 type Dutchman struct {
 	cfg Config
-	r   *gin.Engine
+
+	r  *gin.Engine
+	db *database.Database
 }
 
 func NewDutchman(cfg Config) (*Dutchman, error) {
-	r := gin.Default()
-
-	r.POST("/api/auth/login", func(c *gin.Context) {
-
-		email := c.PostForm("email")
-		password := c.PostForm("password")
-
-		user := &models.User{
-			ID:       "test",
-			Name:     "Egor",
-			Email:    email,
-			Password: password,
-		}
-		token, err := GenerateToken(user)
-		if err != nil {
-			logrus.Errorf("error generating token: %v", err)
-			c.AbortWithError(500, err)
-			return
-		}
-
-		c.JSON(200, gin.H{
-			"success": true,
-			"token":   token,
-		})
-	})
-	r.GET("/api/auth/user", func(c *gin.Context) {
-		user := &models.User{
-			ID:       "test",
-			Name:     "Egor",
-			Email:    "test@test.ru",
-			Password: "test@test.ru",
-		}
-
-		c.JSON(200, user)
-	})
-
-	return &Dutchman{
+	d := &Dutchman{
 		cfg: cfg,
-		r:   r,
-	}, nil
+	}
+
+	// Gin server
+	r := gin.Default()
+	d.registerRoutes(r)
+	d.r = r
+
+	// Database
+	db, err := database.NewDatabase(database.Config{})
+	if err != nil {
+		logrus.Fatalf("error creating database: %v", err)
+	}
+	d.db = db
+
+	//logrus.Info(db.GetUser("c0c6c001-9fdd-499c-84d3-051cbdcd9cfb"))
+
+	return d, nil
 }
 
 func (d *Dutchman) Start() error {

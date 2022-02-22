@@ -32,7 +32,7 @@ func GenerateToken(user *models.User) (string, error) {
 	return str, nil
 }
 
-func ValidateToken(accessToken string) (jwt.MapClaims, error) {
+func ParseToken(accessToken string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New(fmt.Sprintf("unexpected signing method: %v", token.Header["alg"]))

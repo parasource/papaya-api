@@ -5,6 +5,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
+	"runtime"
 )
 
 var configDefaults = map[string]interface{}{
@@ -29,10 +31,39 @@ func init() {
 
 var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
+		printWelcome()
+
+		for k, v := range configDefaults {
+			viper.SetDefault(k, v)
+		}
+
+		bindEnvs := []string{
+			"http_host", "http_port",
+			"shutdown_timeout",
+		}
+		for _, env := range bindEnvs {
+			err := viper.BindEnv(env)
+			if err != nil {
+				logrus.Fatalf("error binding env variable: %v", err)
+			}
+		}
+
+		if os.Getenv("GOMAXPROCS") == "" {
+			if viper.IsSet("gomaxprocs") && viper.GetInt("gomaxprocs") > 0 {
+				runtime.GOMAXPROCS(viper.GetInt("gomaxprocs"))
+			} else {
+				runtime.GOMAXPROCS(runtime.NumCPU())
+			}
+		}
+
+		v := viper.GetViper()
+
+		httpHost := v.GetString("http_host")
+		httpPort := v.GetString("http_port")
 
 		dutchman, err := dutchman.NewDutchman(dutchman.Config{
-			HttpHost: "localhost",
-			HttpPort: "8000",
+			HttpHost: httpHost,
+			HttpPort: httpPort,
 		})
 		if err != nil {
 			panic(err)
@@ -42,7 +73,6 @@ var rootCmd = &cobra.Command{
 			logrus.Fatalf("error starting dutchman: %v", err)
 		}
 
-		printWelcome()
 	},
 }
 
