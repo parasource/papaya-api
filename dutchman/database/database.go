@@ -49,10 +49,10 @@ func (d *Database) Shutdown() {
 }
 
 func (d *Database) StoreUser(user *models.User) error {
-	return d.storeModel(usersCollection, user)
+	return d.StoreModel(usersCollection, user)
 }
 
-func (d *Database) storeModel(collection string, model interface{}) error {
+func (d *Database) StoreModel(collection string, model interface{}) error {
 	coll := d.client.Database(defaultDb).Collection(collection)
 
 	res, err := coll.InsertOne(context.TODO(), model)
@@ -112,4 +112,23 @@ func (d *Database) GetUserByEmail(email string) *models.User {
 	}
 
 	return &user
+}
+
+// Interests
+
+func (d *Database) GetAllInterests() []*models.Interest {
+	coll := d.client.Database(defaultDb).Collection("interests")
+
+	var interests []*models.Interest
+	cursor, err := coll.Find(context.TODO(), bson.M{})
+	if err != nil {
+		logrus.Errorf("error cursoring all interests: %v", err)
+		return nil
+	}
+
+	if err = cursor.All(context.TODO(), &interests); err != nil {
+		logrus.Errorf("error decoding interests: %v", err)
+	}
+
+	return interests
 }

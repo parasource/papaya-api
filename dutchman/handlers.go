@@ -16,6 +16,7 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 
 	r.GET("/api/feed", d.AuthMiddleware, d.HandleFeed)
 
+	r.GET("/api/get-interests", d.AuthMiddleware, d.HandleGetAllInterests)
 	r.GET("/api/profile/set-interests", d.AuthMiddleware, d.HandleProfileSetInterests)
 	r.GET("/api/profile/update-settings", d.AuthMiddleware, d.HandleProfileUpdateSettings)
 }
@@ -166,6 +167,13 @@ func (d *Dutchman) HandleUser(c *gin.Context) {
 
 func (d *Dutchman) HandleFeed(c *gin.Context) {
 
+}
+
+// All routes
+
+func (d *Dutchman) HandleGetAllInterests(c *gin.Context) {
+	interests := d.db.GetAllInterests()
+	c.JSON(200, interests)
 }
 
 // Profile handlers
