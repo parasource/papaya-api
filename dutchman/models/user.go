@@ -5,11 +5,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserSettings struct {
+	ReceiveNotifications bool `bson:"receive_notifications"`
+}
+
 type User struct {
 	ID       string `json:"id" bson:"id"`
 	Name     string `json:"name" bson:"name"`
 	Email    string `json:"email" bson:"email"`
-	Password string `json:"password" bson:"password"`
+	Password string `json:"-" bson:"password"`
+
+	Settings UserSettings
 }
 
 func NewUser(email string, name string, password string) *User {

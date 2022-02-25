@@ -1,12 +1,11 @@
 package dutchman
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/lightswitch/dutchman-backend/dutchman/models"
+	"github.com/lightswitch/dutchman-backend/dutchman/util"
 	"github.com/sirupsen/logrus"
 	"net/http"
-	"strings"
 )
 
 func (d *Dutchman) registerRoutes(r *gin.Engine) {
@@ -14,6 +13,11 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 	r.POST("/api/auth/login", d.HandleLogin)
 	r.POST("/api/auth/refresh", d.AuthMiddleware, d.HandleRefresh)
 	r.GET("/api/auth/user", d.AuthMiddleware, d.HandleUser)
+
+	r.GET("/api/feed", d.AuthMiddleware, d.HandleFeed)
+
+	r.GET("/api/profile/set-interests", d.AuthMiddleware, d.HandleProfileSetInterests)
+	r.GET("/api/profile/update-settings", d.AuthMiddleware, d.HandleProfileUpdateSettings)
 }
 
 func (d *Dutchman) HandleRegister(c *gin.Context) {
@@ -137,7 +141,7 @@ func (d *Dutchman) HandleRefresh(c *gin.Context) {
 }
 
 func (d *Dutchman) HandleUser(c *gin.Context) {
-	token, err := getToken(c.GetHeader("Authorization"))
+	token, err := util.ExtractToken(c.GetHeader("Authorization"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
@@ -160,19 +164,16 @@ func (d *Dutchman) HandleUser(c *gin.Context) {
 	c.JSON(200, user)
 }
 
-func getToken(authHeader string) (string, error) {
-	if authHeader == "" {
-		return "", errors.New("token not found")
-	}
+func (d *Dutchman) HandleFeed(c *gin.Context) {
 
-	headerParts := strings.Split(authHeader, " ")
-	if len(headerParts) != 2 {
-		return "", errors.New("invalid token")
-	}
+}
 
-	if headerParts[0] != "Bearer" {
-		return "", errors.New("invalid token")
-	}
+// Profile handlers
 
-	return headerParts[1], nil
+func (d *Dutchman) HandleProfileSetInterests(c *gin.Context) {
+
+}
+
+func (d *Dutchman) HandleProfileUpdateSettings(c *gin.Context) {
+
 }

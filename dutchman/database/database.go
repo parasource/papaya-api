@@ -49,9 +49,13 @@ func (d *Database) Shutdown() {
 }
 
 func (d *Database) StoreUser(user *models.User) error {
-	coll := d.client.Database(defaultDb).Collection(usersCollection)
+	return d.storeModel(usersCollection, user)
+}
 
-	res, err := coll.InsertOne(context.TODO(), user)
+func (d *Database) storeModel(collection string, model interface{}) error {
+	coll := d.client.Database(defaultDb).Collection(collection)
+
+	res, err := coll.InsertOne(context.TODO(), model)
 	if err != nil {
 		return err
 	}
