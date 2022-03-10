@@ -3,6 +3,7 @@ package dutchman
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lightswitch/dutchman-backend/dutchman/models"
+	"github.com/lightswitch/dutchman-backend/dutchman/requests"
 	"github.com/lightswitch/dutchman-backend/dutchman/util"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -22,11 +23,15 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 }
 
 func (d *Dutchman) HandleRegister(c *gin.Context) {
-	name := c.PostForm("name")
-	email := c.PostForm("email")
-	password := c.PostForm("password")
+	var r requests.RegisterRequest
+	err := c.BindJSON(&r)
+	if err != nil {
+		logrus.Errorf("error binding register request: %v", err)
+		return
+	}
+	logrus.Infof("req %v", r)
 
-	if d.db.CheckIfUserExists(email) {
+	if d.db.CheckIfUserExists(r.Email) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "Пользователь с таким адресом эл.почты уже существует",
@@ -34,8 +39,8 @@ func (d *Dutchman) HandleRegister(c *gin.Context) {
 		return
 	}
 
-	user := models.NewUser(email, name, password)
-	err := d.db.StoreUser(user)
+	user := models.NewUser(r.Email, r.Name, r.Password)
+	err = d.db.StoreUser(user)
 	if err != nil {
 		c.AbortWithStatus(500)
 		return
@@ -62,10 +67,16 @@ func (d *Dutchman) HandleRegister(c *gin.Context) {
 }
 
 func (d *Dutchman) HandleLogin(c *gin.Context) {
-	email := c.PostForm("email")
-	password := c.PostForm("password")
+	var r requests.LoginRequest
+	err := c.BindJSON(&r)
+	if err != nil {
+		logrus.Errorf("error binding login request: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+	logrus.Debug(r)
 
-	user := d.db.GetUserByEmail(email)
+	user := d.db.GetUserByEmail(r.Email)
 	if user == nil {
 		c.JSON(403, gin.H{
 			"success": false,
@@ -74,7 +85,7 @@ func (d *Dutchman) HandleLogin(c *gin.Context) {
 		return
 	}
 	// Wrong password
-	if !user.CheckPasswordHash(password) {
+	if !user.CheckPasswordHash(r.Password) {
 		c.JSON(403, gin.H{
 			"success": false,
 			"message": "Неверный пароль",

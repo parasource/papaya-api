@@ -1,10 +1,8 @@
 package dutchman
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/lightswitch/dutchman-backend/dutchman/database"
-	"github.com/lightswitch/dutchman-backend/dutchman/models"
 	"github.com/sirupsen/logrus"
 	"net"
 )
@@ -39,30 +37,30 @@ func NewDutchman(cfg Config) (*Dutchman, error) {
 	}
 	d.db = db
 
-	for i := 0; i < 15; i++ {
-		interest := &models.Interest{
-			ID:       fmt.Sprintf("shs%v", i),
-			Name:     fmt.Sprintf("Ботинки %v", i),
-			Slug:     fmt.Sprintf("shoes-%v", i),
-			Category: "shoes",
-			Sex: []string{
-				"male",
-			},
-		}
-		d.db.StoreModel("interests", interest)
-	}
-	for i := 0; i < 15; i++ {
-		interest := &models.Interest{
-			ID:       fmt.Sprintf("hts-%v", i),
-			Name:     fmt.Sprintf("Шапки %v", i),
-			Slug:     fmt.Sprintf("hats-%v", i),
-			Category: "hats",
-			Sex: []string{
-				"female",
-			},
-		}
-		d.db.StoreModel("interests", interest)
-	}
+	//for i := 0; i < 15; i++ {
+	//	interest := &models.Interest{
+	//		ID:       fmt.Sprintf("shs%v", i),
+	//		Name:     fmt.Sprintf("Ботинки %v", i),
+	//		Slug:     fmt.Sprintf("shoes-%v", i),
+	//		Category: "shoes",
+	//		Sex: []string{
+	//			"male",
+	//		},
+	//	}
+	//	d.db.StoreModel("interests", interest)
+	//}
+	//for i := 0; i < 15; i++ {
+	//	interest := &models.Interest{
+	//		ID:       fmt.Sprintf("hts-%v", i),
+	//		Name:     fmt.Sprintf("Шапки %v", i),
+	//		Slug:     fmt.Sprintf("hats-%v", i),
+	//		Category: "hats",
+	//		Sex: []string{
+	//			"female",
+	//		},
+	//	}
+	//	d.db.StoreModel("interests", interest)
+	//}
 
 	return d, nil
 }
