@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"github.com/lightswitch/dutchman-backend/dutchman/models"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -55,7 +56,69 @@ func NewDatabase(cfg Config) (*Database, error) {
 	}
 	d.client = client
 
+	d.fillWithWardrobe()
+	d.fillWithSelections()
+
 	return d, nil
+}
+
+func (d *Database) fillWithWardrobe() {
+	err := d.ClearCollection("wardrobe")
+	if err != nil {
+		logrus.Errorf("error clearing collection: %v", err)
+	}
+	for i := 0; i < 15; i++ {
+		interest := &models.WardrobeItem{
+			ID:       fmt.Sprintf("shs%v", i),
+			Name:     fmt.Sprintf("Ботинки %v", i),
+			Slug:     fmt.Sprintf("shoes-%v", i),
+			Category: "shoes",
+			Sex: []string{
+				"male",
+			},
+		}
+		d.StoreModel("wardrobe", interest)
+	}
+	for i := 0; i < 15; i++ {
+		interest := &models.WardrobeItem{
+			ID:       fmt.Sprintf("hts-%v", i),
+			Name:     fmt.Sprintf("Шапки %v", i),
+			Slug:     fmt.Sprintf("hats-%v", i),
+			Category: "hats",
+			Sex: []string{
+				"female",
+			},
+		}
+		d.StoreModel("wardrobe", interest)
+	}
+}
+
+func (d *Database) fillWithSelections() {
+	err := d.ClearCollection("selections")
+	if err != nil {
+		logrus.Errorf("error clearing collection: %v", err)
+	}
+
+	for i := 0; i < 15; i++ {
+		selection := models.FakeSelection()
+		d.StoreModel("selections", selection)
+	}
+}
+
+func (d *Database) GetAllSelections() ([]*models.Selection, error) {
+	coll := d.client.Database(defaultDb).Collection("selections")
+
+	var items []*models.Selection
+	cursor, err := coll.Find(context.TODO(), bson.M{})
+	if err != nil {
+		return nil, err
+	}
+
+	if err = cursor.All(context.TODO(), &items); err != nil {
+		logrus.Errorf("error decoding interests: %v", err)
+	}
+
+	return items, nil
 }
 
 func (d *Database) Shutdown() {
@@ -74,6 +137,17 @@ func (d *Database) StoreModel(collection string, model interface{}) error {
 	logrus.Infof("inserted doc with _id: %v", res.InsertedID)
 
 	return nil
+}
+
+func (d *Database) ClearCollection(collection string) error {
+	coll := d.client.Database(defaultDb).Collection(collection)
+
+	_, err := coll.DeleteMany(
+		context.Background(),
+		bson.M{},
+	)
+
+	return err
 }
 
 // Wardrobe

@@ -115,3 +115,21 @@ func (d *Database) SetUserWardrobe(userId string, items []string) error {
 
 	return err
 }
+
+func (d *Database) UpdateUserSettings(userId string, settings *models.UserSettings) error {
+	coll := d.client.Database(defaultDb).Collection(usersCollection)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	_, err := coll.UpdateOne(
+		ctx,
+		bson.M{
+			"_id": userId,
+		},
+		bson.D{
+			{"$set", bson.D{{"settings", settings}}},
+		},
+	)
+
+	return err
+}

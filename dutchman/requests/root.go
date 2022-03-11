@@ -15,11 +15,3 @@
  */
 
 package requests
-
-type SetMoodRequest struct {
-	Mood string `json:"mood" binding:"required"`
-}
-
-type SetWardrobeRequest struct {
-	Wardrobe []string `json:"wardrobe"`
-}

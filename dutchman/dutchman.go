@@ -17,13 +17,16 @@
 package dutchman
 
 import (
-	"fmt"
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gin-gonic/gin"
 	"github.com/lightswitch/dutchman-backend/dutchman/database"
-	"github.com/lightswitch/dutchman-backend/dutchman/models"
 	"github.com/sirupsen/logrus"
 	"net"
 )
+
+func init() {
+	gofakeit.Seed(0)
+}
 
 type Config struct {
 	HttpHost        string `json:"http_host"`
@@ -54,31 +57,6 @@ func NewDutchman(cfg Config) (*Dutchman, error) {
 		logrus.Fatalf("error creating database: %v", err)
 	}
 	d.db = db
-
-	for i := 0; i < 15; i++ {
-		interest := &models.WardrobeItem{
-			ID:       fmt.Sprintf("shs%v", i),
-			Name:     fmt.Sprintf("Ботинки %v", i),
-			Slug:     fmt.Sprintf("shoes-%v", i),
-			Category: "shoes",
-			Sex: []string{
-				"male",
-			},
-		}
-		d.db.StoreModel("wardrobe", interest)
-	}
-	for i := 0; i < 15; i++ {
-		interest := &models.WardrobeItem{
-			ID:       fmt.Sprintf("hts-%v", i),
-			Name:     fmt.Sprintf("Шапки %v", i),
-			Slug:     fmt.Sprintf("hats-%v", i),
-			Category: "hats",
-			Sex: []string{
-				"female",
-			},
-		}
-		d.db.StoreModel("wardrobe", interest)
-	}
 
 	return d, nil
 }

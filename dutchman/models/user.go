@@ -22,7 +22,8 @@ import (
 )
 
 type UserSettings struct {
-	ReceiveNotifications bool `bson:"receive_notifications"`
+	ReceivePushNotifications  bool `json:"receive_push_notifications" bson:"receive_push_notifications"`
+	ReceiveEmailNotifications bool `json:"receive_email_notifications" bson:"receive_email_notifications"`
 }
 
 type User struct {
