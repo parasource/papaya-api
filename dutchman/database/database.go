@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 LightSwitch.Digital
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package database
 
 import (
@@ -48,10 +64,6 @@ func (d *Database) Shutdown() {
 	}
 }
 
-func (d *Database) StoreUser(user *models.User) error {
-	return d.StoreModel(usersCollection, user)
-}
-
 func (d *Database) StoreModel(collection string, model interface{}) error {
 	coll := d.client.Database(defaultDb).Collection(collection)
 
@@ -64,62 +76,12 @@ func (d *Database) StoreModel(collection string, model interface{}) error {
 	return nil
 }
 
-func (d *Database) CheckIfUserExists(email string) bool {
-	coll := d.client.Database(defaultDb).Collection(usersCollection)
+// Wardrobe
 
-	count, err := coll.CountDocuments(context.TODO(), bson.M{"email": email})
-	if err != nil {
-		logrus.Errorf("error counting users: %v", err)
-		return true
-	}
+func (d *Database) GetWardrobeItems() []*models.WardrobeItem {
+	coll := d.client.Database(defaultDb).Collection("wardrobe")
 
-	return count > 0
-}
-
-func (d *Database) GetUser(id string) *models.User {
-	coll := d.client.Database(defaultDb).Collection(usersCollection)
-
-	res := coll.FindOne(context.TODO(), bson.M{"id": id})
-	if res.Err() != nil {
-		logrus.Errorf("error getting result from mongo: %v", res.Err())
-		return nil
-	}
-
-	var user models.User
-	err := res.Decode(&user)
-	if err != nil {
-		logrus.Errorf("error decoding result: %v", err)
-		return nil
-	}
-
-	return &user
-}
-
-func (d *Database) GetUserByEmail(email string) *models.User {
-	coll := d.client.Database(defaultDb).Collection(usersCollection)
-
-	res := coll.FindOne(context.TODO(), bson.M{"email": email})
-	if res.Err() != nil {
-		logrus.Errorf("error getting result from mongo: %v", res.Err())
-		return nil
-	}
-
-	var user models.User
-	err := res.Decode(&user)
-	if err != nil {
-		logrus.Errorf("error decoding result: %v", err)
-		return nil
-	}
-
-	return &user
-}
-
-// Interests
-
-func (d *Database) GetAllInterests() []*models.Interest {
-	coll := d.client.Database(defaultDb).Collection("interests")
-
-	var interests []*models.Interest
+	var interests []*models.WardrobeItem
 	cursor, err := coll.Find(context.TODO(), bson.M{})
 	if err != nil {
 		logrus.Errorf("error cursoring all interests: %v", err)

@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package requests
+package models
 
-type LoginRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
+const (
+	MaleSex   = "male"
+	FemaleSex = "female"
+)
 
-type RegisterRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-	Name     string `json:"name" binding:"required"`
+type WardrobeItem struct {
+	ID       string   `bson:"_id" json:"id"`
+	Name     string   `bson:"name" json:"name"`
+	Slug     string   `bson:"slug" json:"slug"`
+	Sex      []string `bson:"sex" json:"sex"`
+	Mood     []string `bson:"mood" json:"mood"`
+	Category string   `bson:"category" json:"category"`
 }

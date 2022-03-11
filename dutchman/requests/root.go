@@ -16,13 +16,10 @@
 
 package requests
 
-type LoginRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
+type SetMoodRequest struct {
+	Mood string `json:"mood" binding:"required"`
 }
 
-type RegisterRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-	Name     string `json:"name" binding:"required"`
+type SetWardrobeRequest struct {
+	Wardrobe []string `json:"wardrobe"`
 }
