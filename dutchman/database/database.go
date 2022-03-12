@@ -64,7 +64,7 @@ func (d *Database) DB() *gorm.DB {
 func (d *Database) GetUserByEmail(email string) *models.User {
 	var user models.User
 
-	d.db.Preload("Wardrobe").Preload("FavoriteLooks").Preload("FavoriteSelections").First(&user, "email = ?", email)
+	d.db.Preload("Wardrobe").Preload("FavoriteLooks").Preload("PinnedSelections").Preload("Collections").First(&user, "email = ?", email)
 	if user.ID == 0 {
 		return nil
 	}
@@ -96,6 +96,7 @@ func (d *Database) setup() error {
 		&models.Selection{},
 		&models.Look{},
 		&models.LookItem{},
+		&models.Collection{},
 	)
 	if err != nil {
 		return err

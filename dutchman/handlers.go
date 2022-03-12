@@ -37,10 +37,17 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 
 	// starting from page 0
 	r.GET("/api/feed/:page", d.AuthMiddleware, d.HandleFeed)
+
 	r.GET("/api/selections", d.AuthMiddleware, d.HandleGetSelections)
 	r.GET("/api/selections/:selection", d.AuthMiddleware, d.HandleGetSelection)
-	r.PUT("/api/selections/:selection/favorites", d.AuthMiddleware, d.HandleAddSelectionToFavorites)
-	r.DELETE("/api/selections/:selection/favorites", d.AuthMiddleware, d.HandleRemoveSelectionFromFavorites)
+	r.PUT("/api/selections/:selection/pin", d.AuthMiddleware, d.HandlePinSelection)
+	r.DELETE("/api/selections/:selection/unpin", d.AuthMiddleware, d.HandleUnpinSelection)
+
+	r.POST("/api/collections/create", d.AuthMiddleware, d.HandleCreateCollection)
+	r.GET("/api/collections/:collection", d.AuthMiddleware, d.HandleGetCollection)
+	//r.DELETE("/api/collections/:collection/delete", d.AuthMiddleware, d.HandleDeleteCollection)
+	//r.PUT("/api/collections/:collection/add/:look", d.AuthMiddleware, d.HandleCollectionAddLook)
+	//r.DELETE("/api/collections/:collection/remove/:look", d.AuthMiddleware, d.HandleCollectionRemoveLook)
 
 	r.GET("/api/get-wardrobe-items", d.AuthMiddleware, d.HandleGetWardrobeItems)
 

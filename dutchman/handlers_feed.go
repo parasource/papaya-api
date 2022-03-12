@@ -127,7 +127,7 @@ func (d *Dutchman) HandleRemoveLookFromFavorites(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleAddSelectionToFavorites(c *gin.Context) {
+func (d *Dutchman) HandlePinSelection(c *gin.Context) {
 	slug := c.Param("selection")
 
 	var selection models.Selection
@@ -147,9 +147,9 @@ func (d *Dutchman) HandleAddSelectionToFavorites(c *gin.Context) {
 		return
 	}
 
-	err = d.db.DB().Model(user).Association("FavoriteSelections").Append(&selection)
+	err = d.db.DB().Model(user).Association("PinnedSelections").Append(&selection)
 	if err != nil {
-		logrus.Errorf("error adding look to favorites: %v", err)
+		logrus.Errorf("error pinning selection: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 
@@ -158,7 +158,7 @@ func (d *Dutchman) HandleAddSelectionToFavorites(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleRemoveSelectionFromFavorites(c *gin.Context) {
+func (d *Dutchman) HandleUnpinSelection(c *gin.Context) {
 	slug := c.Param("selection")
 
 	var selection models.Selection
@@ -176,9 +176,9 @@ func (d *Dutchman) HandleRemoveSelectionFromFavorites(c *gin.Context) {
 		return
 	}
 
-	err = d.db.DB().Model(user).Association("FavoriteSelections").Delete(&selection)
+	err = d.db.DB().Model(user).Association("PinnedSelections").Delete(&selection)
 	if err != nil {
-		logrus.Errorf("error adding look to favorites: %v", err)
+		logrus.Errorf("error unpinning selection: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 
