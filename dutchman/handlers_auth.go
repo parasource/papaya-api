@@ -43,6 +43,7 @@ func (d *Dutchman) HandleRegister(c *gin.Context) {
 	}
 
 	user := models.NewUser(r.Email, r.Name, r.Password)
+	user.Sex = r.Sex
 	d.db.CreateUser(user)
 
 	token, err := GenerateToken(user)

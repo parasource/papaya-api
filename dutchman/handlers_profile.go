@@ -18,6 +18,7 @@ package dutchman
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/lightswitch/dutchman-backend/dutchman/models"
 	"github.com/lightswitch/dutchman-backend/dutchman/requests"
 	"github.com/lightswitch/dutchman-backend/dutchman/util"
 	"github.com/sirupsen/logrus"
@@ -49,19 +50,11 @@ func (d *Dutchman) HandleProfileSetWardrobe(c *gin.Context) {
 		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
-	logrus.Info(user)
-	err = d.db.DB().Where(user).Association("Wardrobe").Clear()
-	if err != nil {
-		logrus.Errorf("error clearing associations: %v", err)
-		c.AbortWithStatus(500)
-		return
-	}
+	user.Wardrobe = []*models.WardrobeItem{}
 	for _, itemID := range r.Wardrobe {
-		if err := d.db.DB().Where(user).Association("Wardrobe").Append(itemID); err != nil {
-			logrus.Errorf("error associating: %v", err)
-			break
-		}
+		user.Wardrobe = append(user.Wardrobe, &models.WardrobeItem{ID: itemID})
 	}
+	d.db.DB().Save(&user)
 
 	c.JSON(200, gin.H{
 		"success": true,
@@ -76,21 +69,24 @@ func (d *Dutchman) HandleProfileSetMood(c *gin.Context) {
 		return
 	}
 
-	//token, err := util.ExtractToken(c.GetHeader("Authorization"))
+	token, err := util.ExtractToken(c.GetHeader("Authorization"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	//userId, err := getUserEmailFromToken(token)
+	email, err := getUserEmailFromToken(token)
 	if err != nil {
 		c.AbortWithStatus(500)
 	}
-	//err = d.db.SetUserMood(userId, r.Mood)
-	if err != nil {
-		c.AbortWithStatus(500)
-		logrus.Errorf("error setting profile mood: %v", err)
+	user := d.db.GetUserByEmail(email)
+	if user == nil {
+		c.AbortWithStatus(http.StatusForbidden)
+		return
 	}
+
+	user.Mood = r.Mood
+	d.db.DB().Save(user)
 
 	c.JSON(200, gin.H{
 		"success": true,

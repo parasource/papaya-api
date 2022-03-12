@@ -32,7 +32,7 @@ type WardrobeCategory struct {
 }
 
 type WardrobeItem struct {
-	gorm.Model
+	ID                 uint    `gorm:"primaryKey" json:"id"`
 	Name               string  `json:"name"`
 	Slug               string  `json:"slug"`
 	Sex                string  `json:"sex"`
