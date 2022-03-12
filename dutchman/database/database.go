@@ -17,20 +17,15 @@
 package database
 
 import (
-	"context"
-	"fmt"
 	"github.com/lightswitch/dutchman-backend/dutchman/models"
 	"github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 const (
 	defaultDb       = "dutchman"
 	usersCollection = "users"
-	uri             = "mongodb://localhost:27017/?maxPoolSize=20&w=majority"
 )
 
 type Config struct {
@@ -39,7 +34,7 @@ type Config struct {
 type Database struct {
 	cfg Config
 
-	client *mongo.Client
+	db *gorm.DB
 }
 
 func NewDatabase(cfg Config) (*Database, error) {
@@ -47,124 +42,114 @@ func NewDatabase(cfg Config) (*Database, error) {
 		cfg: cfg,
 	}
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	dsn := "host=localhost user=dutchman password=admin dbname=dutchman port=5432 sslmode=disable"
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return nil, err
+		logrus.Fatalf("error connecting to postgres: %v", err)
 	}
-	if err := client.Ping(context.TODO(), readpref.Primary()); err != nil {
-		return nil, err
-	}
-	d.client = client
+	d.db = db
 
-	d.fillWithWardrobe()
-	d.fillWithSelections()
+	err = d.setup()
+	if err != nil {
+		logrus.Fatalf("error migrating: %v", err)
+	}
 
 	return d, nil
 }
 
-func (d *Database) fillWithWardrobe() {
-	err := d.ClearCollection("wardrobe")
-	if err != nil {
-		logrus.Errorf("error clearing collection: %v", err)
-	}
-	for i := 0; i < 15; i++ {
-		interest := &models.WardrobeItem{
-			ID:       fmt.Sprintf("shs%v", i),
-			Name:     fmt.Sprintf("Ботинки %v", i),
-			Slug:     fmt.Sprintf("shoes-%v", i),
-			Category: "shoes",
-			Sex: []string{
-				"male",
-			},
-		}
-		d.StoreModel("wardrobe", interest)
-	}
-	for i := 0; i < 15; i++ {
-		interest := &models.WardrobeItem{
-			ID:       fmt.Sprintf("hts-%v", i),
-			Name:     fmt.Sprintf("Шапки %v", i),
-			Slug:     fmt.Sprintf("hats-%v", i),
-			Category: "hats",
-			Sex: []string{
-				"female",
-			},
-		}
-		d.StoreModel("wardrobe", interest)
-	}
+func (d *Database) DB() *gorm.DB {
+	return d.db
 }
 
-func (d *Database) fillWithSelections() {
-	err := d.ClearCollection("selections")
-	if err != nil {
-		logrus.Errorf("error clearing collection: %v", err)
-	}
+func (d *Database) GetUserByEmail(email string) *models.User {
+	var user models.User
 
-	for i := 0; i < 15; i++ {
-		selection := models.FakeSelection()
-		d.StoreModel("selections", selection)
-	}
-}
-
-func (d *Database) GetAllSelections() ([]*models.Selection, error) {
-	coll := d.client.Database(defaultDb).Collection("selections")
-
-	var items []*models.Selection
-	cursor, err := coll.Find(context.TODO(), bson.M{})
-	if err != nil {
-		return nil, err
-	}
-
-	if err = cursor.All(context.TODO(), &items); err != nil {
-		logrus.Errorf("error decoding interests: %v", err)
-	}
-
-	return items, nil
-}
-
-func (d *Database) Shutdown() {
-	if err := d.client.Disconnect(context.TODO()); err != nil {
-		panic(err)
-	}
-}
-
-func (d *Database) StoreModel(collection string, model interface{}) error {
-	coll := d.client.Database(defaultDb).Collection(collection)
-
-	res, err := coll.InsertOne(context.TODO(), model)
-	if err != nil {
-		return err
-	}
-	logrus.Infof("inserted doc with _id: %v", res.InsertedID)
-
-	return nil
-}
-
-func (d *Database) ClearCollection(collection string) error {
-	coll := d.client.Database(defaultDb).Collection(collection)
-
-	_, err := coll.DeleteMany(
-		context.Background(),
-		bson.M{},
-	)
-
-	return err
-}
-
-// Wardrobe
-
-func (d *Database) GetWardrobeItems() []*models.WardrobeItem {
-	coll := d.client.Database(defaultDb).Collection("wardrobe")
-
-	var interests []*models.WardrobeItem
-	cursor, err := coll.Find(context.TODO(), bson.M{})
-	if err != nil {
-		logrus.Errorf("error cursoring all interests: %v", err)
+	d.db.Preload("Wardrobe").First(&user, "email = ?", email)
+	if user.ID == 0 {
 		return nil
 	}
 
-	if err = cursor.All(context.TODO(), &interests); err != nil {
-		logrus.Errorf("error decoding interests: %v", err)
+	return &user
+}
+
+func (d *Database) GetUser(id uint) *models.User {
+	var user models.User
+
+	d.db.First(&user, "id = ?", id)
+	if user.ID == 0 {
+		return nil
 	}
 
-	return interests
+	return &user
+}
+
+func (d *Database) CreateUser(user *models.User) {
+	d.db.Create(user)
+}
+
+func (d *Database) setup() error {
+
+	err := d.db.AutoMigrate(
+		&models.User{},
+		&models.WardrobeCategory{},
+		&models.WardrobeItem{},
+		&models.Selection{},
+		&models.Look{},
+		&models.LookItem{},
+	)
+	if err != nil {
+		return err
+	}
+
+	if d.db.Model(&models.WardrobeItem{}).RowsAffected == 0 {
+
+		cat1 := models.WardrobeCategory{
+			Name: "Верхняя одежда",
+			Slug: "cloths",
+		}
+		d.db.Create(&cat1)
+		cat2 := models.WardrobeCategory{
+			Name: "Штаны",
+			Slug: "trousers",
+		}
+		d.db.Create(&cat2)
+		cat3 := models.WardrobeCategory{
+			Name: "Обувь",
+			Slug: "shoes",
+		}
+		d.db.Create(&cat3)
+
+		d.db.Create(&models.WardrobeItem{
+			Name:               "Белая майка",
+			Slug:               "white-tshirt",
+			WardrobeCategoryID: cat1.ID,
+		})
+		d.db.Create(&models.WardrobeItem{
+			Name:               "Черная майка",
+			Slug:               "black-tshirt",
+			WardrobeCategoryID: cat1.ID,
+		})
+		d.db.Create(&models.WardrobeItem{
+			Name:               "Брюки",
+			Slug:               "trousers",
+			WardrobeCategoryID: cat2.ID,
+		})
+		d.db.Create(&models.WardrobeItem{
+			Name:               "Джинсы",
+			Slug:               "jeans",
+			WardrobeCategoryID: cat2.ID,
+		})
+		d.db.Create(&models.WardrobeItem{
+			Name:               "Кроссовки",
+			Slug:               "jeans",
+			WardrobeCategoryID: cat3.ID,
+		})
+		d.db.Create(&models.WardrobeItem{
+			Name:               "Джинсы",
+			Slug:               "jeans",
+			WardrobeCategoryID: cat3.ID,
+		})
+	}
+
+	return err
 }

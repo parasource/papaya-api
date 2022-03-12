@@ -18,7 +18,6 @@ package dutchman
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/dutchman-backend/dutchman/models"
 	"github.com/lightswitch/dutchman-backend/dutchman/requests"
 	"github.com/lightswitch/dutchman-backend/dutchman/util"
 	"github.com/sirupsen/logrus"
@@ -39,14 +38,29 @@ func (d *Dutchman) HandleProfileSetWardrobe(c *gin.Context) {
 		return
 	}
 
-	userId, err := getUserIdFromToken(token)
+	email, err := getUserEmailFromToken(token)
 	if err != nil {
+		logrus.Errorf("error getting email from token: %v", err)
 		c.AbortWithStatus(500)
+		return
 	}
-	err = d.db.SetUserWardrobe(userId, r.Wardrobe)
+	user := d.db.GetUserByEmail(email)
+	if user == nil {
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+	logrus.Info(user)
+	err = d.db.DB().Where(user).Association("Wardrobe").Clear()
 	if err != nil {
+		logrus.Errorf("error clearing associations: %v", err)
 		c.AbortWithStatus(500)
-		logrus.Errorf("error setting profile mood: %v", err)
+		return
+	}
+	for _, itemID := range r.Wardrobe {
+		if err := d.db.DB().Where(user).Association("Wardrobe").Append(itemID); err != nil {
+			logrus.Errorf("error associating: %v", err)
+			break
+		}
 	}
 
 	c.JSON(200, gin.H{
@@ -62,17 +76,17 @@ func (d *Dutchman) HandleProfileSetMood(c *gin.Context) {
 		return
 	}
 
-	token, err := util.ExtractToken(c.GetHeader("Authorization"))
+	//token, err := util.ExtractToken(c.GetHeader("Authorization"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	userId, err := getUserIdFromToken(token)
+	//userId, err := getUserEmailFromToken(token)
 	if err != nil {
 		c.AbortWithStatus(500)
 	}
-	err = d.db.SetUserMood(userId, r.Mood)
+	//err = d.db.SetUserMood(userId, r.Mood)
 	if err != nil {
 		c.AbortWithStatus(500)
 		logrus.Errorf("error setting profile mood: %v", err)
@@ -97,15 +111,16 @@ func (d *Dutchman) HandleProfileUpdateSettings(c *gin.Context) {
 		return
 	}
 
-	userId, err := getUserIdFromToken(token)
+	_, err = getUserEmailFromToken(token)
 	if err != nil {
 		c.AbortWithStatus(500)
 	}
 
-	err = d.db.UpdateUserSettings(userId, &models.UserSettings{
-		ReceivePushNotifications:  r.ReceivePushNotifications,
-		ReceiveEmailNotifications: r.ReceiveEmailNotifications,
-	})
+	//
+	//err = d.db.UpdateUserSettings(userId, &models.UserSettings{
+	//	ReceivePushNotifications:  r.ReceivePushNotifications,
+	//	ReceiveEmailNotifications: r.ReceiveEmailNotifications,
+	//})
 	if err != nil {
 		c.AbortWithStatus(500)
 		return

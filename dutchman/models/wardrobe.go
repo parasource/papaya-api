@@ -16,14 +16,26 @@
 
 package models
 
-import (
-	"gorm.io/gorm"
+import "gorm.io/gorm"
+
+const (
+	MaleSex   = "male"
+	FemaleSex = "female"
+	AnySex    = "any"
 )
 
-type Selection struct {
+type WardrobeCategory struct {
 	gorm.Model
-	Name  string  `json:"name"`
-	Slug  string  `json:"slug"`
-	Desc  string  `json:"desc"`
-	Looks []*Look `json:"looks" gorm:"many2many:selection_looks;"`
+	Name  string         `json:"name"`
+	Slug  string         `json:"slug"`
+	Items []WardrobeItem `json:"items"`
+}
+
+type WardrobeItem struct {
+	gorm.Model
+	Name               string  `json:"name"`
+	Slug               string  `json:"slug"`
+	Sex                string  `json:"sex"`
+	WardrobeCategoryID uint    `json:"category_id"`
+	Users              []*User `json:"users" gorm:"many2many:users_wardrobe;"`
 }

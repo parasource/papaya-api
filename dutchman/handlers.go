@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/lightswitch/dutchman-backend/dutchman/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -30,8 +31,15 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 	r.POST("/api/auth/refresh", d.AuthMiddleware, d.HandleRefresh)
 	r.GET("/api/auth/user", d.AuthMiddleware, d.HandleUser)
 
+	//r.GET("/api/looks/:look", d.AuthMiddleware, d.HandleGetLook)
+	//r.PUT("/api/looks/:look/favorites", d.AuthMiddleware, d.HandleAddLookToFavorites)
+	//r.DELETE("/api/looks/:look/favorites", d.AuthMiddleware, d.HandleRemoveLookFromFavorites)
+
 	r.GET("/api/feed", d.AuthMiddleware, d.HandleFeed)
 	r.GET("/api/selections", d.AuthMiddleware, d.HandleGetSelections)
+	r.GET("/api/selections/:selection", d.AuthMiddleware, d.HandleGetSelection)
+	//r.PUT("/api/selections/:selection/favorites", d.AuthMiddleware, d.HandleAddSelectionToFavorites)
+	//r.DELETE("/api/selections/:selection/favorites", d.AuthMiddleware, d.HandleDeleteSelectionFromFavorites)
 
 	r.GET("/api/get-wardrobe-items", d.AuthMiddleware, d.HandleGetWardrobeItems)
 
@@ -47,18 +55,14 @@ func (d *Dutchman) HandleFeed(c *gin.Context) {
 // Root routes
 
 func (d *Dutchman) HandleGetWardrobeItems(c *gin.Context) {
-	interests := d.db.GetWardrobeItems()
-	c.JSON(200, interests)
-}
-
-func (d *Dutchman) HandleGetSelections(c *gin.Context) {
-	selections, err := d.db.GetAllSelections()
+	var items []models.WardrobeItem
+	err := d.db.DB().Find(&items).Error
 	if err != nil {
-		logrus.Errorf("error getting all selections")
+		logrus.Errorf("error getting wardrobe items from db: %v", err)
 		c.AbortWithStatus(500)
+		return
 	}
-
-	c.JSON(200, selections)
+	c.JSON(200, items)
 }
 
 func ParseToken(accessToken string) (jwt.MapClaims, error) {
@@ -80,12 +84,12 @@ func ParseToken(accessToken string) (jwt.MapClaims, error) {
 	return nil, ErrInvalid
 }
 
-func getUserIdFromToken(token string) (string, error) {
+func getUserEmailFromToken(token string) (string, error) {
 	claims, err := ParseToken(token)
 	if err != nil {
 		return "", err
 	}
 
-	id := claims["id"].(string)
+	id := claims["email"].(string)
 	return id, nil
 }

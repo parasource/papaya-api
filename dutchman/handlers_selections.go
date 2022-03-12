@@ -14,18 +14,26 @@
  * limitations under the License.
  */
 
-package models
+package dutchman
 
-const (
-	MaleSex   = "male"
-	FemaleSex = "female"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/lightswitch/dutchman-backend/dutchman/models"
+	"github.com/sirupsen/logrus"
 )
 
-type WardrobeItem struct {
-	ID       string   `bson:"_id" json:"id"`
-	Name     string   `bson:"name" json:"name"`
-	Slug     string   `bson:"slug" json:"slug"`
-	Sex      []string `bson:"sex" json:"sex"`
-	Mood     []string `bson:"mood" json:"mood"`
-	Category string   `bson:"category" json:"category"`
+func (d *Dutchman) HandleGetSelections(c *gin.Context) {
+	var result []models.Selection
+
+	err := d.db.DB().Find(&result).Error
+	if err != nil {
+		logrus.Errorf("error getting all selections")
+		c.AbortWithStatus(500)
+	}
+
+	c.JSON(200, result)
+}
+
+func (d *Dutchman) HandleGetSelection(c *gin.Context) {
+
 }

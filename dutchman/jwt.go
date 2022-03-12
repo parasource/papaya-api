@@ -54,7 +54,7 @@ func GenerateToken(user *models.User) (string, error) {
 	return str, nil
 }
 
-func GenerateRefreshToken(id string) (string, error) {
+func GenerateRefreshToken(id uint) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id": id,

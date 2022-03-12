@@ -34,7 +34,7 @@ func (d *Dutchman) HandleRegister(c *gin.Context) {
 	}
 	logrus.Infof("req %v", r)
 
-	if d.db.CheckIfUserExists(r.Email) {
+	if d.db.GetUserByEmail(r.Email) != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "Пользователь с таким адресом эл.почты уже существует",
@@ -43,11 +43,7 @@ func (d *Dutchman) HandleRegister(c *gin.Context) {
 	}
 
 	user := models.NewUser(r.Email, r.Name, r.Password)
-	err = d.db.StoreUser(user)
-	if err != nil {
-		c.AbortWithStatus(500)
-		return
-	}
+	d.db.CreateUser(user)
 
 	token, err := GenerateToken(user)
 	if err != nil {
@@ -129,7 +125,7 @@ func (d *Dutchman) HandleRefresh(c *gin.Context) {
 		return
 	}
 
-	id := claims["id"].(string)
+	id := claims["id"].(uint)
 	user := d.db.GetUser(id)
 	if user == nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
@@ -168,8 +164,8 @@ func (d *Dutchman) HandleUser(c *gin.Context) {
 		return
 	}
 
-	id := claims["id"].(string)
-	user := d.db.GetUser(id)
+	email := claims["email"].(string)
+	user := d.db.GetUserByEmail(email)
 	if user == nil {
 		logrus.Errorf("user with claims not found: %v", err)
 		c.AbortWithStatus(http.StatusUnauthorized)

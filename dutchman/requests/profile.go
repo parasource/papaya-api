@@ -27,5 +27,5 @@ type SetMoodRequest struct {
 }
 
 type SetWardrobeRequest struct {
-	Wardrobe []string `json:"wardrobe"`
+	Wardrobe []uint `json:"wardrobe"`
 }

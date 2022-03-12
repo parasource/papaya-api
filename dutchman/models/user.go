@@ -17,32 +17,26 @@
 package models
 
 import (
-	"github.com/lightswitch/dutchman-backend/dutchman/util/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
-type UserSettings struct {
-	ReceivePushNotifications  bool `json:"receive_push_notifications" bson:"receive_push_notifications"`
-	ReceiveEmailNotifications bool `json:"receive_email_notifications" bson:"receive_email_notifications"`
-}
-
 type User struct {
-	ID       string `json:"_id" bson:"_id"`
-	Name     string `json:"name" bson:"name"`
-	Email    string `json:"email" bson:"email"`
-	Password string `json:"-" bson:"password"`
+	gorm.Model
+	Name     string `json:"name"`
+	Email    string `json:"email" gorm:"unique"`
+	Password string `json:"-"`
 
-	Wardrobe []string `json:"wardrobe" bson:"wardrobe"`
-	Mood     string   `json:"mood" bson:"mood"`
+	Wardrobe []*WardrobeItem `json:"wardrobe" gorm:"many2many:users_wardrobe;"`
+	Mood     string          `json:"mood"`
 
-	Settings UserSettings `json:"settings" bson:"settings"`
+	EmailNotifications bool `json:"email_notifications"`
+	PushNotifications  bool `json:"push_notifications"`
 }
 
 func NewUser(email string, name string, password string) *User {
-	uid, _ := uuid.NewV4()
 	pwd, _ := hashPassword(password)
 	return &User{
-		ID:       uid.String(),
 		Name:     name,
 		Email:    email,
 		Password: pwd,
