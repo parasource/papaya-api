@@ -64,7 +64,7 @@ func (d *Database) DB() *gorm.DB {
 func (d *Database) GetUserByEmail(email string) *models.User {
 	var user models.User
 
-	d.db.Preload("Wardrobe").First(&user, "email = ?", email)
+	d.db.Preload("Wardrobe").Preload("FavoriteLooks").Preload("FavoriteSelections").First(&user, "email = ?", email)
 	if user.ID == 0 {
 		return nil
 	}
@@ -101,55 +101,100 @@ func (d *Database) setup() error {
 		return err
 	}
 
-	if d.db.Model(&models.WardrobeItem{}).RowsAffected == 0 {
-
-		cat1 := models.WardrobeCategory{
-			Name: "Верхняя одежда",
-			Slug: "cloths",
-		}
-		d.db.Create(&cat1)
-		cat2 := models.WardrobeCategory{
-			Name: "Штаны",
-			Slug: "trousers",
-		}
-		d.db.Create(&cat2)
-		cat3 := models.WardrobeCategory{
-			Name: "Обувь",
-			Slug: "shoes",
-		}
-		d.db.Create(&cat3)
-
-		d.db.Create(&models.WardrobeItem{
-			Name:               "Белая майка",
-			Slug:               "white-tshirt",
-			WardrobeCategoryID: cat1.ID,
-		})
-		d.db.Create(&models.WardrobeItem{
-			Name:               "Черная майка",
-			Slug:               "black-tshirt",
-			WardrobeCategoryID: cat1.ID,
-		})
-		d.db.Create(&models.WardrobeItem{
-			Name:               "Брюки",
-			Slug:               "trousers",
-			WardrobeCategoryID: cat2.ID,
-		})
-		d.db.Create(&models.WardrobeItem{
-			Name:               "Джинсы",
-			Slug:               "jeans",
-			WardrobeCategoryID: cat2.ID,
-		})
-		d.db.Create(&models.WardrobeItem{
-			Name:               "Кроссовки",
-			Slug:               "jeans",
-			WardrobeCategoryID: cat3.ID,
-		})
-		d.db.Create(&models.WardrobeItem{
-			Name:               "Джинсы",
-			Slug:               "jeans",
-			WardrobeCategoryID: cat3.ID,
-		})
+	var count int64
+	if err := d.db.Model(&models.WardrobeItem{}).Count(&count).Error; err == nil && count == 0 {
+		d.seed()
 	}
 
 	return err
+}
+
+func (d *Database) seed() {
+	//////////////////////
+	// WARDROBE
+
+	cat1 := models.WardrobeCategory{
+		Name: "Верхняя одежда",
+		Slug: "cloths",
+	}
+	d.db.Create(&cat1)
+	cat2 := models.WardrobeCategory{
+		Name: "Штаны",
+		Slug: "trousers",
+	}
+	d.db.Create(&cat2)
+	cat3 := models.WardrobeCategory{
+		Name: "Обувь",
+		Slug: "shoes",
+	}
+	d.db.Create(&cat3)
+
+	d.db.Create(&models.WardrobeItem{
+		Name:               "Белая майка",
+		Slug:               "white-tshirt",
+		WardrobeCategoryID: cat1.ID,
+	})
+	d.db.Create(&models.WardrobeItem{
+		Name:               "Черная майка",
+		Slug:               "black-tshirt",
+		WardrobeCategoryID: cat1.ID,
+	})
+	d.db.Create(&models.WardrobeItem{
+		Name:               "Брюки",
+		Slug:               "trousers",
+		WardrobeCategoryID: cat2.ID,
+	})
+	d.db.Create(&models.WardrobeItem{
+		Name:               "Джинсы",
+		Slug:               "jeans",
+		WardrobeCategoryID: cat2.ID,
+	})
+	d.db.Create(&models.WardrobeItem{
+		Name:               "Кроссовки",
+		Slug:               "jeans",
+		WardrobeCategoryID: cat3.ID,
+	})
+	d.db.Create(&models.WardrobeItem{
+		Name:               "Джинсы",
+		Slug:               "jeans",
+		WardrobeCategoryID: cat3.ID,
+	})
+
+	//////////////////////
+	// LOOKS
+
+	look1 := &models.Look{
+		Name:  "Первый лук",
+		Slug:  "test",
+		Image: "test.jpg",
+		Desc:  "Первый лук",
+	}
+	d.db.Create(look1)
+	look2 := &models.Look{
+		Name:  "Второй лук",
+		Slug:  "test1",
+		Image: "test.jpg",
+		Desc:  "Второй лук",
+	}
+	d.db.Create(look2)
+	look3 := &models.Look{
+		Name:  "Третий лук",
+		Slug:  "test2",
+		Image: "test.jpg",
+		Desc:  "Третий лук",
+	}
+	d.db.Create(look3)
+
+	d.db.Create(&models.Selection{
+		Name:  "Летняя подборка",
+		Slug:  "summer",
+		Desc:  "Летняя подборка",
+		Looks: []*models.Look{look1, look3},
+	})
+	d.db.Create(&models.Selection{
+		Name:  "Зимняя подборка",
+		Slug:  "winter",
+		Desc:  "Зимняя подборка",
+		Looks: []*models.Look{look1, look2, look3},
+	})
 }

@@ -20,9 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lightswitch/dutchman-backend/dutchman/models"
 	"github.com/lightswitch/dutchman-backend/dutchman/requests"
-	"github.com/lightswitch/dutchman-backend/dutchman/util"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 func (d *Dutchman) HandleProfileSetWardrobe(c *gin.Context) {
@@ -33,21 +31,10 @@ func (d *Dutchman) HandleProfileSetWardrobe(c *gin.Context) {
 		return
 	}
 
-	token, err := util.ExtractToken(c.GetHeader("Authorization"))
+	user, err := d.GetUser(c)
 	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	email, err := getUserEmailFromToken(token)
-	if err != nil {
-		logrus.Errorf("error getting email from token: %v", err)
-		c.AbortWithStatus(500)
-		return
-	}
-	user := d.db.GetUserByEmail(email)
-	if user == nil {
-		c.AbortWithStatus(http.StatusForbidden)
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
 		return
 	}
 	user.Wardrobe = []*models.WardrobeItem{}
@@ -69,19 +56,10 @@ func (d *Dutchman) HandleProfileSetMood(c *gin.Context) {
 		return
 	}
 
-	token, err := util.ExtractToken(c.GetHeader("Authorization"))
+	user, err := d.GetUser(c)
 	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	email, err := getUserEmailFromToken(token)
-	if err != nil {
-		c.AbortWithStatus(500)
-	}
-	user := d.db.GetUserByEmail(email)
-	if user == nil {
-		c.AbortWithStatus(http.StatusForbidden)
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
 		return
 	}
 
@@ -101,15 +79,11 @@ func (d *Dutchman) HandleProfileUpdateSettings(c *gin.Context) {
 		return
 	}
 
-	token, err := util.ExtractToken(c.GetHeader("Authorization"))
+	_, err = d.GetUser(c)
 	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
 		return
-	}
-
-	_, err = getUserEmailFromToken(token)
-	if err != nil {
-		c.AbortWithStatus(500)
 	}
 
 	//

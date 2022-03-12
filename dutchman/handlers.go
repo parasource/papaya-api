@@ -31,25 +31,22 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 	r.POST("/api/auth/refresh", d.AuthMiddleware, d.HandleRefresh)
 	r.GET("/api/auth/user", d.AuthMiddleware, d.HandleUser)
 
-	//r.GET("/api/looks/:look", d.AuthMiddleware, d.HandleGetLook)
-	//r.PUT("/api/looks/:look/favorites", d.AuthMiddleware, d.HandleAddLookToFavorites)
-	//r.DELETE("/api/looks/:look/favorites", d.AuthMiddleware, d.HandleRemoveLookFromFavorites)
+	r.GET("/api/looks/:look", d.AuthMiddleware, d.HandleGetLook)
+	r.PUT("/api/looks/:look/favorites", d.AuthMiddleware, d.HandleAddLookToFavorites)
+	r.DELETE("/api/looks/:look/favorites", d.AuthMiddleware, d.HandleRemoveLookFromFavorites)
 
-	r.GET("/api/feed", d.AuthMiddleware, d.HandleFeed)
+	// starting from page 0
+	r.GET("/api/feed/:page", d.AuthMiddleware, d.HandleFeed)
 	r.GET("/api/selections", d.AuthMiddleware, d.HandleGetSelections)
 	r.GET("/api/selections/:selection", d.AuthMiddleware, d.HandleGetSelection)
-	//r.PUT("/api/selections/:selection/favorites", d.AuthMiddleware, d.HandleAddSelectionToFavorites)
-	//r.DELETE("/api/selections/:selection/favorites", d.AuthMiddleware, d.HandleDeleteSelectionFromFavorites)
+	r.PUT("/api/selections/:selection/favorites", d.AuthMiddleware, d.HandleAddSelectionToFavorites)
+	r.DELETE("/api/selections/:selection/favorites", d.AuthMiddleware, d.HandleRemoveSelectionFromFavorites)
 
 	r.GET("/api/get-wardrobe-items", d.AuthMiddleware, d.HandleGetWardrobeItems)
 
 	r.POST("/api/profile/set-wardrobe", d.AuthMiddleware, d.HandleProfileSetWardrobe)
 	r.POST("/api/profile/set-mood", d.AuthMiddleware, d.HandleProfileSetMood)
 	r.POST("/api/profile/update-settings", d.AuthMiddleware, d.HandleProfileUpdateSettings)
-}
-
-func (d *Dutchman) HandleFeed(c *gin.Context) {
-
 }
 
 // Root routes

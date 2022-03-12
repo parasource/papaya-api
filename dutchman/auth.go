@@ -14,23 +14,27 @@
  * limitations under the License.
  */
 
-package models
+package dutchman
 
-import "gorm.io/gorm"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/lightswitch/dutchman-backend/dutchman/models"
+	"github.com/lightswitch/dutchman-backend/dutchman/util"
+)
 
-type Look struct {
-	gorm.Model
-	Name       string       `json:"name"`
-	Slug       string       `json:"slug" gorm:"unique"`
-	Image      string       `json:"image"`
-	Desc       string       `json:"desc"`
-	Items      []LookItem   `json:"items"`
-	Selections []*Selection `json:"selections" gorm:"many2many:selection_looks;"`
-}
+func (d *Dutchman) GetUser(c *gin.Context) (*models.User, error) {
+	token, err := util.ExtractToken(c.GetHeader("Authorization"))
+	if err != nil {
+		return nil, err
+	}
 
-type LookItem struct {
-	gorm.Model
-	Name     string `json:"name"`
-	Position string `json:"position"`
-	LookID   uint
+	claims, err := ParseToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	email := claims["email"].(string)
+	user := d.db.GetUserByEmail(email)
+
+	return user, nil
 }
