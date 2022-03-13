@@ -45,9 +45,9 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 
 	r.POST("/api/collections/create", d.AuthMiddleware, d.HandleCreateCollection)
 	r.GET("/api/collections/:collection", d.AuthMiddleware, d.HandleGetCollection)
-	//r.DELETE("/api/collections/:collection/delete", d.AuthMiddleware, d.HandleDeleteCollection)
-	//r.PUT("/api/collections/:collection/add/:look", d.AuthMiddleware, d.HandleCollectionAddLook)
-	//r.DELETE("/api/collections/:collection/remove/:look", d.AuthMiddleware, d.HandleCollectionRemoveLook)
+	r.DELETE("/api/collections/:collection/delete", d.AuthMiddleware, d.HandleDeleteCollection)
+	r.PUT("/api/collections/:collection/add/:look", d.AuthMiddleware, d.HandleCollectionAddLook)
+	r.DELETE("/api/collections/:collection/remove/:look", d.AuthMiddleware, d.HandleCollectionRemoveLook)
 
 	r.GET("/api/get-wardrobe-items", d.AuthMiddleware, d.HandleGetWardrobeItems)
 
