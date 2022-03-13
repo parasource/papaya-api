@@ -65,6 +65,72 @@ func (d *Dutchman) HandleGetLook(c *gin.Context) {
 	c.JSON(200, look)
 }
 
+func (d *Dutchman) HandleLikeLook(c *gin.Context) {
+	slug := c.Param("look")
+
+	var look models.Look
+	d.db.DB().First(&look, "slug = ?", slug)
+
+	if look.ID == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	// user
+
+	user, err := d.GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	d.db.DB().Model(user).Association("DislikedLooks").Delete(&look)
+
+	err = d.db.DB().Model(user).Association("LikedLooks").Append(&look)
+	if err != nil {
+		logrus.Errorf("error adding look to favorites: %v", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+
+	c.JSON(200, gin.H{
+		"success": true,
+	})
+}
+
+func (d *Dutchman) HandleDislikeLook(c *gin.Context) {
+	slug := c.Param("look")
+
+	var look models.Look
+	d.db.DB().First(&look, "slug = ?", slug)
+
+	if look.ID == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	// user
+
+	user, err := d.GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	d.db.DB().Model(user).Association("LikedLooks").Delete(&look)
+
+	err = d.db.DB().Model(user).Association("DislikedLooks").Append(&look)
+	if err != nil {
+		logrus.Errorf("error adding look to favorites: %v", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+
+	c.JSON(200, gin.H{
+		"success": true,
+	})
+}
+
 func (d *Dutchman) HandleAddLookToFavorites(c *gin.Context) {
 	slug := c.Param("look")
 

@@ -34,6 +34,8 @@ type User struct {
 	FavoriteLooks    []*Look      `json:"favorite_looks" gorm:"many2many:favorite_looks;"`
 	Collections      []Collection `json:"collections"`
 	PinnedSelections []*Selection `json:"pinned_selections" gorm:"many2many:pinned_selections;"`
+	LikedLooks       []*Look      `json:"-" gorm:"many2many:liked_looks;"`
+	DislikedLooks    []*Look      `json:"-" gorm:"many2many:disliked_looks;"`
 
 	EmailNotifications bool `json:"email_notifications"`
 	PushNotifications  bool `json:"push_notifications"`
