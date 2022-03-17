@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package dutchman
+package papaya
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/dutchman-backend/dutchman/models"
+	"github.com/lightswitch/dutchman-backend/papaya/models"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"

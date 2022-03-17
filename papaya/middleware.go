@@ -14,27 +14,34 @@
  * limitations under the License.
  */
 
-package dutchman
+package papaya
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/dutchman-backend/dutchman/models"
-	"github.com/lightswitch/dutchman-backend/dutchman/util"
+	"net/http"
+	"strings"
 )
 
-func (d *Dutchman) GetUser(c *gin.Context) (*models.User, error) {
-	token, err := util.ExtractToken(c.GetHeader("Authorization"))
-	if err != nil {
-		return nil, err
+func (d *Dutchman) AuthMiddleware(c *gin.Context) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
 
-	claims, err := ParseToken(token)
-	if err != nil {
-		return nil, err
+	headerParts := strings.Split(authHeader, " ")
+	if len(headerParts) != 2 {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	if headerParts[0] != "Bearer" {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
 
-	email := claims["email"].(string)
-	user := d.db.GetUserByEmail(email)
-
-	return user, nil
+	_, err := ParseToken(headerParts[1])
+	if err != nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
 }

@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$USER_HOME$/Desktop/work/deployment/.idea/deployment.iml" filepath="$USER_HOME$/Desktop/work/deployment/.idea/deployment.iml" />
       <module fileurl="file://$USER_HOME$/Desktop/dutchman-app/.idea/dutchman-app.iml" filepath="$USER_HOME$/Desktop/dutchman-app/.idea/dutchman-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/dutchman-backend.iml" filepath="$PROJECT_DIR$/.idea/dutchman-backend.iml" />
     </modules>

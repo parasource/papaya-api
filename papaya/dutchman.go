@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package dutchman
+package papaya
 
 import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/dutchman-backend/dutchman/database"
+	"github.com/lightswitch/dutchman-backend/papaya/database"
 	"github.com/sirupsen/logrus"
 	"net"
 )
@@ -41,7 +41,7 @@ type Dutchman struct {
 	db *database.Database
 }
 
-func NewDutchman(cfg Config) (*Dutchman, error) {
+func NewDutchman(cfg Config, dbCfg database.Config) (*Dutchman, error) {
 	d := &Dutchman{
 		cfg: cfg,
 	}
@@ -52,7 +52,7 @@ func NewDutchman(cfg Config) (*Dutchman, error) {
 	d.r = r
 
 	// Database
-	db, err := database.NewDatabase(database.Config{})
+	db, err := database.NewDatabase(dbCfg)
 	if err != nil {
 		logrus.Fatalf("error creating database: %v", err)
 	}

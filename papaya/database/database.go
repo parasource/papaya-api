@@ -17,18 +17,19 @@
 package database
 
 import (
-	"github.com/lightswitch/dutchman-backend/dutchman/models"
+	"fmt"
+	"github.com/lightswitch/dutchman-backend/papaya/models"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-const (
-	defaultDb       = "dutchman"
-	usersCollection = "users"
-)
-
 type Config struct {
+	Host     string
+	Port     string
+	Database string
+	User     string
+	Password string
 }
 
 type Database struct {
@@ -42,7 +43,7 @@ func NewDatabase(cfg Config) (*Database, error) {
 		cfg: cfg,
 	}
 
-	dsn := "host=localhost user=dutchman password=admin dbname=dutchman port=5432 sslmode=disable"
+	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=disable", d.cfg.Host, d.cfg.User, d.cfg.Password, d.cfg.Database, d.cfg.Port)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		logrus.Fatalf("error connecting to postgres: %v", err)

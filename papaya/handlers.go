@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package dutchman
+package papaya
 
 import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"github.com/lightswitch/dutchman-backend/dutchman/models"
+	"github.com/lightswitch/dutchman-backend/papaya/models"
 	"github.com/sirupsen/logrus"
 )
 
