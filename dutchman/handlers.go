@@ -61,8 +61,8 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 // Root routes
 
 func (d *Dutchman) HandleGetWardrobeItems(c *gin.Context) {
-	var items []models.WardrobeItem
-	err := d.db.DB().Find(&items).Error
+	var items []models.WardrobeCategory
+	err := d.db.DB().Preload("Items").Find(&items).Error
 	if err != nil {
 		logrus.Errorf("error getting wardrobe items from db: %v", err)
 		c.AbortWithStatus(500)
