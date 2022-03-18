@@ -2,8 +2,8 @@ properties([disableConcurrentBuilds()])
 
 pipeline {
     agent {
-        label 'master'
-        }
+        label 'jenkins_agent'
+	}
     triggers { pollSCM('* * * * *') }
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
