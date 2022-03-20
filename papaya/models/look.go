@@ -20,12 +20,12 @@ import "gorm.io/gorm"
 
 type Look struct {
 	gorm.Model
-	Name       string       `json:"name"`
-	Slug       string       `json:"slug" gorm:"unique"`
-	Image      string       `json:"image"`
-	Desc       string       `json:"desc"`
-	Items      []LookItem   `json:"items"`
-	Selections []*Selection `json:"selections" gorm:"many2many:selection_looks;"`
+	Name   string     `json:"name"`
+	Slug   string     `json:"slug" gorm:"unique"`
+	Image  string     `json:"image"`
+	Desc   string     `json:"desc"`
+	Items  []LookItem `json:"items"`
+	Topics []*Topic   `json:"topics" gorm:"many2many:topic_looks;"`
 }
 
 type LookItem struct {

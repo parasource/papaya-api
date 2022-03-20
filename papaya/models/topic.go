@@ -14,26 +14,16 @@
  * limitations under the License.
  */
 
-package papaya
+package models
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/dutchman-backend/papaya/models"
-	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
-func (d *Dutchman) HandleGetSelections(c *gin.Context) {
-	var result []models.Selection
-
-	err := d.db.DB().Find(&result).Error
-	if err != nil {
-		logrus.Errorf("error getting all selections")
-		c.AbortWithStatus(500)
-	}
-
-	c.JSON(200, result)
-}
-
-func (d *Dutchman) HandleGetSelection(c *gin.Context) {
-
+type Topic struct {
+	gorm.Model
+	Name  string  `json:"name"`
+	Slug  string  `json:"slug"`
+	Desc  string  `json:"desc"`
+	Looks []*Look `json:"looks" gorm:"many2many:topic_looks;"`
 }

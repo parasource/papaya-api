@@ -31,11 +31,10 @@ type User struct {
 	Wardrobe []*WardrobeItem `json:"wardrobe" gorm:"many2many:users_wardrobe;"`
 	Mood     string          `json:"mood"`
 
-	FavoriteLooks    []*Look      `json:"favorite_looks" gorm:"many2many:favorite_looks;"`
-	Collections      []Collection `json:"collections"`
-	PinnedSelections []*Selection `json:"pinned_selections" gorm:"many2many:pinned_selections;"`
-	LikedLooks       []*Look      `json:"-" gorm:"many2many:liked_looks;"`
-	DislikedLooks    []*Look      `json:"-" gorm:"many2many:disliked_looks;"`
+	Collections   []Collection `json:"collections"`
+	Topics        []*Topic     `json:"topics" gorm:"many2many:watched_topics;"`
+	LikedLooks    []*Look      `json:"-" gorm:"many2many:liked_looks;"`
+	DislikedLooks []*Look      `json:"-" gorm:"many2many:disliked_looks;"`
 
 	EmailNotifications bool `json:"email_notifications"`
 	PushNotifications  bool `json:"push_notifications"`

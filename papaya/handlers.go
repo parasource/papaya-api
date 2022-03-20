@@ -34,16 +34,14 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 	r.GET("/api/looks/:look", d.AuthMiddleware, d.HandleGetLook)
 	r.POST("/api/looks/:look/like", d.AuthMiddleware, d.HandleLikeLook)
 	r.POST("/api/looks/:look/dislike", d.AuthMiddleware, d.HandleDislikeLook)
-	r.PUT("/api/looks/:look/favorites", d.AuthMiddleware, d.HandleAddLookToFavorites)
-	r.DELETE("/api/looks/:look/favorites", d.AuthMiddleware, d.HandleRemoveLookFromFavorites)
 
 	// starting from page 0
 	r.GET("/api/feed/:page", d.AuthMiddleware, d.HandleFeed)
 
-	r.GET("/api/selections", d.AuthMiddleware, d.HandleGetSelections)
-	r.GET("/api/selections/:selection", d.AuthMiddleware, d.HandleGetSelection)
-	r.PUT("/api/selections/:selection/pin", d.AuthMiddleware, d.HandlePinSelection)
-	r.DELETE("/api/selections/:selection/unpin", d.AuthMiddleware, d.HandleUnpinSelection)
+	r.GET("/api/topics", d.AuthMiddleware, d.HandleGetTopics)
+	r.GET("/api/topics/:topic", d.AuthMiddleware, d.HandleGetTopic)
+	r.PUT("/api/topics/:topic/watch", d.AuthMiddleware, d.HandleWatchTopic)
+	r.DELETE("/api/topics/:topic/unwatch", d.AuthMiddleware, d.HandleUnwatchTopic)
 
 	r.POST("/api/collections/create", d.AuthMiddleware, d.HandleCreateCollection)
 	r.GET("/api/collections/:collection", d.AuthMiddleware, d.HandleGetCollection)

@@ -22,6 +22,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Config struct {
@@ -44,7 +45,25 @@ func NewDatabase(cfg Config) (*Database, error) {
 	}
 
 	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=disable", d.cfg.Host, d.cfg.User, d.cfg.Password, d.cfg.Database, d.cfg.Port)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+	var (
+		db      *gorm.DB
+		err     error
+		retries = 0
+	)
+	for {
+		if retries >= 3 {
+			logrus.Fatalf("error connecting to postgres")
+		}
+
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			break
+		}
+
+		retries++
+		<-time.After(time.Second)
+	}
 	if err != nil {
 		logrus.Fatalf("error connecting to postgres: %v", err)
 	}
@@ -94,7 +113,7 @@ func (d *Database) setup() error {
 		&models.User{},
 		&models.WardrobeCategory{},
 		&models.WardrobeItem{},
-		&models.Selection{},
+		&models.Topic{},
 		&models.Look{},
 		&models.LookItem{},
 		&models.Collection{},
@@ -187,13 +206,13 @@ func (d *Database) seed() {
 	}
 	d.db.Create(look3)
 
-	d.db.Create(&models.Selection{
+	d.db.Create(&models.Topic{
 		Name:  "Летняя подборка",
 		Slug:  "summer",
 		Desc:  "Летняя подборка",
 		Looks: []*models.Look{look1, look3},
 	})
-	d.db.Create(&models.Selection{
+	d.db.Create(&models.Topic{
 		Name:  "Зимняя подборка",
 		Slug:  "winter",
 		Desc:  "Зимняя подборка",
