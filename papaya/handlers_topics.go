@@ -21,12 +21,23 @@ import (
 	"github.com/lightswitch/dutchman-backend/papaya/models"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"strconv"
 )
 
 func (d *Dutchman) HandleGetTopics(c *gin.Context) {
 	var result []models.Topic
 
-	err := d.db.DB().Find(&result).Error
+	params := c.Request.URL.Query()
+
+	var page int64
+	if _, ok := params["page"]; !ok {
+		page = 0
+	} else {
+		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
+	}
+
+	offset := int(page * 20)
+	err := d.db.DB().Order("created_at desc").Limit(20).Offset(offset).Find(&result).Error
 	if err != nil {
 		logrus.Errorf("error getting all selections")
 		c.AbortWithStatus(500)
@@ -37,6 +48,14 @@ func (d *Dutchman) HandleGetTopics(c *gin.Context) {
 
 func (d *Dutchman) HandleGetTopic(c *gin.Context) {
 	slug := c.Param("topic")
+	params := c.Request.URL.Query()
+
+	var page int64
+	if _, ok := params["page"]; !ok {
+		page = 0
+	} else {
+		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
+	}
 
 	var topic models.Topic
 	d.db.DB().First(&topic, "slug = ?", slug)
@@ -46,7 +65,20 @@ func (d *Dutchman) HandleGetTopic(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, topic)
+	offset := int(page * 20)
+	var looks []models.Look
+
+	err := d.db.DB().Model(topic).Order("created_at desc").Limit(20).Offset(offset).Association("Looks").Find(&looks)
+	if err != nil {
+		logrus.Errorf("error getting topic looks: %v", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"topic": topic,
+		"looks": looks,
+	})
 }
 
 func (d *Dutchman) HandleWatchTopic(c *gin.Context) {

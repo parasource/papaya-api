@@ -31,14 +31,17 @@ var (
 func (d *Dutchman) HandleFeed(c *gin.Context) {
 	var looks []models.Look
 
-	page, err := strconv.Atoi(c.Param("page"))
-	if err != nil {
-		logrus.Errorf("error converting page to int: %v", err)
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
+	params := c.Request.URL.Query()
+
+	var page int64
+	if _, ok := params["page"]; !ok {
+		page = 0
+	} else {
+		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
 	}
-	offset := page * FeedPagination
-	err = d.db.DB().Order("created_at desc").Offset(offset).Limit(FeedPagination).Find(&looks).Error
+
+	offset := int(page * 20)
+	err := d.db.DB().Order("created_at desc").Offset(offset).Limit(FeedPagination).Find(&looks).Error
 	if err != nil {
 		logrus.Errorf("error getting looks: %v", err)
 		c.AbortWithStatus(500)
