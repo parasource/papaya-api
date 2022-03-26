@@ -33,6 +33,7 @@ type WardrobeCategory struct {
 
 type WardrobeItem struct {
 	ID                 uint    `gorm:"primaryKey" json:"id"`
+	Image              string  `json:"image"`
 	Name               string  `json:"name"`
 	Slug               string  `json:"slug"`
 	Sex                string  `json:"sex"`

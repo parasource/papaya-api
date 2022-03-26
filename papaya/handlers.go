@@ -56,6 +56,7 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 	r.POST("/api/profile/set-wardrobe", d.AuthMiddleware, d.HandleProfileSetWardrobe)
 	r.POST("/api/profile/set-mood", d.AuthMiddleware, d.HandleProfileSetMood)
 	r.POST("/api/profile/update-settings", d.AuthMiddleware, d.HandleProfileUpdateSettings)
+	r.GET("/api/profile/get-wardrobe", d.AuthMiddleware, d.HandleProfileGetWardrobe)
 }
 
 // Root routes

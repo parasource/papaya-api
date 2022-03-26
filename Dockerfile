@@ -1,5 +1,5 @@
 FROM golang:1.17-alpine as builder
-
+LABEL stage=builder
 WORKDIR /app
 
 COPY go.mod ./

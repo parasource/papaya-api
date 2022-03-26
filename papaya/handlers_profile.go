@@ -100,3 +100,14 @@ func (d *Dutchman) HandleProfileUpdateSettings(c *gin.Context) {
 		"success": true,
 	})
 }
+
+func (d *Dutchman) HandleProfileGetWardrobe(c *gin.Context) {
+	user, err := d.GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	c.JSON(200, user.Wardrobe)
+}
