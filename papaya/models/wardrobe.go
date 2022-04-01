@@ -26,9 +26,10 @@ const (
 
 type WardrobeCategory struct {
 	gorm.Model
-	Name  string         `json:"name"`
-	Slug  string         `json:"slug"`
-	Items []WardrobeItem `json:"items"`
+	Name    string         `json:"name"`
+	Slug    string         `json:"slug"`
+	Items   []WardrobeItem `json:"items"`
+	Preview string         `json:"preview" gorm:"-"`
 }
 
 type WardrobeItem struct {

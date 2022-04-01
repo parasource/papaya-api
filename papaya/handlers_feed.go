@@ -65,7 +65,20 @@ func (d *Dutchman) HandleGetLook(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, look)
+	user, err := d.GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	var isLiked bool
+	d.db.DB().Raw("SELECT COUNT(1) FROM liked_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isLiked)
+
+	c.JSON(200, gin.H{
+		"look":    look,
+		"isLiked": isLiked,
+	})
 }
 
 func (d *Dutchman) HandleLikeLook(c *gin.Context) {

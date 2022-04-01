@@ -62,12 +62,18 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 // Root routes
 
 func (d *Dutchman) HandleGetWardrobeItems(c *gin.Context) {
-	var items []models.WardrobeCategory
+	var items []*models.WardrobeCategory
 	err := d.db.DB().Preload("Items").Find(&items).Error
 	if err != nil {
 		logrus.Errorf("error getting wardrobe items from db: %v", err)
 		c.AbortWithStatus(500)
 		return
+	}
+
+	var preview string
+	for _, item := range items {
+		d.db.DB().Raw("SELECT image FROM wardrobe_items WHERE wardrobe_category_id = ? ORDER BY id LIMIT 1", item.ID).Scan(&preview)
+		item.Preview = preview
 	}
 	c.JSON(200, items)
 }

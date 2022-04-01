@@ -37,11 +37,16 @@ func (d *Dutchman) HandleProfileSetWardrobe(c *gin.Context) {
 		c.AbortWithStatus(403)
 		return
 	}
-	user.Wardrobe = []*models.WardrobeItem{}
+	var items []*models.WardrobeItem
 	for _, itemID := range r.Wardrobe {
-		user.Wardrobe = append(user.Wardrobe, &models.WardrobeItem{ID: itemID})
+		items = append(items, &models.WardrobeItem{ID: itemID})
 	}
-	d.db.DB().Save(&user)
+	err = d.db.DB().Model(&user).Association("Wardrobe").Replace(items)
+	if err != nil {
+		logrus.Errorf("error replacing wardrobe items: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
 
 	c.JSON(200, gin.H{
 		"success": true,
