@@ -22,9 +22,10 @@ import (
 
 type Topic struct {
 	gorm.Model
-	Name  string  `json:"name"`
-	Slug  string  `json:"slug"`
-	Desc  string  `json:"desc"`
-	Image string  `json:"image"`
-	Looks []*Look `json:"looks" gorm:"many2many:topic_looks;"`
+	Name      string  `json:"name"`
+	Slug      string  `json:"slug"`
+	Desc      string  `json:"desc"`
+	Image     string  `json:"image"`
+	Looks     []*Look `json:"looks" gorm:"many2many:topic_looks;"`
+	IsWatched bool    `json:"isWatched" gorm:"-"`
 }

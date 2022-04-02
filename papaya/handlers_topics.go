@@ -75,9 +75,20 @@ func (d *Dutchman) HandleGetTopic(c *gin.Context) {
 		return
 	}
 
+	user, err := d.GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	var isWatched bool
+	d.db.DB().Raw("SELECT COUNT(1) FROM watched_topics WHERE user_id = ? AND topic_id = ?", user.ID, topic.ID).Scan(&isWatched)
+
 	c.JSON(200, gin.H{
-		"topic": topic,
-		"looks": looks,
+		"topic":     topic,
+		"looks":     looks,
+		"isWatched": isWatched,
 	})
 }
 
