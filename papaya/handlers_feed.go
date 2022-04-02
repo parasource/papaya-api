@@ -48,9 +48,25 @@ func (d *Dutchman) HandleFeed(c *gin.Context) {
 		return
 	}
 
+	user, err := d.GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	var topics []models.Topic
+	err = d.db.DB().Model(&user).Association("Topics").Find(&topics)
+	if err != nil {
+		logrus.Errorf("error getting watched topics: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"page":  page,
-		"looks": looks,
+		"page":   page,
+		"looks":  looks,
+		"topics": topics,
 	})
 }
 
