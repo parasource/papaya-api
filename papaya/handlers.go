@@ -42,6 +42,8 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 	// starting from page 0
 	r.GET("/api/feed", d.AuthMiddleware, d.HandleFeed)
 
+	r.GET("/api/test", d.HandleTest)
+
 	// starting from page 0
 	r.GET("/api/topics", d.AuthMiddleware, d.HandleGetTopics)
 	r.GET("/api/topics/:topic", d.AuthMiddleware, d.HandleGetTopic)
@@ -60,6 +62,13 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 	r.POST("/api/profile/set-mood", d.AuthMiddleware, d.HandleProfileSetMood)
 	r.POST("/api/profile/update-settings", d.AuthMiddleware, d.HandleProfileUpdateSettings)
 	r.GET("/api/profile/get-wardrobe", d.AuthMiddleware, d.HandleProfileGetWardrobe)
+}
+
+func (d *Dutchman) HandleTest(c *gin.Context) {
+	err := d.adviser.Like("1", "5")
+	if err != nil {
+		logrus.Errorf("error inserting item: %v", err)
+	}
 }
 
 // Root routes

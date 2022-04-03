@@ -38,6 +38,9 @@ var configDefaults = map[string]interface{}{
 	"db_user":     "papaya-api",
 	"db_password": "6TKE+J({K$>*^fD",
 
+	"adviser_host": "gorse-server",
+	"adviser_port": "8087",
+
 	// seconds to wait til force shutdown
 	"shutdown_timeout": 30,
 }
@@ -50,6 +53,8 @@ func init() {
 	rootCmd.Flags().String("db_database", "papaya", "database name")
 	rootCmd.Flags().String("db_user", "", "db username")
 	rootCmd.Flags().String("db_password", "", "file server http port")
+	rootCmd.Flags().String("adviser_host", "gorse-server", "adviser host")
+	rootCmd.Flags().String("adviser_port", "8087", "adviser port")
 	rootCmd.Flags().Int("shutdown_timeout", 30, "node graceful shutdown timeout")
 
 	viper.BindPFlag("http_host", rootCmd.Flags().Lookup("http_host"))
@@ -59,6 +64,8 @@ func init() {
 	viper.BindPFlag("db_database", rootCmd.Flags().Lookup("db_database"))
 	viper.BindPFlag("db_user", rootCmd.Flags().Lookup("db_user"))
 	viper.BindPFlag("db_password", rootCmd.Flags().Lookup("db_password"))
+	viper.BindPFlag("adviser_host", rootCmd.Flags().Lookup("adviser_host"))
+	viper.BindPFlag("adviser_port", rootCmd.Flags().Lookup("adviser_port"))
 	viper.BindPFlag("shutdown_timeout", rootCmd.Flags().Lookup("shutdown_timeout"))
 }
 
@@ -73,6 +80,7 @@ var rootCmd = &cobra.Command{
 		bindEnvs := []string{
 			"http_host", "http_port",
 			"db_host", "db_port", "db_database", "db_user", "db_password",
+			"adviser_host", "adviser_port",
 			"shutdown_timeout",
 		}
 		for _, env := range bindEnvs {
@@ -101,9 +109,14 @@ var rootCmd = &cobra.Command{
 		dbUser := v.GetString("db_user")
 		dbPass := v.GetString("db_password")
 
+		adviserHost := v.GetString("adviser_host")
+		adviserPort := v.GetString("adviser_port")
+
 		dutchman, err := papaya.NewDutchman(papaya.Config{
-			HttpHost: httpHost,
-			HttpPort: httpPort,
+			HttpHost:    httpHost,
+			HttpPort:    httpPort,
+			AdviserHost: adviserHost,
+			AdviserPort: adviserPort,
 		}, database.Config{
 			Host:     dbHost,
 			Port:     dbPort,
@@ -112,7 +125,7 @@ var rootCmd = &cobra.Command{
 			Password: dbPass,
 		})
 		if err != nil {
-			panic(err)
+			logrus.Fatal(err)
 		}
 		err = dutchman.Start()
 		if err != nil {

@@ -19,6 +19,7 @@ package papaya
 import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gin-gonic/gin"
+	"github.com/lightswitch/dutchman-backend/papaya/adviser"
 	"github.com/lightswitch/dutchman-backend/papaya/database"
 	"github.com/sirupsen/logrus"
 	"net"
@@ -31,14 +32,17 @@ func init() {
 type Config struct {
 	HttpHost        string `json:"http_host"`
 	HttpPort        string `json:"http_port"`
+	AdviserHost     string `json:"adviser_host"`
+	AdviserPort     string `json:"adviser_port"`
 	ShutdownTimeout int    `json:"shutdown_timeout"`
 }
 
 type Dutchman struct {
 	cfg Config
 
-	r  *gin.Engine
-	db *database.Database
+	r       *gin.Engine
+	db      *database.Database
+	adviser *adviser.Adviser
 }
 
 func NewDutchman(cfg Config, dbCfg database.Config) (*Dutchman, error) {
@@ -57,6 +61,10 @@ func NewDutchman(cfg Config, dbCfg database.Config) (*Dutchman, error) {
 		logrus.Fatalf("error creating database: %v", err)
 	}
 	d.db = db
+
+	adviserUrl := net.JoinHostPort(cfg.AdviserHost, cfg.AdviserPort)
+	a := adviser.NewAdviser(adviserUrl, 3)
+	d.adviser = a
 
 	return d, nil
 }

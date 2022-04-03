@@ -88,6 +88,11 @@ func (d *Dutchman) HandleGetLook(c *gin.Context) {
 		return
 	}
 
+	err = d.adviser.Read(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("error submitting 'read' feedback to adviser: %v", err)
+	}
+
 	var isLiked bool
 	d.db.DB().Raw("SELECT COUNT(1) FROM liked_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isLiked)
 
@@ -125,6 +130,11 @@ func (d *Dutchman) HandleLikeLook(c *gin.Context) {
 	if err != nil {
 		logrus.Errorf("error adding look to favorites: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+
+	err = d.adviser.Like(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("error submitting 'like' feedback to adviser: %v", err)
 	}
 
 	c.JSON(200, gin.H{
