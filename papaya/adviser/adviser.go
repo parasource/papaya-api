@@ -63,12 +63,12 @@ func (a *Adviser) Read(userId, itemId string) error {
 		Timestamp:    time.Now(),
 		FeedbackType: "read",
 	}
-	rBytes, _ := r.Marshal()
+	rBytes, _ := json.Marshal([]FeedbackRequest{r})
 
 	url := fmt.Sprintf("http://%v/api/feedback", a.baseUrl)
 	res, err := a.c.Post(url, "application/json", bytes.NewReader(rBytes))
 	if res.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("wrong status code - %v", res.StatusCode))
+		return fmt.Errorf("wrong status code - %v", res.StatusCode)
 	}
 
 	return err
@@ -88,7 +88,7 @@ func (a *Adviser) Like(userId, itemID string) error {
 	url := fmt.Sprintf("http://%v/api/feedback", a.baseUrl)
 	res, err := a.c.Post(url, "application/json", bytes.NewReader(rBytes))
 	if res.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("wrong status code - %v", res.StatusCode))
+		return fmt.Errorf("wrong status code - %v", res.StatusCode)
 	}
 
 	return err

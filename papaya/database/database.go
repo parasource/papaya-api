@@ -115,6 +115,7 @@ func (d *Database) setup() error {
 		&models.WardrobeItem{},
 		&models.Topic{},
 		&models.Look{},
+		&models.Category{},
 		&models.LookItem{},
 		&models.Collection{},
 	)
