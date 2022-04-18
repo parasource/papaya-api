@@ -20,22 +20,13 @@ import "gorm.io/gorm"
 
 type Look struct {
 	gorm.Model
-	Name       string      `json:"name"`
-	Slug       string      `json:"slug" gorm:"unique"`
-	Image      string      `json:"image"`
-	Desc       string      `json:"desc"`
-	Items      []LookItem  `json:"items"`
-	Categories []*Category `json:"categories" gorm:"many2many:look_categories;"`
+	Name       string          `json:"name"`
+	Slug       string          `json:"slug" gorm:"unique"`
+	Image      string          `json:"image"`
+	Desc       string          `json:"desc"`
+	Items      []*WardrobeItem `json:"items" gorm:"many2many:look_items;"`
+	Categories []*Category     `json:"categories" gorm:"many2many:look_categories;"`
 	//Tags 	   []string   `json:"tags"`
 	Topics     []*Topic `json:"topics" gorm:"many2many:topic_looks;"`
 	UsersLiked []*User  `json:"-" gorm:"many2many:liked_looks;"`
-}
-
-type LookItem struct {
-	gorm.Model
-	Name     string `json:"name"`
-	Price    int32  `json:"price"`
-	URL      string `json:"url"`
-	Position string `json:"position"`
-	LookID   uint
 }

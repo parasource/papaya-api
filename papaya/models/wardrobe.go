@@ -33,11 +33,19 @@ type WardrobeCategory struct {
 }
 
 type WardrobeItem struct {
-	ID                 uint    `gorm:"primaryKey" json:"id"`
-	Image              string  `json:"image"`
-	Name               string  `json:"name"`
-	Slug               string  `json:"slug"`
-	Sex                string  `json:"sex"`
-	WardrobeCategoryID uint    `json:"category_id"`
-	Users              []*User `json:"users" gorm:"many2many:users_wardrobe;"`
+	ID                 uint      `gorm:"primaryKey" json:"id"`
+	Image              string    `json:"image"`
+	Name               string    `json:"name"`
+	Slug               string    `json:"slug"`
+	Sex                string    `json:"sex"`
+	WardrobeCategoryID uint      `json:"category_id"`
+	Users              []*User   `json:"users" gorm:"many2many:users_wardrobe;"`
+	Urls               []ItemURL `json:"urls" gorm:"foreignKey:item_id"`
+}
+
+type ItemURL struct {
+	gorm.Model
+	Name   string `json:"name"`
+	Url    string `json:"url"`
+	ItemID int    `json:"item_id"`
 }

@@ -74,6 +74,24 @@ func (a *Adviser) Read(userId, itemId string) error {
 	return err
 }
 
+func (a *Adviser) RecommendForUser(userID string) ([]string, error) {
+	var ids []string
+
+	url := fmt.Sprintf("http://%v/api/recommend/%v", a.baseUrl, userID)
+	res, err := a.c.Get(url)
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("wrong status code - %v", res.StatusCode)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.NewDecoder(res.Body).Decode(&ids)
+
+	return ids, err
+
+}
+
 func (a *Adviser) Like(userId, itemID string) error {
 	var err error
 

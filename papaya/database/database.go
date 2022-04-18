@@ -115,8 +115,8 @@ func (d *Database) setup() error {
 		&models.WardrobeItem{},
 		&models.Topic{},
 		&models.Look{},
+		&models.ItemURL{},
 		&models.Category{},
-		&models.LookItem{},
 		&models.Collection{},
 	)
 	if err != nil {

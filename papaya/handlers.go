@@ -65,10 +65,12 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 }
 
 func (d *Dutchman) HandleTest(c *gin.Context) {
-	err := d.adviser.Like("1", "5")
+	ids, err := d.adviser.RecommendForUser("1")
 	if err != nil {
 		logrus.Errorf("error inserting item: %v", err)
 	}
+
+	logrus.Info(ids)
 }
 
 // Root routes
