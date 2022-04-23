@@ -16,7 +16,15 @@
 
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
+
+const (
+	SEX_MALE   = "male"
+	SEX_FEMALE = "female"
+	SEX_UNISEX = "unisex"
+)
 
 type Look struct {
 	gorm.Model
@@ -26,7 +34,7 @@ type Look struct {
 	Desc       string          `json:"desc"`
 	Items      []*WardrobeItem `json:"items" gorm:"many2many:look_items;"`
 	Categories []*Category     `json:"categories" gorm:"many2many:look_categories;"`
-	//Tags 	   []string   `json:"tags"`
-	Topics     []*Topic `json:"topics" gorm:"many2many:topic_looks;"`
-	UsersLiked []*User  `json:"-" gorm:"many2many:liked_looks;"`
+	Sex        string          `json:"sex"`
+	Topics     []*Topic        `json:"topics" gorm:"many2many:topic_looks;"`
+	UsersLiked []*User         `json:"-" gorm:"many2many:liked_looks;"`
 }

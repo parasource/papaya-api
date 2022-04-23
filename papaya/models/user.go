@@ -27,7 +27,10 @@ type User struct {
 	Email    string `json:"email" gorm:"unique"`
 	Password string `json:"-"`
 
-	Sex      string          `json:"sex"`
+	Sex    string `json:"sex"`
+	Age    int    `json:"age"`
+	Avatar string `json:"avatar"`
+
 	Wardrobe []*WardrobeItem `json:"wardrobe" gorm:"many2many:users_wardrobe;"`
 	Mood     string          `json:"mood"`
 

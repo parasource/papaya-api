@@ -45,7 +45,8 @@ type WardrobeItem struct {
 
 type ItemURL struct {
 	gorm.Model
-	Name   string `json:"name"`
-	Url    string `json:"url"`
-	ItemID int    `json:"item_id"`
+	BrandID int    `json:"-"`
+	Brand   Brand  `json:"brand"`
+	Url     string `json:"url"`
+	ItemID  int    `json:"item_id"`
 }

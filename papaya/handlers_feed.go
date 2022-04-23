@@ -41,7 +41,7 @@ func (d *Dutchman) HandleFeed(c *gin.Context) {
 	}
 
 	offset := int(page * 20)
-	err := d.db.DB().Order("created_at desc").Offset(offset).Preload("Items.Urls").Limit(FeedPagination).Find(&looks).Error
+	err := d.db.DB().Order("created_at desc").Offset(offset).Preload("Items.Urls.Brand").Limit(FeedPagination).Find(&looks).Error
 	if err != nil {
 		logrus.Errorf("error getting looks: %v", err)
 		c.AbortWithStatus(500)
@@ -74,7 +74,7 @@ func (d *Dutchman) HandleGetLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
-	d.db.DB().Preload("Items.Urls").First(&look, "slug = ?", slug)
+	d.db.DB().Preload("Items.Urls.Brand").First(&look, "slug = ?", slug)
 
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)

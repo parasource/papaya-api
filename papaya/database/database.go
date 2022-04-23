@@ -125,7 +125,7 @@ func (d *Database) setup() error {
 
 	var count int64
 	if err := d.db.Model(&models.WardrobeItem{}).Count(&count).Error; err == nil && count == 0 {
-		d.seed()
+		//d.seed()
 	}
 
 	return err
