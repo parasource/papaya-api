@@ -63,11 +63,26 @@ func (d *Dutchman) HandleFeed(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{
-		"page":   page,
-		"looks":  looks,
-		"topics": topics,
-	})
+	var todayLookId int
+	d.db.DB().Raw("SELECT look_id FROM today_looks WHERE user_id = ? LIMIT 1", user.ID).Scan(&todayLookId)
+
+	var todayLook models.Look
+	d.db.DB().Preload("Items").First(&todayLook, "id = ?", todayLookId)
+
+	err = d.db.DB().Model(&user).Association("TodayLook").Find(&todayLook)
+	if err != nil {
+		logrus.Errorf("error getting today's look: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	result := gin.H{
+		"todayLook": todayLook,
+		"page":      page,
+		"looks":     looks,
+		"topics":    topics,
+	}
+	c.JSON(200, result)
 }
 
 func (d *Dutchman) HandleGetLook(c *gin.Context) {
@@ -103,6 +118,34 @@ func (d *Dutchman) HandleGetLook(c *gin.Context) {
 		"look":       look,
 		"isLiked":    isLiked,
 		"isDisliked": isDisliked,
+	})
+}
+
+func (d *Dutchman) HandleGetLookItem(c *gin.Context) {
+	slugLook := c.Param("look")
+	var look models.Look
+	d.db.DB().First(&look, "slug = ?", slugLook)
+
+	if look.ID == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	itemId := c.Param("item")
+	var item models.WardrobeItem
+	d.db.DB().Preload("Urls.Brand").First(&item, "id = ?", itemId)
+
+	if look.ID == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	var looks []models.Look
+	d.db.DB().Raw("SELECT looks.* FROM looks JOIN look_items li on looks.id = li.look_id WHERE li.look_id = ? AND looks.id != ? LIMIT 10", item.ID, look.ID).Scan(&looks)
+
+	c.JSON(200, gin.H{
+		"item":  item,
+		"looks": looks,
 	})
 }
 

@@ -43,6 +43,7 @@ type Dutchman struct {
 	r       *gin.Engine
 	db      *database.Database
 	adviser *adviser.Adviser
+	jobs    *JobsManager
 }
 
 func NewDutchman(cfg Config, dbCfg database.Config) (*Dutchman, error) {
@@ -65,6 +66,21 @@ func NewDutchman(cfg Config, dbCfg database.Config) (*Dutchman, error) {
 	adviserUrl := net.JoinHostPort(cfg.AdviserHost, cfg.AdviserPort)
 	a := adviser.NewAdviser(adviserUrl, 3)
 	d.adviser = a
+
+	jobs := []*Job{
+		//{
+		//	Name: "TestJob",
+		//	F: func() {
+		//		println("HIIIII")
+		//	},
+		//	Interval: IntervalEveryMinute,
+		//},
+	}
+	jm, err := NewJobsManager(jobs)
+	if err != nil {
+		logrus.Fatalf("error running jobs manager: %v", err)
+	}
+	d.jobs = jm
 
 	return d, nil
 }

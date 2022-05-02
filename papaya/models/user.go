@@ -38,6 +38,7 @@ type User struct {
 	Topics        []*Topic     `json:"topics" gorm:"many2many:watched_topics;"`
 	LikedLooks    []*Look      `json:"-" gorm:"many2many:liked_looks;"`
 	DislikedLooks []*Look      `json:"-" gorm:"many2many:disliked_looks;"`
+	TodayLook     []*Look      `json:"today_look" gorm:"many2many:today_looks;"`
 
 	EmailNotifications bool `json:"email_notifications"`
 	PushNotifications  bool `json:"push_notifications"`

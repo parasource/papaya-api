@@ -32,6 +32,7 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 	r.GET("/api/auth/user", d.AuthMiddleware, d.HandleUser)
 
 	r.GET("/api/looks/:look", d.AuthMiddleware, d.HandleGetLook)
+	r.GET("/api/looks/:look/item/:item", d.AuthMiddleware, d.HandleGetLookItem)
 	r.PUT("/api/looks/:look/like", d.AuthMiddleware, d.HandleLikeLook)
 	r.DELETE("/api/looks/:look/like", d.AuthMiddleware, d.HandleUnlikeLook)
 	r.PUT("/api/looks/:look/dislike", d.AuthMiddleware, d.HandleDislikeLook)
