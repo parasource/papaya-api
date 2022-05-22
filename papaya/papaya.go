@@ -21,6 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lightswitch/dutchman-backend/papaya/adviser"
 	"github.com/lightswitch/dutchman-backend/papaya/database"
+	"github.com/lightswitch/dutchman-backend/papaya/models"
 	"github.com/sirupsen/logrus"
 	"net"
 )
@@ -37,7 +38,7 @@ type Config struct {
 	ShutdownTimeout int    `json:"shutdown_timeout"`
 }
 
-type Dutchman struct {
+type Papaya struct {
 	cfg Config
 
 	r       *gin.Engine
@@ -46,8 +47,8 @@ type Dutchman struct {
 	jobs    *JobsManager
 }
 
-func NewDutchman(cfg Config, dbCfg database.Config) (*Dutchman, error) {
-	d := &Dutchman{
+func NewPapaya(cfg Config, dbCfg database.Config) (*Papaya, error) {
+	d := &Papaya{
 		cfg: cfg,
 	}
 
@@ -68,13 +69,28 @@ func NewDutchman(cfg Config, dbCfg database.Config) (*Dutchman, error) {
 	d.adviser = a
 
 	jobs := []*Job{
-		//{
-		//	Name: "TestJob",
-		//	F: func() {
-		//		println("HIIIII")
-		//	},
-		//	Interval: IntervalEveryMinute,
-		//},
+		{
+			Name: "Renew today's look",
+			F: func() {
+				var users []models.User
+				d.db.DB().Find(&users)
+
+				for _, user := range users {
+					var look models.Look
+
+					err := d.db.DB().Limit(1).Order("random()").Find(&look).Error
+					if err != nil {
+						logrus.Errorf("error running job: %v", err)
+					}
+
+					err = d.db.DB().Model(&user).Association("TodayLook").Replace(&look)
+					if err != nil {
+						logrus.Errorf("error running job: %v", err)
+					}
+				}
+			},
+			Interval: IntervalDaily,
+		},
 	}
 	jm, err := NewJobsManager(jobs)
 	if err != nil {
@@ -85,7 +101,7 @@ func NewDutchman(cfg Config, dbCfg database.Config) (*Dutchman, error) {
 	return d, nil
 }
 
-func (d *Dutchman) Start() error {
+func (d *Papaya) Start() error {
 	err := d.r.Run(net.JoinHostPort(d.cfg.HttpHost, d.cfg.HttpPort))
 	if err != nil {
 		logrus.Fatalf("error running gin: %v", err)

@@ -28,7 +28,7 @@ var (
 	FeedPagination = 10
 )
 
-func (d *Dutchman) HandleFeed(c *gin.Context) {
+func (d *Papaya) HandleFeed(c *gin.Context) {
 	var looks []models.Look
 
 	params := c.Request.URL.Query()
@@ -85,7 +85,7 @@ func (d *Dutchman) HandleFeed(c *gin.Context) {
 	c.JSON(200, result)
 }
 
-func (d *Dutchman) HandleGetLook(c *gin.Context) {
+func (d *Papaya) HandleGetLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
@@ -121,7 +121,7 @@ func (d *Dutchman) HandleGetLook(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleGetLookItem(c *gin.Context) {
+func (d *Papaya) HandleGetLookItem(c *gin.Context) {
 	slugLook := c.Param("look")
 	var look models.Look
 	d.db.DB().First(&look, "slug = ?", slugLook)
@@ -149,7 +149,7 @@ func (d *Dutchman) HandleGetLookItem(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleLikeLook(c *gin.Context) {
+func (d *Papaya) HandleLikeLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
@@ -185,7 +185,7 @@ func (d *Dutchman) HandleLikeLook(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleUnlikeLook(c *gin.Context) {
+func (d *Papaya) HandleUnlikeLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
@@ -212,7 +212,7 @@ func (d *Dutchman) HandleUnlikeLook(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleDislikeLook(c *gin.Context) {
+func (d *Papaya) HandleDislikeLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
@@ -243,7 +243,7 @@ func (d *Dutchman) HandleDislikeLook(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleUndislikeLook(c *gin.Context) {
+func (d *Papaya) HandleUndislikeLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
@@ -274,7 +274,7 @@ func (d *Dutchman) HandleUndislikeLook(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) GetLikedLooks(c *gin.Context) {
+func (d *Papaya) GetLikedLooks(c *gin.Context) {
 	// user
 
 	user, err := d.GetUser(c)

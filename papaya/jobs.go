@@ -50,6 +50,7 @@ func NewJobsManager(jobs []*Job) (*JobsManager, error) {
 
 	j := &JobsManager{
 		sched: s,
+		jobs:  make(map[string]*Job),
 	}
 
 	for _, job := range jobs {
@@ -60,8 +61,15 @@ func NewJobsManager(jobs []*Job) (*JobsManager, error) {
 	}
 
 	j.sched.StartAsync()
+	j.PreflightRunAllJobs()
 
 	return j, nil
+}
+
+func (j *JobsManager) PreflightRunAllJobs() {
+	for _, job := range j.jobs {
+		job.F()
+	}
 }
 
 func (j *JobsManager) AddJob(job *Job) error {
@@ -88,6 +96,8 @@ func (j *JobsManager) AddJob(job *Job) error {
 	if err != nil {
 		return err
 	}
+
+	j.jobs[job.Name] = job
 
 	return nil
 }

@@ -25,7 +25,7 @@ import (
 	"strconv"
 )
 
-func (d *Dutchman) HandleCreateCollection(c *gin.Context) {
+func (d *Papaya) HandleCreateCollection(c *gin.Context) {
 	var r requests.CreateCollectionRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -56,7 +56,7 @@ func (d *Dutchman) HandleCreateCollection(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleGetCollection(c *gin.Context) {
+func (d *Papaya) HandleGetCollection(c *gin.Context) {
 	collID, _ := strconv.Atoi(c.Param("collection"))
 
 	user, err := d.GetUser(c)
@@ -80,7 +80,7 @@ func (d *Dutchman) HandleGetCollection(c *gin.Context) {
 	c.JSON(200, coll)
 }
 
-func (d *Dutchman) HandleDeleteCollection(c *gin.Context) {
+func (d *Papaya) HandleDeleteCollection(c *gin.Context) {
 	collID, _ := strconv.Atoi(c.Param("collection"))
 
 	user, err := d.GetUser(c)
@@ -115,7 +115,7 @@ func (d *Dutchman) HandleDeleteCollection(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleCollectionAddLook(c *gin.Context) {
+func (d *Papaya) HandleCollectionAddLook(c *gin.Context) {
 	collID, _ := strconv.Atoi(c.Param("collection"))
 	lookSlug := c.Param("look")
 
@@ -157,7 +157,7 @@ func (d *Dutchman) HandleCollectionAddLook(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleCollectionRemoveLook(c *gin.Context) {
+func (d *Papaya) HandleCollectionRemoveLook(c *gin.Context) {
 	collID, _ := strconv.Atoi(c.Param("collection"))
 	lookSlug := c.Param("look")
 

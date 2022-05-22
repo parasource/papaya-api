@@ -22,7 +22,7 @@ import (
 	"github.com/lightswitch/dutchman-backend/papaya/util"
 )
 
-func (d *Dutchman) GetUser(c *gin.Context) (*models.User, error) {
+func (d *Papaya) GetUser(c *gin.Context) (*models.User, error) {
 	token, err := util.ExtractToken(c.GetHeader("Authorization"))
 	if err != nil {
 		return nil, err

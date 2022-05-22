@@ -24,7 +24,7 @@ import (
 	"strconv"
 )
 
-func (d *Dutchman) HandleGetTopics(c *gin.Context) {
+func (d *Papaya) HandleGetTopics(c *gin.Context) {
 	var result []models.Topic
 
 	params := c.Request.URL.Query()
@@ -46,7 +46,7 @@ func (d *Dutchman) HandleGetTopics(c *gin.Context) {
 	c.JSON(200, result)
 }
 
-func (d *Dutchman) HandleGetTopic(c *gin.Context) {
+func (d *Papaya) HandleGetTopic(c *gin.Context) {
 	slug := c.Param("topic")
 	params := c.Request.URL.Query()
 
@@ -92,7 +92,7 @@ func (d *Dutchman) HandleGetTopic(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleWatchTopic(c *gin.Context) {
+func (d *Papaya) HandleWatchTopic(c *gin.Context) {
 	slug := c.Param("topic")
 
 	var topic models.Topic
@@ -123,7 +123,7 @@ func (d *Dutchman) HandleWatchTopic(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleUnwatchTopic(c *gin.Context) {
+func (d *Papaya) HandleUnwatchTopic(c *gin.Context) {
 	slug := c.Param("topic")
 
 	var topic models.Topic

@@ -112,7 +112,7 @@ var rootCmd = &cobra.Command{
 		adviserHost := v.GetString("adviser_host")
 		adviserPort := v.GetString("adviser_port")
 
-		dutchman, err := papaya.NewDutchman(papaya.Config{
+		papaya, err := papaya.NewPapaya(papaya.Config{
 			HttpHost:    httpHost,
 			HttpPort:    httpPort,
 			AdviserHost: adviserHost,
@@ -127,7 +127,7 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			logrus.Fatal(err)
 		}
-		err = dutchman.Start()
+		err = papaya.Start()
 		if err != nil {
 			logrus.Fatalf("error starting papaya: %v", err)
 		}
@@ -136,7 +136,7 @@ var rootCmd = &cobra.Command{
 }
 
 func printWelcome() {
-	text := "    ____  __  ________________  ____  ______    _   __\n   / __ \\/ / / /_  __/ ____/ / / /  |/  /   |  / | / /\n  / / / / / / / / / / /   / /_/ / /|_/ / /| | /  |/ / \n / /_/ / /_/ / / / / /___/ __  / /  / / ___ |/ /|  /  \n/_____/\\____/ /_/  \\____/_/ /_/_/  /_/_/  |_/_/ |_/   \n                                                      "
+	text := "    ____                               \n   / __ \\____ _____  ____ ___  ______ _\n  / /_/ / __ `/ __ \\/ __ `/ / / / __ `/\n / ____/ /_/ / /_/ / /_/ / /_/ / /_/ / \n/_/    \\__,_/ .___/\\__,_/\\__, /\\__,_/  \n           /_/          /____/         "
 
 	println(text)
 }

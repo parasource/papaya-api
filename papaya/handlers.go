@@ -25,7 +25,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (d *Dutchman) registerRoutes(r *gin.Engine) {
+func (d *Papaya) registerRoutes(r *gin.Engine) {
 	r.POST("/api/auth/register", d.HandleRegister)
 	r.POST("/api/auth/login", d.HandleLogin)
 	r.POST("/api/auth/refresh", d.AuthMiddleware, d.HandleRefresh)
@@ -65,7 +65,7 @@ func (d *Dutchman) registerRoutes(r *gin.Engine) {
 	r.GET("/api/profile/get-wardrobe", d.AuthMiddleware, d.HandleProfileGetWardrobe)
 }
 
-func (d *Dutchman) HandleTest(c *gin.Context) {
+func (d *Papaya) HandleTest(c *gin.Context) {
 	ids, err := d.adviser.RecommendForUser("1")
 	if err != nil {
 		logrus.Errorf("error inserting item: %v", err)
@@ -76,7 +76,7 @@ func (d *Dutchman) HandleTest(c *gin.Context) {
 
 // Root routes
 
-func (d *Dutchman) HandleGetWardrobeItems(c *gin.Context) {
+func (d *Papaya) HandleGetWardrobeItems(c *gin.Context) {
 	var items []*models.WardrobeCategory
 	err := d.db.DB().Preload("Items").Find(&items).Error
 	if err != nil {

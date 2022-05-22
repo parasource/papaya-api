@@ -25,7 +25,7 @@ import (
 	"net/http"
 )
 
-func (d *Dutchman) HandleRegister(c *gin.Context) {
+func (d *Papaya) HandleRegister(c *gin.Context) {
 	var r requests.RegisterRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -66,7 +66,7 @@ func (d *Dutchman) HandleRegister(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleLogin(c *gin.Context) {
+func (d *Papaya) HandleLogin(c *gin.Context) {
 	var r requests.LoginRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -112,7 +112,7 @@ func (d *Dutchman) HandleLogin(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleRefresh(c *gin.Context) {
+func (d *Papaya) HandleRefresh(c *gin.Context) {
 	refreshToken := c.PostForm("refresh_token")
 
 	if refreshToken == "" {
@@ -152,7 +152,7 @@ func (d *Dutchman) HandleRefresh(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleUser(c *gin.Context) {
+func (d *Papaya) HandleUser(c *gin.Context) {
 	token, err := util.ExtractToken(c.GetHeader("Authorization"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)

@@ -23,7 +23,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (d *Dutchman) HandleProfileSetWardrobe(c *gin.Context) {
+func (d *Papaya) HandleProfileSetWardrobe(c *gin.Context) {
 	var r requests.SetWardrobeRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -53,7 +53,7 @@ func (d *Dutchman) HandleProfileSetWardrobe(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleProfileSetMood(c *gin.Context) {
+func (d *Papaya) HandleProfileSetMood(c *gin.Context) {
 	var r requests.SetMoodRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -76,7 +76,7 @@ func (d *Dutchman) HandleProfileSetMood(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleProfileUpdateSettings(c *gin.Context) {
+func (d *Papaya) HandleProfileUpdateSettings(c *gin.Context) {
 	var r requests.UpdateSettingsRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -106,7 +106,7 @@ func (d *Dutchman) HandleProfileUpdateSettings(c *gin.Context) {
 	})
 }
 
-func (d *Dutchman) HandleProfileGetWardrobe(c *gin.Context) {
+func (d *Papaya) HandleProfileGetWardrobe(c *gin.Context) {
 	user, err := d.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)

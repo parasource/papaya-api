@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-func (d *Dutchman) AuthMiddleware(c *gin.Context) {
+func (d *Papaya) AuthMiddleware(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
 		c.AbortWithStatus(http.StatusUnauthorized)
