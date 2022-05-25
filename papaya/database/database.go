@@ -113,7 +113,7 @@ func (d *Database) setup() error {
 		&models.User{},
 		&models.WardrobeCategory{},
 		&models.WardrobeItem{},
-		&models.Style{},
+		&models.Tag{},
 		&models.Look{},
 		&models.ItemURL{},
 		&models.Category{},

@@ -55,7 +55,7 @@ func (d *Papaya) HandleFeed(c *gin.Context) {
 		return
 	}
 
-	var styles []models.Style
+	var styles []models.Tag
 	err = d.db.DB().Preload("Looks.Items").Find(&styles).Error
 	if err != nil {
 		logrus.Errorf("error getting styles: %v", err)
@@ -85,8 +85,8 @@ func (d *Papaya) HandleFeed(c *gin.Context) {
 	c.JSON(200, result)
 }
 
-func (d *Papaya) HandleFeedByStyle(c *gin.Context) {
-	slug := c.Param("style")
+func (d *Papaya) HandleFeedByTag(c *gin.Context) {
+	slug := c.Param("tag")
 
 	params := c.Request.URL.Query()
 
@@ -99,17 +99,17 @@ func (d *Papaya) HandleFeedByStyle(c *gin.Context) {
 
 	offset := int(page * 20)
 
-	var style models.Style
-	d.db.DB().Preload("Looks.Items").First(&style, "slug = ?", slug)
+	var tag models.Tag
+	d.db.DB().First(&tag, "slug = ?", slug)
 
-	if style.ID == 0 {
+	if tag.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
 	var looks []*models.Look
 	err := d.db.DB().
-		Raw("SELECT * FROM looks JOIN look_styles ls on looks.id = ls.look_id WHERE ls.style_id = ?", style.ID).
+		Raw("SELECT * FROM looks JOIN look_tags lt on looks.id = lt.look_id WHERE lt.tag_id = ?", tag.ID).
 		Order("created_at desc").
 		Offset(offset).Preload("Items.Urls.Brand").
 		Limit(FeedPagination).Find(&looks).Error
@@ -119,7 +119,7 @@ func (d *Papaya) HandleFeedByStyle(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"looks": looks,
-		"style": style,
+		"tag":   tag,
 	})
 }
 

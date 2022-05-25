@@ -18,9 +18,9 @@ package models
 
 import "gorm.io/gorm"
 
-type Style struct {
+type Tag struct {
 	gorm.Model
 	Name  string  `json:"name"`
 	Slug  string  `json:"slug"`
-	Looks []*Look `json:"looks" gorm:"many2many:look_styles;"`
+	Looks []*Look `json:"looks" gorm:"many2many:look_tags;"`
 }

@@ -42,7 +42,7 @@ func (d *Papaya) registerRoutes(r *gin.Engine) {
 
 	// starting from page 0
 	r.GET("/api/feed", d.AuthMiddleware, d.HandleFeed)
-	r.GET("/api/feed/:style", d.AuthMiddleware, d.HandleFeedByStyle)
+	r.GET("/api/feed/:tag", d.AuthMiddleware, d.HandleFeedByTag)
 
 	r.GET("/api/test", d.HandleTest)
 

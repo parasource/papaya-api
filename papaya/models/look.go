@@ -35,7 +35,7 @@ type Look struct {
 	Items      []*WardrobeItem `json:"items" gorm:"many2many:look_items;"`
 	Categories []*Category     `json:"categories" gorm:"many2many:look_categories;"`
 	Sex        string          `json:"sex"`
-	Styles     []*Style        `json:"styles" gorm:"many2many:look_styles;"`
+	Tags       []*Tag          `json:"tags" gorm:"many2many:look_tags;"`
 	Topics     []*Topic        `json:"topics" gorm:"many2many:topic_looks;"`
 	UsersLiked []*User         `json:"-" gorm:"many2many:liked_looks;"`
 }
