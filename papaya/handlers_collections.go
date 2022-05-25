@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,25 @@ import (
 	"net/http"
 	"strconv"
 )
+
+func (d *Papaya) HandleGetCollections(c *gin.Context) {
+	user, err := d.GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	var collections []*models.Collection
+	err = d.db.DB().Model(&user).Association("Collections").Find(&collections)
+	if err != nil {
+		logrus.Errorf("error getting user's collections: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	c.JSON(200, collections)
+}
 
 func (d *Papaya) HandleCreateCollection(c *gin.Context) {
 	var r requests.CreateCollectionRequest

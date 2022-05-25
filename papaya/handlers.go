@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,15 +42,19 @@ func (d *Papaya) registerRoutes(r *gin.Engine) {
 
 	// starting from page 0
 	r.GET("/api/feed", d.AuthMiddleware, d.HandleFeed)
+	r.GET("/api/feed/:style", d.AuthMiddleware, d.HandleFeedByStyle)
 
 	r.GET("/api/test", d.HandleTest)
 
 	// starting from page 0
-	r.GET("/api/topics", d.AuthMiddleware, d.HandleGetTopics)
+	r.GET("/api/topics/recommended", d.AuthMiddleware, d.HandleGetRecommendedTopics)
+	r.GET("/api/topics/popular", d.AuthMiddleware, d.HandleGetPopularTopics)
+	r.GET("/api/topics/saved", d.AuthMiddleware, d.HandleGetSavedTopics)
 	r.GET("/api/topics/:topic", d.AuthMiddleware, d.HandleGetTopic)
-	r.PUT("/api/topics/:topic/watch", d.AuthMiddleware, d.HandleWatchTopic)
-	r.DELETE("/api/topics/:topic/unwatch", d.AuthMiddleware, d.HandleUnwatchTopic)
+	r.PUT("/api/topics/:topic/save", d.AuthMiddleware, d.HandleSaveTopic)
+	r.DELETE("/api/topics/:topic/unsave", d.AuthMiddleware, d.HandleUnsaveTopic)
 
+	r.POST("/api/collections", d.AuthMiddleware, d.HandleGetCollections)
 	r.POST("/api/collections/create", d.AuthMiddleware, d.HandleCreateCollection)
 	r.GET("/api/collections/:collection", d.AuthMiddleware, d.HandleGetCollection)
 	r.DELETE("/api/collections/:collection/delete", d.AuthMiddleware, d.HandleDeleteCollection)

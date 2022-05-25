@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"strconv"
 )
 
-func (d *Papaya) HandleGetTopics(c *gin.Context) {
+func (d *Papaya) HandleGetRecommendedTopics(c *gin.Context) {
 	var result []models.Topic
 
 	params := c.Request.URL.Query()
@@ -44,6 +44,47 @@ func (d *Papaya) HandleGetTopics(c *gin.Context) {
 	}
 
 	c.JSON(200, result)
+}
+
+func (d *Papaya) HandleGetPopularTopics(c *gin.Context) {
+	var result []models.Topic
+
+	params := c.Request.URL.Query()
+
+	var page int64
+	if _, ok := params["page"]; !ok {
+		page = 0
+	} else {
+		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
+	}
+
+	offset := int(page * 20)
+	err := d.db.DB().Order("created_at desc").Limit(20).Offset(offset).Find(&result).Error
+	if err != nil {
+		logrus.Errorf("error getting all selections")
+		c.AbortWithStatus(500)
+	}
+
+	c.JSON(200, result)
+}
+
+func (d *Papaya) HandleGetSavedTopics(c *gin.Context) {
+	user, err := d.GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	var topics []*models.Topic
+	err = d.db.DB().Model(&user).Association("SavedTopics").Find(&topics)
+	if err != nil {
+		logrus.Errorf("error getting saved topics: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	c.JSON(200, topics)
 }
 
 func (d *Papaya) HandleGetTopic(c *gin.Context) {
@@ -82,17 +123,17 @@ func (d *Papaya) HandleGetTopic(c *gin.Context) {
 		return
 	}
 
-	var isWatched bool
-	d.db.DB().Raw("SELECT COUNT(1) FROM watched_topics WHERE user_id = ? AND topic_id = ?", user.ID, topic.ID).Scan(&isWatched)
+	var isSaved bool
+	d.db.DB().Raw("SELECT COUNT(1) FROM saved_topics WHERE user_id = ? AND topic_id = ?", user.ID, topic.ID).Scan(&isSaved)
 
 	c.JSON(200, gin.H{
-		"topic":     topic,
-		"looks":     looks,
-		"isWatched": isWatched,
+		"topic":   topic,
+		"looks":   looks,
+		"isSaved": isSaved,
 	})
 }
 
-func (d *Papaya) HandleWatchTopic(c *gin.Context) {
+func (d *Papaya) HandleSaveTopic(c *gin.Context) {
 	slug := c.Param("topic")
 
 	var topic models.Topic
@@ -104,7 +145,6 @@ func (d *Papaya) HandleWatchTopic(c *gin.Context) {
 	}
 
 	// user
-
 	user, err := d.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
@@ -112,7 +152,7 @@ func (d *Papaya) HandleWatchTopic(c *gin.Context) {
 		return
 	}
 
-	err = d.db.DB().Model(user).Association("Topics").Append(&topic)
+	err = d.db.DB().Model(user).Association("SavedTopics").Append(&topic)
 	if err != nil {
 		logrus.Errorf("error watching topic: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -123,7 +163,7 @@ func (d *Papaya) HandleWatchTopic(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleUnwatchTopic(c *gin.Context) {
+func (d *Papaya) HandleUnsaveTopic(c *gin.Context) {
 	slug := c.Param("topic")
 
 	var topic models.Topic
@@ -134,6 +174,7 @@ func (d *Papaya) HandleUnwatchTopic(c *gin.Context) {
 		return
 	}
 
+	// user
 	user, err := d.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
@@ -141,9 +182,9 @@ func (d *Papaya) HandleUnwatchTopic(c *gin.Context) {
 		return
 	}
 
-	err = d.db.DB().Model(user).Association("Topics").Delete(&topic)
+	err = d.db.DB().Model(user).Association("SavedTopics").Delete(&topic)
 	if err != nil {
-		logrus.Errorf("error unwatching topic: %v", err)
+		logrus.Errorf("error watching topic: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 

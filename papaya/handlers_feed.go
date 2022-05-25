@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,10 +55,10 @@ func (d *Papaya) HandleFeed(c *gin.Context) {
 		return
 	}
 
-	var topics []models.Topic
-	err = d.db.DB().Model(&user).Association("Topics").Find(&topics)
+	var styles []models.Style
+	err = d.db.DB().Preload("Looks.Items").Find(&styles).Error
 	if err != nil {
-		logrus.Errorf("error getting watched topics: %v", err)
+		logrus.Errorf("error getting styles: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
@@ -80,9 +80,47 @@ func (d *Papaya) HandleFeed(c *gin.Context) {
 		"todayLook": todayLook,
 		"page":      page,
 		"looks":     looks,
-		"topics":    topics,
+		"styles":    styles,
 	}
 	c.JSON(200, result)
+}
+
+func (d *Papaya) HandleFeedByStyle(c *gin.Context) {
+	slug := c.Param("style")
+
+	params := c.Request.URL.Query()
+
+	var page int64
+	if _, ok := params["page"]; !ok {
+		page = 0
+	} else {
+		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
+	}
+
+	offset := int(page * 20)
+
+	var style models.Style
+	d.db.DB().Preload("Looks.Items").First(&style, "slug = ?", slug)
+
+	if style.ID == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	var looks []*models.Look
+	err := d.db.DB().
+		Raw("SELECT * FROM looks JOIN look_styles ls on looks.id = ls.look_id WHERE ls.style_id = ?", style.ID).
+		Order("created_at desc").
+		Offset(offset).Preload("Items.Urls.Brand").
+		Limit(FeedPagination).Find(&looks).Error
+	if err != nil {
+		logrus.Errorf("error getting feed looks by style: %v", err)
+	}
+
+	c.JSON(200, gin.H{
+		"looks": looks,
+		"style": style,
+	})
 }
 
 func (d *Papaya) HandleGetLook(c *gin.Context) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ type User struct {
 	Mood     string          `json:"mood"`
 
 	Collections   []Collection `json:"collections"`
-	Topics        []*Topic     `json:"topics" gorm:"many2many:watched_topics;"`
+	SavedTopics   []*Topic     `json:"saved_topics" gorm:"many2many:saved_topics;"`
 	LikedLooks    []*Look      `json:"-" gorm:"many2many:liked_looks;"`
 	DislikedLooks []*Look      `json:"-" gorm:"many2many:disliked_looks;"`
 	TodayLook     []*Look      `json:"today_look" gorm:"many2many:today_looks;"`

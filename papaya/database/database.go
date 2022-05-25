@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ func (d *Database) DB() *gorm.DB {
 func (d *Database) GetUserByEmail(email string) *models.User {
 	var user models.User
 
-	d.db.Preload("Wardrobe").Preload("Topics").Preload("Collections").First(&user, "email = ?", email)
+	d.db.Preload("Wardrobe").Preload("SavedTopics").Preload("Collections").First(&user, "email = ?", email)
 	if user.ID == 0 {
 		return nil
 	}
@@ -113,7 +113,7 @@ func (d *Database) setup() error {
 		&models.User{},
 		&models.WardrobeCategory{},
 		&models.WardrobeItem{},
-		&models.Topic{},
+		&models.Style{},
 		&models.Look{},
 		&models.ItemURL{},
 		&models.Category{},
@@ -207,16 +207,16 @@ func (d *Database) seed() {
 	}
 	d.db.Create(look3)
 
-	d.db.Create(&models.Topic{
-		Name:  "Летняя подборка",
-		Slug:  "summer",
-		Desc:  "Летняя подборка",
-		Looks: []*models.Look{look1, look3},
-	})
-	d.db.Create(&models.Topic{
-		Name:  "Зимняя подборка",
-		Slug:  "winter",
-		Desc:  "Зимняя подборка",
-		Looks: []*models.Look{look1, look2, look3},
-	})
+	//d.db.Create(&models.Topic{
+	//	Name:  "Летняя подборка",
+	//	Slug:  "summer",
+	//	Desc:  "Летняя подборка",
+	//	Looks: []*models.Look{look1, look3},
+	//})
+	//d.db.Create(&models.Topic{
+	//	Name:  "Зимняя подборка",
+	//	Slug:  "winter",
+	//	Desc:  "Зимняя подборка",
+	//	Looks: []*models.Look{look1, look2, look3},
+	//})
 }

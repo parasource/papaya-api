@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ type Look struct {
 	Items      []*WardrobeItem `json:"items" gorm:"many2many:look_items;"`
 	Categories []*Category     `json:"categories" gorm:"many2many:look_categories;"`
 	Sex        string          `json:"sex"`
+	Styles     []*Style        `json:"styles" gorm:"many2many:look_styles;"`
 	Topics     []*Topic        `json:"topics" gorm:"many2many:topic_looks;"`
 	UsersLiked []*User         `json:"-" gorm:"many2many:liked_looks;"`
 }
