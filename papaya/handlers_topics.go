@@ -24,7 +24,7 @@ import (
 	"strconv"
 )
 
-func (d *Papaya) HandleGetRecommendedTopics(c *gin.Context) {
+func (p *Papaya) HandleGetRecommendedTopics(c *gin.Context) {
 	var result []models.Topic
 
 	params := c.Request.URL.Query()
@@ -37,7 +37,7 @@ func (d *Papaya) HandleGetRecommendedTopics(c *gin.Context) {
 	}
 
 	offset := int(page * 20)
-	err := d.db.DB().Order("created_at desc").Limit(20).Offset(offset).Find(&result).Error
+	err := p.db.DB().Order("created_at desc").Limit(20).Offset(offset).Find(&result).Error
 	if err != nil {
 		logrus.Errorf("error getting all selections")
 		c.AbortWithStatus(500)
@@ -46,7 +46,7 @@ func (d *Papaya) HandleGetRecommendedTopics(c *gin.Context) {
 	c.JSON(200, result)
 }
 
-func (d *Papaya) HandleGetPopularTopics(c *gin.Context) {
+func (p *Papaya) HandleGetPopularTopics(c *gin.Context) {
 	var result []models.Topic
 
 	params := c.Request.URL.Query()
@@ -59,7 +59,7 @@ func (d *Papaya) HandleGetPopularTopics(c *gin.Context) {
 	}
 
 	offset := int(page * 20)
-	err := d.db.DB().Order("created_at desc").Limit(20).Offset(offset).Find(&result).Error
+	err := p.db.DB().Order("created_at desc").Limit(20).Offset(offset).Find(&result).Error
 	if err != nil {
 		logrus.Errorf("error getting all selections")
 		c.AbortWithStatus(500)
@@ -68,8 +68,8 @@ func (d *Papaya) HandleGetPopularTopics(c *gin.Context) {
 	c.JSON(200, result)
 }
 
-func (d *Papaya) HandleGetSavedTopics(c *gin.Context) {
-	user, err := d.GetUser(c)
+func (p *Papaya) HandleGetSavedTopics(c *gin.Context) {
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -77,7 +77,7 @@ func (d *Papaya) HandleGetSavedTopics(c *gin.Context) {
 	}
 
 	var topics []*models.Topic
-	err = d.db.DB().Model(&user).Association("SavedTopics").Find(&topics)
+	err = p.db.DB().Model(&user).Association("SavedTopics").Find(&topics)
 	if err != nil {
 		logrus.Errorf("error getting saved topics: %v", err)
 		c.AbortWithStatus(500)
@@ -87,7 +87,7 @@ func (d *Papaya) HandleGetSavedTopics(c *gin.Context) {
 	c.JSON(200, topics)
 }
 
-func (d *Papaya) HandleGetTopic(c *gin.Context) {
+func (p *Papaya) HandleGetTopic(c *gin.Context) {
 	slug := c.Param("topic")
 	params := c.Request.URL.Query()
 
@@ -99,7 +99,7 @@ func (d *Papaya) HandleGetTopic(c *gin.Context) {
 	}
 
 	var topic models.Topic
-	d.db.DB().First(&topic, "slug = ?", slug)
+	p.db.DB().First(&topic, "slug = ?", slug)
 
 	if topic.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -109,14 +109,14 @@ func (d *Papaya) HandleGetTopic(c *gin.Context) {
 	offset := int(page * 20)
 	var looks []models.Look
 
-	err := d.db.DB().Model(topic).Order("created_at desc").Limit(20).Offset(offset).Association("Looks").Find(&looks)
+	err := p.db.DB().Model(topic).Order("created_at desc").Limit(20).Offset(offset).Association("Looks").Find(&looks)
 	if err != nil {
 		logrus.Errorf("error getting topic looks: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -124,7 +124,7 @@ func (d *Papaya) HandleGetTopic(c *gin.Context) {
 	}
 
 	var isSaved bool
-	d.db.DB().Raw("SELECT COUNT(1) FROM saved_topics WHERE user_id = ? AND topic_id = ?", user.ID, topic.ID).Scan(&isSaved)
+	p.db.DB().Raw("SELECT COUNT(1) FROM saved_topics WHERE user_id = ? AND topic_id = ?", user.ID, topic.ID).Scan(&isSaved)
 
 	c.JSON(200, gin.H{
 		"topic":   topic,
@@ -133,11 +133,11 @@ func (d *Papaya) HandleGetTopic(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleSaveTopic(c *gin.Context) {
+func (p *Papaya) HandleSaveTopic(c *gin.Context) {
 	slug := c.Param("topic")
 
 	var topic models.Topic
-	d.db.DB().First(&topic, "slug = ?", slug)
+	p.db.DB().First(&topic, "slug = ?", slug)
 
 	if topic.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -145,14 +145,14 @@ func (d *Papaya) HandleSaveTopic(c *gin.Context) {
 	}
 
 	// user
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
 		return
 	}
 
-	err = d.db.DB().Model(user).Association("SavedTopics").Append(&topic)
+	err = p.db.DB().Model(user).Association("SavedTopics").Append(&topic)
 	if err != nil {
 		logrus.Errorf("error watching topic: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -163,11 +163,11 @@ func (d *Papaya) HandleSaveTopic(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleUnsaveTopic(c *gin.Context) {
+func (p *Papaya) HandleUnsaveTopic(c *gin.Context) {
 	slug := c.Param("topic")
 
 	var topic models.Topic
-	d.db.DB().First(&topic, "slug = ?", slug)
+	p.db.DB().First(&topic, "slug = ?", slug)
 
 	if topic.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -175,14 +175,14 @@ func (d *Papaya) HandleUnsaveTopic(c *gin.Context) {
 	}
 
 	// user
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
 		return
 	}
 
-	err = d.db.DB().Model(user).Association("SavedTopics").Delete(&topic)
+	err = p.db.DB().Model(user).Association("SavedTopics").Delete(&topic)
 	if err != nil {
 		logrus.Errorf("error watching topic: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)

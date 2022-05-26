@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,8 +101,8 @@ func NewPapaya(cfg Config, dbCfg database.Config) (*Papaya, error) {
 	return d, nil
 }
 
-func (d *Papaya) Start() error {
-	err := d.r.Run(net.JoinHostPort(d.cfg.HttpHost, d.cfg.HttpPort))
+func (p *Papaya) Start() error {
+	err := p.r.Run(net.JoinHostPort(p.cfg.HttpHost, p.cfg.HttpPort))
 	if err != nil {
 		logrus.Fatalf("error running gin: %v", err)
 	}

@@ -16,17 +16,10 @@
 
 package models
 
-import (
-	"gorm.io/gorm"
-)
+import "gorm.io/gorm"
 
-type Topic struct {
+type SearchRecord struct {
 	gorm.Model
-	Name      string  `json:"name"`
-	Slug      string  `json:"slug"`
-	Desc      string  `json:"desc"`
-	Image     string  `json:"image"`
-	Looks     []*Look `json:"looks" gorm:"many2many:topic_looks;"`
-	IsWatched bool    `json:"isSaved" gorm:"-"`
-	Rank      float32 `gorm:"-" json:"rank"`
+	Query  string `json:"query"`
+	UserID uint   `json:"user_id"`
 }

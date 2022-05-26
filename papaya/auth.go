@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import (
 	"github.com/lightswitch/dutchman-backend/papaya/util"
 )
 
-func (d *Papaya) GetUser(c *gin.Context) (*models.User, error) {
+func (p *Papaya) GetUser(c *gin.Context) (*models.User, error) {
 	token, err := util.ExtractToken(c.GetHeader("Authorization"))
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (d *Papaya) GetUser(c *gin.Context) (*models.User, error) {
 	}
 
 	email := claims["email"].(string)
-	user := d.db.GetUserByEmail(email)
+	user := p.db.GetUserByEmail(email)
 
 	return user, nil
 }

@@ -25,8 +25,8 @@ import (
 	"strconv"
 )
 
-func (d *Papaya) HandleGetCollections(c *gin.Context) {
-	user, err := d.GetUser(c)
+func (p *Papaya) HandleGetCollections(c *gin.Context) {
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -34,7 +34,7 @@ func (d *Papaya) HandleGetCollections(c *gin.Context) {
 	}
 
 	var collections []*models.Collection
-	err = d.db.DB().Model(&user).Association("Collections").Find(&collections)
+	err = p.db.DB().Model(&user).Association("Collections").Find(&collections)
 	if err != nil {
 		logrus.Errorf("error getting user's collections: %v", err)
 		c.AbortWithStatus(500)
@@ -44,7 +44,7 @@ func (d *Papaya) HandleGetCollections(c *gin.Context) {
 	c.JSON(200, collections)
 }
 
-func (d *Papaya) HandleCreateCollection(c *gin.Context) {
+func (p *Papaya) HandleCreateCollection(c *gin.Context) {
 	var r requests.CreateCollectionRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -52,7 +52,7 @@ func (d *Papaya) HandleCreateCollection(c *gin.Context) {
 		return
 	}
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -63,8 +63,8 @@ func (d *Papaya) HandleCreateCollection(c *gin.Context) {
 		Name:   r.Name,
 		UserID: user.ID,
 	}
-	d.db.DB().Create(coll)
-	if err = d.db.DB().Model(user).Association("Collections").Append(coll); err != nil {
+	p.db.DB().Create(coll)
+	if err = p.db.DB().Model(user).Association("Collections").Append(coll); err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -75,10 +75,10 @@ func (d *Papaya) HandleCreateCollection(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleGetCollection(c *gin.Context) {
+func (p *Papaya) HandleGetCollection(c *gin.Context) {
 	collID, _ := strconv.Atoi(c.Param("collection"))
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -86,7 +86,7 @@ func (d *Papaya) HandleGetCollection(c *gin.Context) {
 	}
 
 	var coll models.Collection
-	d.db.DB().Preload("Looks").First(&coll, "id = ?", collID)
+	p.db.DB().Preload("Looks").First(&coll, "id = ?", collID)
 	if coll.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -99,10 +99,10 @@ func (d *Papaya) HandleGetCollection(c *gin.Context) {
 	c.JSON(200, coll)
 }
 
-func (d *Papaya) HandleDeleteCollection(c *gin.Context) {
+func (p *Papaya) HandleDeleteCollection(c *gin.Context) {
 	collID, _ := strconv.Atoi(c.Param("collection"))
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -110,7 +110,7 @@ func (d *Papaya) HandleDeleteCollection(c *gin.Context) {
 	}
 
 	var coll models.Collection
-	d.db.DB().First(&coll, "id = ?", collID)
+	p.db.DB().First(&coll, "id = ?", collID)
 	if coll.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -120,25 +120,25 @@ func (d *Papaya) HandleDeleteCollection(c *gin.Context) {
 		return
 	}
 
-	err = d.db.DB().Model(&coll).Association("Looks").Delete(coll.Looks)
+	err = p.db.DB().Model(&coll).Association("Looks").Delete(coll.Looks)
 	if err != nil {
 		logrus.Errorf("error removing looks from collection before deleting: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	d.db.DB().Delete(&coll)
+	p.db.DB().Delete(&coll)
 
 	c.JSON(200, gin.H{
 		"success": true,
 	})
 }
 
-func (d *Papaya) HandleCollectionAddLook(c *gin.Context) {
+func (p *Papaya) HandleCollectionAddLook(c *gin.Context) {
 	collID, _ := strconv.Atoi(c.Param("collection"))
 	lookSlug := c.Param("look")
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -146,7 +146,7 @@ func (d *Papaya) HandleCollectionAddLook(c *gin.Context) {
 	}
 
 	var coll models.Collection
-	d.db.DB().First(&coll, "id = ?", collID)
+	p.db.DB().First(&coll, "id = ?", collID)
 	if coll.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -157,30 +157,30 @@ func (d *Papaya) HandleCollectionAddLook(c *gin.Context) {
 	}
 
 	var look models.Look
-	d.db.DB().First(&look, "slug = ?", lookSlug)
+	p.db.DB().First(&look, "slug = ?", lookSlug)
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
-	err = d.db.DB().Model(&coll).Association("Looks").Append(&look)
+	err = p.db.DB().Model(&coll).Association("Looks").Append(&look)
 	if err != nil {
 		logrus.Errorf("error associating look with collection: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	//d.db.DB().Save()
+	//p.db.DB().Save()
 
 	c.JSON(200, gin.H{
 		"success": true,
 	})
 }
 
-func (d *Papaya) HandleCollectionRemoveLook(c *gin.Context) {
+func (p *Papaya) HandleCollectionRemoveLook(c *gin.Context) {
 	collID, _ := strconv.Atoi(c.Param("collection"))
 	lookSlug := c.Param("look")
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -188,7 +188,7 @@ func (d *Papaya) HandleCollectionRemoveLook(c *gin.Context) {
 	}
 
 	var coll models.Collection
-	d.db.DB().First(&coll, "id = ?", collID)
+	p.db.DB().First(&coll, "id = ?", collID)
 	if coll.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -199,13 +199,13 @@ func (d *Papaya) HandleCollectionRemoveLook(c *gin.Context) {
 	}
 
 	var look models.Look
-	d.db.DB().First(&look, "slug = ?", lookSlug)
+	p.db.DB().First(&look, "slug = ?", lookSlug)
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
-	err = d.db.DB().Model(&coll).Association("Looks").Delete(&look)
+	err = p.db.DB().Model(&coll).Association("Looks").Delete(&look)
 	if err != nil {
 		logrus.Errorf("error associating look with collection: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)

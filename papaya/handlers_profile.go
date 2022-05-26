@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (d *Papaya) HandleProfileSetWardrobe(c *gin.Context) {
+func (p *Papaya) HandleProfileSetWardrobe(c *gin.Context) {
 	var r requests.SetWardrobeRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -31,7 +31,7 @@ func (d *Papaya) HandleProfileSetWardrobe(c *gin.Context) {
 		return
 	}
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -41,7 +41,7 @@ func (d *Papaya) HandleProfileSetWardrobe(c *gin.Context) {
 	for _, itemID := range r.Wardrobe {
 		items = append(items, &models.WardrobeItem{ID: itemID})
 	}
-	err = d.db.DB().Model(&user).Association("Wardrobe").Replace(items)
+	err = p.db.DB().Model(&user).Association("Wardrobe").Replace(items)
 	if err != nil {
 		logrus.Errorf("error replacing wardrobe items: %v", err)
 		c.AbortWithStatus(500)
@@ -53,7 +53,7 @@ func (d *Papaya) HandleProfileSetWardrobe(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleProfileSetMood(c *gin.Context) {
+func (p *Papaya) HandleProfileSetMood(c *gin.Context) {
 	var r requests.SetMoodRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -61,7 +61,7 @@ func (d *Papaya) HandleProfileSetMood(c *gin.Context) {
 		return
 	}
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -69,14 +69,14 @@ func (d *Papaya) HandleProfileSetMood(c *gin.Context) {
 	}
 
 	user.Mood = r.Mood
-	d.db.DB().Save(user)
+	p.db.DB().Save(user)
 
 	c.JSON(200, gin.H{
 		"success": true,
 	})
 }
 
-func (d *Papaya) HandleProfileUpdateSettings(c *gin.Context) {
+func (p *Papaya) HandleProfileUpdateSettings(c *gin.Context) {
 	var r requests.UpdateSettingsRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -84,7 +84,7 @@ func (d *Papaya) HandleProfileUpdateSettings(c *gin.Context) {
 		return
 	}
 
-	_, err = d.GetUser(c)
+	_, err = p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -92,7 +92,7 @@ func (d *Papaya) HandleProfileUpdateSettings(c *gin.Context) {
 	}
 
 	//
-	//err = d.db.UpdateUserSettings(userId, &models.UserSettings{
+	//err = p.db.UpdateUserSettings(userId, &models.UserSettings{
 	//	ReceivePushNotifications:  r.ReceivePushNotifications,
 	//	ReceiveEmailNotifications: r.ReceiveEmailNotifications,
 	//})
@@ -106,8 +106,8 @@ func (d *Papaya) HandleProfileUpdateSettings(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleProfileGetWardrobe(c *gin.Context) {
-	user, err := d.GetUser(c)
+func (p *Papaya) HandleProfileGetWardrobe(c *gin.Context) {
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)

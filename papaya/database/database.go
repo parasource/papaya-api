@@ -118,6 +118,7 @@ func (d *Database) setup() error {
 		&models.ItemURL{},
 		&models.Category{},
 		&models.Collection{},
+		&models.SearchRecord{},
 	)
 	if err != nil {
 		return err

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"net/http"
 )
 
-func (d *Papaya) HandleRegister(c *gin.Context) {
+func (p *Papaya) HandleRegister(c *gin.Context) {
 	var r requests.RegisterRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -34,7 +34,7 @@ func (d *Papaya) HandleRegister(c *gin.Context) {
 	}
 	logrus.Infof("req %v", r)
 
-	if d.db.GetUserByEmail(r.Email) != nil {
+	if p.db.GetUserByEmail(r.Email) != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "Пользователь с таким адресом эл.почты уже существует",
@@ -44,7 +44,7 @@ func (d *Papaya) HandleRegister(c *gin.Context) {
 
 	user := models.NewUser(r.Email, r.Name, r.Password)
 	user.Sex = r.Sex
-	d.db.CreateUser(user)
+	p.db.CreateUser(user)
 
 	token, err := GenerateToken(user)
 	if err != nil {
@@ -66,7 +66,7 @@ func (d *Papaya) HandleRegister(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleLogin(c *gin.Context) {
+func (p *Papaya) HandleLogin(c *gin.Context) {
 	var r requests.LoginRequest
 	err := c.BindJSON(&r)
 	if err != nil {
@@ -76,7 +76,7 @@ func (d *Papaya) HandleLogin(c *gin.Context) {
 	}
 	logrus.Debug(r)
 
-	user := d.db.GetUserByEmail(r.Email)
+	user := p.db.GetUserByEmail(r.Email)
 	if user == nil {
 		c.JSON(403, gin.H{
 			"success": false,
@@ -112,7 +112,7 @@ func (d *Papaya) HandleLogin(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleRefresh(c *gin.Context) {
+func (p *Papaya) HandleRefresh(c *gin.Context) {
 	refreshToken := c.PostForm("refresh_token")
 
 	if refreshToken == "" {
@@ -127,7 +127,7 @@ func (d *Papaya) HandleRefresh(c *gin.Context) {
 	}
 
 	id := claims["id"].(uint)
-	user := d.db.GetUser(id)
+	user := p.db.GetUser(id)
 	if user == nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
@@ -152,7 +152,7 @@ func (d *Papaya) HandleRefresh(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleUser(c *gin.Context) {
+func (p *Papaya) HandleUser(c *gin.Context) {
 	token, err := util.ExtractToken(c.GetHeader("Authorization"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
@@ -166,7 +166,7 @@ func (d *Papaya) HandleUser(c *gin.Context) {
 	}
 
 	email := claims["email"].(string)
-	user := d.db.GetUserByEmail(email)
+	user := p.db.GetUserByEmail(email)
 	if user == nil {
 		logrus.Errorf("user with claims not found: %v", err)
 		c.AbortWithStatus(http.StatusUnauthorized)

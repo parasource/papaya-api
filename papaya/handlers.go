@@ -25,52 +25,54 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (d *Papaya) registerRoutes(r *gin.Engine) {
-	r.POST("/api/auth/register", d.HandleRegister)
-	r.POST("/api/auth/login", d.HandleLogin)
-	r.POST("/api/auth/refresh", d.AuthMiddleware, d.HandleRefresh)
-	r.GET("/api/auth/user", d.AuthMiddleware, d.HandleUser)
+func (p *Papaya) registerRoutes(r *gin.Engine) {
+	r.POST("/api/auth/register", p.HandleRegister)
+	r.POST("/api/auth/login", p.HandleLogin)
+	r.POST("/api/auth/refresh", p.AuthMiddleware, p.HandleRefresh)
+	r.GET("/api/auth/user", p.AuthMiddleware, p.HandleUser)
 
-	r.GET("/api/looks/:look", d.AuthMiddleware, d.HandleGetLook)
-	r.GET("/api/looks/:look/item/:item", d.AuthMiddleware, d.HandleGetLookItem)
-	r.PUT("/api/looks/:look/like", d.AuthMiddleware, d.HandleLikeLook)
-	r.DELETE("/api/looks/:look/like", d.AuthMiddleware, d.HandleUnlikeLook)
-	r.PUT("/api/looks/:look/dislike", d.AuthMiddleware, d.HandleDislikeLook)
-	r.DELETE("/api/looks/:look/dislike", d.AuthMiddleware, d.HandleUndislikeLook)
+	r.GET("/api/looks/:look", p.AuthMiddleware, p.HandleGetLook)
+	r.GET("/api/looks/:look/item/:item", p.AuthMiddleware, p.HandleGetLookItem)
+	r.PUT("/api/looks/:look/like", p.AuthMiddleware, p.HandleLikeLook)
+	r.DELETE("/api/looks/:look/like", p.AuthMiddleware, p.HandleUnlikeLook)
+	r.PUT("/api/looks/:look/dislike", p.AuthMiddleware, p.HandleDislikeLook)
+	r.DELETE("/api/looks/:look/dislike", p.AuthMiddleware, p.HandleUndislikeLook)
 
-	r.GET("/api/liked", d.AuthMiddleware, d.GetLikedLooks)
-
-	// starting from page 0
-	r.GET("/api/feed", d.AuthMiddleware, d.HandleFeed)
-	r.GET("/api/feed/:tag", d.AuthMiddleware, d.HandleFeedByTag)
-
-	r.GET("/api/test", d.HandleTest)
+	r.GET("/api/liked", p.AuthMiddleware, p.GetLikedLooks)
 
 	// starting from page 0
-	r.GET("/api/topics/recommended", d.AuthMiddleware, d.HandleGetRecommendedTopics)
-	r.GET("/api/topics/popular", d.AuthMiddleware, d.HandleGetPopularTopics)
-	r.GET("/api/topics/saved", d.AuthMiddleware, d.HandleGetSavedTopics)
-	r.GET("/api/topics/:topic", d.AuthMiddleware, d.HandleGetTopic)
-	r.PUT("/api/topics/:topic/save", d.AuthMiddleware, d.HandleSaveTopic)
-	r.DELETE("/api/topics/:topic/unsave", d.AuthMiddleware, d.HandleUnsaveTopic)
+	r.GET("/api/feed", p.AuthMiddleware, p.HandleFeed)
+	r.GET("/api/feed/:tag", p.AuthMiddleware, p.HandleFeedByTag)
 
-	r.POST("/api/collections", d.AuthMiddleware, d.HandleGetCollections)
-	r.POST("/api/collections/create", d.AuthMiddleware, d.HandleCreateCollection)
-	r.GET("/api/collections/:collection", d.AuthMiddleware, d.HandleGetCollection)
-	r.DELETE("/api/collections/:collection/delete", d.AuthMiddleware, d.HandleDeleteCollection)
-	r.PUT("/api/collections/:collection/add/:look", d.AuthMiddleware, d.HandleCollectionAddLook)
-	r.DELETE("/api/collections/:collection/remove/:look", d.AuthMiddleware, d.HandleCollectionRemoveLook)
+	r.GET("/api/test", p.HandleTest)
 
-	r.GET("/api/get-wardrobe-items", d.AuthMiddleware, d.HandleGetWardrobeItems)
+	r.GET("/api/search", p.HandleSearch)
 
-	r.POST("/api/profile/set-wardrobe", d.AuthMiddleware, d.HandleProfileSetWardrobe)
-	r.POST("/api/profile/set-mood", d.AuthMiddleware, d.HandleProfileSetMood)
-	r.POST("/api/profile/update-settings", d.AuthMiddleware, d.HandleProfileUpdateSettings)
-	r.GET("/api/profile/get-wardrobe", d.AuthMiddleware, d.HandleProfileGetWardrobe)
+	// starting from page 0
+	r.GET("/api/topics/recommended", p.AuthMiddleware, p.HandleGetRecommendedTopics)
+	r.GET("/api/topics/popular", p.AuthMiddleware, p.HandleGetPopularTopics)
+	r.GET("/api/topics/saved", p.AuthMiddleware, p.HandleGetSavedTopics)
+	r.GET("/api/topics/:topic", p.AuthMiddleware, p.HandleGetTopic)
+	r.PUT("/api/topics/:topic/save", p.AuthMiddleware, p.HandleSaveTopic)
+	r.DELETE("/api/topics/:topic/unsave", p.AuthMiddleware, p.HandleUnsaveTopic)
+
+	r.POST("/api/collections", p.AuthMiddleware, p.HandleGetCollections)
+	r.POST("/api/collections/create", p.AuthMiddleware, p.HandleCreateCollection)
+	r.GET("/api/collections/:collection", p.AuthMiddleware, p.HandleGetCollection)
+	r.DELETE("/api/collections/:collection/delete", p.AuthMiddleware, p.HandleDeleteCollection)
+	r.PUT("/api/collections/:collection/add/:look", p.AuthMiddleware, p.HandleCollectionAddLook)
+	r.DELETE("/api/collections/:collection/remove/:look", p.AuthMiddleware, p.HandleCollectionRemoveLook)
+
+	r.GET("/api/get-wardrobe-items", p.AuthMiddleware, p.HandleGetWardrobeItems)
+
+	r.POST("/api/profile/set-wardrobe", p.AuthMiddleware, p.HandleProfileSetWardrobe)
+	r.POST("/api/profile/set-mood", p.AuthMiddleware, p.HandleProfileSetMood)
+	r.POST("/api/profile/update-settings", p.AuthMiddleware, p.HandleProfileUpdateSettings)
+	r.GET("/api/profile/get-wardrobe", p.AuthMiddleware, p.HandleProfileGetWardrobe)
 }
 
-func (d *Papaya) HandleTest(c *gin.Context) {
-	ids, err := d.adviser.RecommendForUser("1")
+func (p *Papaya) HandleTest(c *gin.Context) {
+	ids, err := p.adviser.RecommendForUser("1")
 	if err != nil {
 		logrus.Errorf("error inserting item: %v", err)
 	}
@@ -80,9 +82,9 @@ func (d *Papaya) HandleTest(c *gin.Context) {
 
 // Root routes
 
-func (d *Papaya) HandleGetWardrobeItems(c *gin.Context) {
+func (p *Papaya) HandleGetWardrobeItems(c *gin.Context) {
 	var items []*models.WardrobeCategory
-	err := d.db.DB().Preload("Items").Find(&items).Error
+	err := p.db.DB().Preload("Items").Find(&items).Error
 	if err != nil {
 		logrus.Errorf("error getting wardrobe items from db: %v", err)
 		c.AbortWithStatus(500)
@@ -91,7 +93,7 @@ func (d *Papaya) HandleGetWardrobeItems(c *gin.Context) {
 
 	var preview string
 	for _, item := range items {
-		d.db.DB().Raw("SELECT image FROM wardrobe_items WHERE wardrobe_category_id = ? ORDER BY id LIMIT 1", item.ID).Scan(&preview)
+		p.db.DB().Raw("SELECT image FROM wardrobe_items WHERE wardrobe_category_id = ? ORDER BY id LIMIT 1", item.ID).Scan(&preview)
 		item.Preview = preview
 	}
 	c.JSON(200, items)

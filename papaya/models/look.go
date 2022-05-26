@@ -38,4 +38,5 @@ type Look struct {
 	Tags       []*Tag          `json:"tags" gorm:"many2many:look_tags;"`
 	Topics     []*Topic        `json:"topics" gorm:"many2many:topic_looks;"`
 	UsersLiked []*User         `json:"-" gorm:"many2many:liked_looks;"`
+	Rank       float32         `gorm:"-" json:"rank"`
 }

@@ -28,7 +28,7 @@ var (
 	FeedPagination = 10
 )
 
-func (d *Papaya) HandleFeed(c *gin.Context) {
+func (p *Papaya) HandleFeed(c *gin.Context) {
 	var looks []models.Look
 
 	params := c.Request.URL.Query()
@@ -41,14 +41,14 @@ func (d *Papaya) HandleFeed(c *gin.Context) {
 	}
 
 	offset := int(page * 20)
-	err := d.db.DB().Order("created_at desc").Offset(offset).Preload("Items.Urls.Brand").Limit(FeedPagination).Find(&looks).Error
+	err := p.db.DB().Order("created_at desc").Offset(offset).Preload("Items.Urls.Brand").Limit(FeedPagination).Find(&looks).Error
 	if err != nil {
 		logrus.Errorf("error getting looks: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -56,7 +56,7 @@ func (d *Papaya) HandleFeed(c *gin.Context) {
 	}
 
 	var styles []models.Tag
-	err = d.db.DB().Preload("Looks.Items").Find(&styles).Error
+	err = p.db.DB().Preload("Looks.Items").Find(&styles).Error
 	if err != nil {
 		logrus.Errorf("error getting styles: %v", err)
 		c.AbortWithStatus(500)
@@ -64,12 +64,12 @@ func (d *Papaya) HandleFeed(c *gin.Context) {
 	}
 
 	var todayLookId int
-	d.db.DB().Raw("SELECT look_id FROM today_looks WHERE user_id = ? LIMIT 1", user.ID).Scan(&todayLookId)
+	p.db.DB().Raw("SELECT look_id FROM today_looks WHERE user_id = ? LIMIT 1", user.ID).Scan(&todayLookId)
 
 	var todayLook models.Look
-	d.db.DB().Preload("Items").First(&todayLook, "id = ?", todayLookId)
+	p.db.DB().Preload("Items").First(&todayLook, "id = ?", todayLookId)
 
-	err = d.db.DB().Model(&user).Association("TodayLook").Find(&todayLook)
+	err = p.db.DB().Model(&user).Association("TodayLook").Find(&todayLook)
 	if err != nil {
 		logrus.Errorf("error getting today's look: %v", err)
 		c.AbortWithStatus(500)
@@ -85,7 +85,7 @@ func (d *Papaya) HandleFeed(c *gin.Context) {
 	c.JSON(200, result)
 }
 
-func (d *Papaya) HandleFeedByTag(c *gin.Context) {
+func (p *Papaya) HandleFeedByTag(c *gin.Context) {
 	slug := c.Param("tag")
 
 	params := c.Request.URL.Query()
@@ -100,7 +100,7 @@ func (d *Papaya) HandleFeedByTag(c *gin.Context) {
 	offset := int(page * 20)
 
 	var tag models.Tag
-	d.db.DB().First(&tag, "slug = ?", slug)
+	p.db.DB().First(&tag, "slug = ?", slug)
 
 	if tag.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -108,7 +108,7 @@ func (d *Papaya) HandleFeedByTag(c *gin.Context) {
 	}
 
 	var looks []*models.Look
-	err := d.db.DB().
+	err := p.db.DB().
 		Raw("SELECT * FROM looks JOIN look_tags lt on looks.id = lt.look_id WHERE lt.tag_id = ?", tag.ID).
 		Order("created_at desc").
 		Offset(offset).Preload("Items.Urls.Brand").
@@ -123,34 +123,34 @@ func (d *Papaya) HandleFeedByTag(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleGetLook(c *gin.Context) {
+func (p *Papaya) HandleGetLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
-	d.db.DB().Preload("Items.Urls.Brand").First(&look, "slug = ?", slug)
+	p.db.DB().Preload("Items.Urls.Brand").First(&look, "slug = ?", slug)
 
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
 		return
 	}
 
-	err = d.adviser.Read(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	err = p.adviser.Read(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
 	if err != nil {
 		logrus.Errorf("error submitting 'read' feedback to adviser: %v", err)
 	}
 
 	var isLiked bool
-	d.db.DB().Raw("SELECT COUNT(1) FROM liked_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isLiked)
+	p.db.DB().Raw("SELECT COUNT(1) FROM liked_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isLiked)
 
 	var isDisliked bool
-	d.db.DB().Raw("SELECT COUNT(1) FROM disliked_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isDisliked)
+	p.db.DB().Raw("SELECT COUNT(1) FROM disliked_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isDisliked)
 
 	c.JSON(200, gin.H{
 		"look":       look,
@@ -159,10 +159,10 @@ func (d *Papaya) HandleGetLook(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleGetLookItem(c *gin.Context) {
+func (p *Papaya) HandleGetLookItem(c *gin.Context) {
 	slugLook := c.Param("look")
 	var look models.Look
-	d.db.DB().First(&look, "slug = ?", slugLook)
+	p.db.DB().First(&look, "slug = ?", slugLook)
 
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -171,7 +171,7 @@ func (d *Papaya) HandleGetLookItem(c *gin.Context) {
 
 	itemId := c.Param("item")
 	var item models.WardrobeItem
-	d.db.DB().Preload("Urls.Brand").First(&item, "id = ?", itemId)
+	p.db.DB().Preload("Urls.Brand").First(&item, "id = ?", itemId)
 
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -179,7 +179,7 @@ func (d *Papaya) HandleGetLookItem(c *gin.Context) {
 	}
 
 	var looks []models.Look
-	d.db.DB().Raw("SELECT looks.* FROM looks JOIN look_items li on looks.id = li.look_id WHERE li.look_id = ? AND looks.id != ? LIMIT 10", item.ID, look.ID).Scan(&looks)
+	p.db.DB().Raw("SELECT looks.* FROM looks JOIN look_items li on looks.id = li.look_id WHERE li.look_id = ? AND looks.id != ? LIMIT 10", item.ID, look.ID).Scan(&looks)
 
 	c.JSON(200, gin.H{
 		"item":  item,
@@ -187,11 +187,11 @@ func (d *Papaya) HandleGetLookItem(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleLikeLook(c *gin.Context) {
+func (p *Papaya) HandleLikeLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
-	d.db.DB().First(&look, "slug = ?", slug)
+	p.db.DB().First(&look, "slug = ?", slug)
 
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -200,20 +200,20 @@ func (d *Papaya) HandleLikeLook(c *gin.Context) {
 
 	// user
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
 		return
 	}
 
-	err = d.db.DB().Model(user).Association("LikedLooks").Append(&look)
+	err = p.db.DB().Model(user).Association("LikedLooks").Append(&look)
 	if err != nil {
 		logrus.Errorf("error adding look to favorites: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 
-	err = d.adviser.Like(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	err = p.adviser.Like(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
 	if err != nil {
 		logrus.Errorf("error submitting 'like' feedback to adviser: %v", err)
 	}
@@ -223,11 +223,11 @@ func (d *Papaya) HandleLikeLook(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleUnlikeLook(c *gin.Context) {
+func (p *Papaya) HandleUnlikeLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
-	d.db.DB().First(&look, "slug = ?", slug)
+	p.db.DB().First(&look, "slug = ?", slug)
 
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -236,25 +236,25 @@ func (d *Papaya) HandleUnlikeLook(c *gin.Context) {
 
 	// user
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
 		return
 	}
 
-	d.db.DB().Model(user).Association("LikedLooks").Delete(&look)
+	p.db.DB().Model(user).Association("LikedLooks").Delete(&look)
 
 	c.JSON(200, gin.H{
 		"success": true,
 	})
 }
 
-func (d *Papaya) HandleDislikeLook(c *gin.Context) {
+func (p *Papaya) HandleDislikeLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
-	d.db.DB().First(&look, "slug = ?", slug)
+	p.db.DB().First(&look, "slug = ?", slug)
 
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -263,14 +263,14 @@ func (d *Papaya) HandleDislikeLook(c *gin.Context) {
 
 	// user
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
 		return
 	}
 
-	err = d.db.DB().Model(user).Association("DislikedLooks").Append(&look)
+	err = p.db.DB().Model(user).Association("DislikedLooks").Append(&look)
 	if err != nil {
 		logrus.Errorf("error adding look to favorites: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -281,11 +281,11 @@ func (d *Papaya) HandleDislikeLook(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) HandleUndislikeLook(c *gin.Context) {
+func (p *Papaya) HandleUndislikeLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
-	d.db.DB().First(&look, "slug = ?", slug)
+	p.db.DB().First(&look, "slug = ?", slug)
 
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -294,14 +294,14 @@ func (d *Papaya) HandleUndislikeLook(c *gin.Context) {
 
 	// user
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
 		return
 	}
 
-	err = d.db.DB().Model(user).Association("DislikedLooks").Delete(&look)
+	err = p.db.DB().Model(user).Association("DislikedLooks").Delete(&look)
 	if err != nil {
 		logrus.Errorf("error adding look to favorites: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -312,10 +312,10 @@ func (d *Papaya) HandleUndislikeLook(c *gin.Context) {
 	})
 }
 
-func (d *Papaya) GetLikedLooks(c *gin.Context) {
+func (p *Papaya) GetLikedLooks(c *gin.Context) {
 	// user
 
-	user, err := d.GetUser(c)
+	user, err := p.GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
@@ -323,7 +323,7 @@ func (d *Papaya) GetLikedLooks(c *gin.Context) {
 	}
 
 	var looks []models.Look
-	err = d.db.DB().Model(user).Association("LikedLooks").Find(&looks)
+	err = p.db.DB().Model(user).Association("LikedLooks").Find(&looks)
 	if err != nil {
 		logrus.Errorf("error getting liked looks: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
