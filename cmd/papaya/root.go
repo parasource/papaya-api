@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 LightSwitch.Digital
+ * Copyright 2022 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 package main
 
 import (
-	"github.com/lightswitch/dutchman-backend/papaya"
-	"github.com/lightswitch/dutchman-backend/papaya/database"
+	"github.com/lightswitch/papaya-api/pkg"
+	"github.com/lightswitch/papaya-api/pkg/db"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,7 +32,7 @@ var configDefaults = map[string]interface{}{
 	"http_host": "127.0.0.1",
 	"http_port": "8000",
 
-	"db_host":     "database",
+	"db_host":     "db",
 	"db_port":     "5432",
 	"db_database": "papaya",
 	"db_user":     "papaya-api",
@@ -50,7 +50,7 @@ func init() {
 	rootCmd.Flags().String("http_port", "8000", "file server http port")
 	rootCmd.Flags().String("db_host", "localhost", "db host")
 	rootCmd.Flags().String("db_port", "5432", "db port")
-	rootCmd.Flags().String("db_database", "papaya", "database name")
+	rootCmd.Flags().String("db_database", "papaya", "db name")
 	rootCmd.Flags().String("db_user", "", "db username")
 	rootCmd.Flags().String("db_password", "", "file server http port")
 	rootCmd.Flags().String("adviser_host", "gorse-server", "adviser host")

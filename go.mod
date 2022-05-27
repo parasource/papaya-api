@@ -1,4 +1,4 @@
-module github.com/lightswitch/dutchman-backend
+module github.com/lightswitch/papaya-api
 
 go 1.17
 
@@ -15,6 +15,8 @@ require (
 )
 
 require (
+	github.com/SevereCloud/vksdk v1.10.0 // indirect
+	github.com/SevereCloud/vksdk/v2 v2.14.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-co-op/gocron v1.13.0 // indirect
