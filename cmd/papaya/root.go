@@ -18,7 +18,7 @@ package main
 
 import (
 	"github.com/lightswitch/papaya-api/pkg"
-	"github.com/lightswitch/papaya-api/pkg/db"
+	"github.com/lightswitch/papaya-api/pkg/database"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,7 +32,7 @@ var configDefaults = map[string]interface{}{
 	"http_host": "127.0.0.1",
 	"http_port": "8000",
 
-	"db_host":     "db",
+	"db_host":     "database",
 	"db_port":     "5432",
 	"db_database": "papaya",
 	"db_user":     "papaya-api",
@@ -48,10 +48,10 @@ var configDefaults = map[string]interface{}{
 func init() {
 	rootCmd.Flags().String("http_host", "127.0.0.1", "file server http host")
 	rootCmd.Flags().String("http_port", "8000", "file server http port")
-	rootCmd.Flags().String("db_host", "localhost", "db host")
-	rootCmd.Flags().String("db_port", "5432", "db port")
-	rootCmd.Flags().String("db_database", "papaya", "db name")
-	rootCmd.Flags().String("db_user", "", "db username")
+	rootCmd.Flags().String("db_host", "localhost", "database host")
+	rootCmd.Flags().String("db_port", "5432", "database port")
+	rootCmd.Flags().String("db_database", "papaya", "database name")
+	rootCmd.Flags().String("db_user", "", "database username")
 	rootCmd.Flags().String("db_password", "", "file server http port")
 	rootCmd.Flags().String("adviser_host", "gorse-server", "adviser host")
 	rootCmd.Flags().String("adviser_port", "8087", "adviser port")

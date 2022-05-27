@@ -19,8 +19,8 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lightswitch/papaya-api/api/v1/requests"
-	database "github.com/lightswitch/papaya-api/pkg/db"
-	"github.com/lightswitch/papaya-api/pkg/db/models"
+	database "github.com/lightswitch/papaya-api/pkg/database"
+	"github.com/lightswitch/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -170,7 +170,7 @@ func HandleCollectionAddLook(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	//p.db.DB().Save()
+	//p.database.DB().Save()
 
 	c.JSON(200, gin.H{
 		"success": true,

@@ -19,8 +19,8 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lightswitch/papaya-api/api/v1/requests"
-	database "github.com/lightswitch/papaya-api/pkg/db"
-	"github.com/lightswitch/papaya-api/pkg/db/models"
+	database "github.com/lightswitch/papaya-api/pkg/database"
+	"github.com/lightswitch/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -93,7 +93,7 @@ func HandleProfileUpdateSettings(c *gin.Context) {
 	}
 
 	//
-	//err = p.db.UpdateUserSettings(userId, &models.UserSettings{
+	//err = p.database.UpdateUserSettings(userId, &models.UserSettings{
 	//	ReceivePushNotifications:  r.ReceivePushNotifications,
 	//	ReceiveEmailNotifications: r.ReceiveEmailNotifications,
 	//})

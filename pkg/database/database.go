@@ -18,7 +18,7 @@ package database
 
 import (
 	"fmt"
-	models2 "github.com/lightswitch/papaya-api/pkg/db/models"
+	models2 "github.com/lightswitch/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

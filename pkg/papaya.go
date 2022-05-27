@@ -21,8 +21,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lightswitch/papaya-api/api/v1/router"
 	"github.com/lightswitch/papaya-api/pkg/adviser"
-	"github.com/lightswitch/papaya-api/pkg/db"
-	models2 "github.com/lightswitch/papaya-api/pkg/db/models"
+	"github.com/lightswitch/papaya-api/pkg/database"
+	models2 "github.com/lightswitch/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 	"net"
 )
@@ -58,12 +58,11 @@ func NewPapaya(cfg Config, dbCfg database.Config) (*Papaya, error) {
 	// Database
 	err := database.New(dbCfg)
 	if err != nil {
-		logrus.Fatalf("error creating db: %v", err)
+		logrus.Fatalf("error creating database: %v", err)
 	}
 
 	adviserUrl := net.JoinHostPort(cfg.AdviserHost, cfg.AdviserPort)
-	a := adviser.NewAdviser(adviserUrl, 3)
-	d.adviser = a
+	adviser.New(adviserUrl, 3)
 
 	jobs := []*Job{
 		{

@@ -18,8 +18,9 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	database "github.com/lightswitch/papaya-api/pkg/db"
-	"github.com/lightswitch/papaya-api/pkg/db/models"
+	"github.com/lightswitch/papaya-api/pkg/adviser"
+	database "github.com/lightswitch/papaya-api/pkg/database"
+	"github.com/lightswitch/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -142,11 +143,10 @@ func HandleGetLook(c *gin.Context) {
 		return
 	}
 
-	// FIXME
-	//err = p.adviser.Read(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
-	//if err != nil {
-	//	logrus.Errorf("error submitting 'read' feedback to adviser: %v", err)
-	//}
+	err = adviser.Read(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("error submitting 'read' feedback to adviser: %v", err)
+	}
 
 	var isLiked bool
 	database.DB().Raw("SELECT COUNT(1) FROM liked_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isLiked)
@@ -200,8 +200,6 @@ func HandleLikeLook(c *gin.Context) {
 		return
 	}
 
-	// user
-
 	user, err := GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
@@ -215,11 +213,10 @@ func HandleLikeLook(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 
-	// FIXME
-	//err = p.adviser.Like(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
-	//if err != nil {
-	//	logrus.Errorf("error submitting 'like' feedback to adviser: %v", err)
-	//}
+	err = adviser.Like(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("error submitting 'like' feedback to adviser: %v", err)
+	}
 
 	c.JSON(200, gin.H{
 		"success": true,
@@ -334,7 +331,7 @@ func HandleGetWardrobeItems(c *gin.Context) {
 	var items []*models.WardrobeCategory
 	err := database.DB().Preload("Items").Find(&items).Error
 	if err != nil {
-		logrus.Errorf("error getting wardrobe items from db: %v", err)
+		logrus.Errorf("error getting wardrobe items from database: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}

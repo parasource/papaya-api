@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt"
-	"github.com/lightswitch/papaya-api/pkg/db/models"
+	"github.com/lightswitch/papaya-api/pkg/database/models"
 	"time"
 )
 

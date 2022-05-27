@@ -19,8 +19,8 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lightswitch/papaya-api/api/v1/requests"
-	"github.com/lightswitch/papaya-api/pkg/db"
-	"github.com/lightswitch/papaya-api/pkg/db/models"
+	"github.com/lightswitch/papaya-api/pkg/database"
+	"github.com/lightswitch/papaya-api/pkg/database/models"
 	"github.com/lightswitch/papaya-api/pkg/util"
 	"github.com/sirupsen/logrus"
 	"net/http"

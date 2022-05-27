@@ -18,8 +18,8 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/papaya-api/pkg/db"
-	models2 "github.com/lightswitch/papaya-api/pkg/db/models"
+	"github.com/lightswitch/papaya-api/pkg/database"
+	"github.com/lightswitch/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 	"strconv"
 )
@@ -71,8 +71,8 @@ func HandleSearch(c *gin.Context) {
 		ranks[result.ID] = result.Rank
 	}
 
-	var looks []*models2.Look
-	var topics []*models2.Topic
+	var looks []*models.Look
+	var topics []*models.Topic
 
 	err = database.DB().Find(&looks, lookIDs).Error
 	if err != nil {
@@ -101,7 +101,7 @@ func HandleSearch(c *gin.Context) {
 		c.AbortWithStatus(403)
 		return
 	}
-	sr := models2.SearchRecord{
+	sr := models.SearchRecord{
 		Query:  q[0],
 		UserID: user.ID,
 	}

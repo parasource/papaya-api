@@ -25,28 +25,30 @@ import (
 	"time"
 )
 
+var instance *Adviser
+
 type Adviser struct {
 	c       *http.Client
 	baseUrl string
 }
 
-func NewAdviser(url string, timeoutS int) *Adviser {
+func New(url string, timeoutS int) {
 	c := &http.Client{
 		Timeout: time.Second * time.Duration(timeoutS),
 	}
-	return &Adviser{
+	instance = &Adviser{
 		c:       c,
 		baseUrl: url,
 	}
 }
 
-func (a *Adviser) InsertItem(item *Item) error {
+func InsertItem(item *Item) error {
 	var err error
 
 	itemBytes, _ := item.Marshal()
 
-	url := fmt.Sprintf("http://%v/api/item", a.baseUrl)
-	res, err := a.c.Post(url, "application/json", bytes.NewReader(itemBytes))
+	url := fmt.Sprintf("http://%v/api/item", instance.baseUrl)
+	res, err := instance.c.Post(url, "application/json", bytes.NewReader(itemBytes))
 	if res.StatusCode != 200 {
 		return errors.New(fmt.Sprintf("wrong status code - %v", res.StatusCode))
 	}
@@ -54,7 +56,7 @@ func (a *Adviser) InsertItem(item *Item) error {
 	return err
 }
 
-func (a *Adviser) Read(userId, itemId string) error {
+func Read(userId, itemId string) error {
 	var err error
 
 	r := FeedbackRequest{
@@ -65,8 +67,8 @@ func (a *Adviser) Read(userId, itemId string) error {
 	}
 	rBytes, _ := json.Marshal([]FeedbackRequest{r})
 
-	url := fmt.Sprintf("http://%v/api/feedback", a.baseUrl)
-	res, err := a.c.Post(url, "application/json", bytes.NewReader(rBytes))
+	url := fmt.Sprintf("http://%v/api/feedback", instance.baseUrl)
+	res, err := instance.c.Post(url, "application/json", bytes.NewReader(rBytes))
 	if res.StatusCode != 200 {
 		return fmt.Errorf("wrong status code - %v", res.StatusCode)
 	}
@@ -74,11 +76,11 @@ func (a *Adviser) Read(userId, itemId string) error {
 	return err
 }
 
-func (a *Adviser) RecommendForUser(userID string) ([]string, error) {
+func RecommendForUser(userID string) ([]string, error) {
 	var ids []string
 
-	url := fmt.Sprintf("http://%v/api/recommend/%v", a.baseUrl, userID)
-	res, err := a.c.Get(url)
+	url := fmt.Sprintf("http://%v/api/recommend/%v", instance.baseUrl, userID)
+	res, err := instance.c.Get(url)
 	if res.StatusCode != 200 {
 		return nil, fmt.Errorf("wrong status code - %v", res.StatusCode)
 	}
@@ -92,7 +94,7 @@ func (a *Adviser) RecommendForUser(userID string) ([]string, error) {
 
 }
 
-func (a *Adviser) Like(userId, itemID string) error {
+func Like(userId, itemID string) error {
 	var err error
 
 	r := FeedbackRequest{
@@ -103,8 +105,8 @@ func (a *Adviser) Like(userId, itemID string) error {
 	}
 	rBytes, _ := json.Marshal([]FeedbackRequest{r})
 
-	url := fmt.Sprintf("http://%v/api/feedback", a.baseUrl)
-	res, err := a.c.Post(url, "application/json", bytes.NewReader(rBytes))
+	url := fmt.Sprintf("http://%v/api/feedback", instance.baseUrl)
+	res, err := instance.c.Post(url, "application/json", bytes.NewReader(rBytes))
 	if res.StatusCode != 200 {
 		return fmt.Errorf("wrong status code - %v", res.StatusCode)
 	}
