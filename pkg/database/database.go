@@ -18,11 +18,31 @@ package database
 
 import (
 	"fmt"
-	models2 "github.com/lightswitch/papaya-api/pkg/database/models"
+	"github.com/lightswitch/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"time"
+)
+
+const (
+	setupScript = `
+	CREATE OR REPLACE VIEW searches AS
+
+    SELECT text 'looks' as origin_table, id, tsv
+    FROM looks
+
+    UNION ALL
+
+    SELECT text 'topics' as origin_table, id, tsv
+    FROM topics;
+
+	UPDATE looks SET tsv = to_tsvector('russian', looks.name) || to_tsvector('russian', looks.desc) WHERE tsv IS NULL;
+	UPDATE topics SET tsv = to_tsvector('russian', topics.name) || to_tsvector('russian', topics.desc) WHERE tsv IS NULL;
+
+	CREATE INDEX IF NOT EXISTS idx_tsv_looks ON looks USING gin(tsv);
+	CREATE INDEX IF NOT EXISTS idx_tsv_topics ON topics USING gin(tsv);
+	`
 )
 
 var conn *gorm.DB
@@ -71,6 +91,14 @@ func New(cfg Config) error {
 		logrus.Fatalf("error migrating: %v", err)
 	}
 
+	// Running database setup script
+	err = db.Exec(setupScript).Error
+	if err != nil {
+		logrus.Errorf("error running sql setup script: %v", err)
+	} else {
+		logrus.Infof("database setup script run successfully")
+	}
+
 	conn = db
 
 	return err
@@ -84,8 +112,8 @@ func (d *Database) DB() *gorm.DB {
 	return d.db
 }
 
-func GetUserByEmail(email string) *models2.User {
-	var user models2.User
+func GetUserByEmail(email string) *models.User {
+	var user models.User
 
 	conn.Preload("Wardrobe").Preload("SavedTopics").Preload("Collections").First(&user, "email = ?", email)
 	if user.ID == 0 {
@@ -95,8 +123,8 @@ func GetUserByEmail(email string) *models2.User {
 	return &user
 }
 
-func GetUser(id uint) *models2.User {
-	var user models2.User
+func GetUser(id uint) *models.User {
+	var user models.User
 
 	conn.First(&user, "id = ?", id)
 	if user.ID == 0 {
@@ -106,22 +134,22 @@ func GetUser(id uint) *models2.User {
 	return &user
 }
 
-func CreateUser(user *models2.User) {
+func CreateUser(user *models.User) {
 	conn.Create(user)
 }
 
 func migrate(db *gorm.DB) error {
 
 	err := db.AutoMigrate(
-		&models2.User{},
-		&models2.WardrobeCategory{},
-		&models2.WardrobeItem{},
-		&models2.Tag{},
-		&models2.Look{},
-		&models2.ItemURL{},
-		&models2.Category{},
-		&models2.Collection{},
-		&models2.SearchRecord{},
+		&models.User{},
+		&models.WardrobeCategory{},
+		&models.WardrobeItem{},
+		&models.Tag{},
+		&models.Look{},
+		&models.ItemURL{},
+		&models.Category{},
+		&models.Collection{},
+		&models.SearchRecord{},
 	)
 	if err != nil {
 		return err

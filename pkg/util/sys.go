@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package models
+package util
 
-import (
-	"gorm.io/gorm"
-)
+import "os"
 
-type Topic struct {
-	gorm.Model
-	Name      string  `json:"name"`
-	Slug      string  `json:"slug"`
-	Desc      string  `json:"desc"`
-	Image     string  `json:"image"`
-	Looks     []*Look `json:"looks" gorm:"many2many:topic_looks;"`
-	IsWatched bool    `json:"isSaved" gorm:"-"`
-	Tsv       string  `json:"-" gorm:"type:tsvector"`
-	Rank      float32 `gorm:"-" json:"rank"`
+func GetRootPath() string {
+	path, err := os.Executable()
+	if err != nil {
+
+	}
+	return path
 }
