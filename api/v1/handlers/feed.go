@@ -57,10 +57,10 @@ func HandleFeed(c *gin.Context) {
 		return
 	}
 
-	var styles []models.Tag
-	err = database.DB().Preload("Looks.Items").Find(&styles).Error
+	var categories []models.Category
+	err = database.DB().Find(&categories).Error
 	if err != nil {
-		logrus.Errorf("error getting styles: %v", err)
+		logrus.Errorf("error getting categories: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
@@ -79,16 +79,16 @@ func HandleFeed(c *gin.Context) {
 	}
 
 	result := gin.H{
-		"todayLook": todayLook,
-		"page":      page,
-		"looks":     looks,
-		"styles":    styles,
+		"todayLook":  todayLook,
+		"page":       page,
+		"looks":      looks,
+		"categories": categories,
 	}
 	c.JSON(200, result)
 }
 
-func HandleFeedByTag(c *gin.Context) {
-	slug := c.Param("tag")
+func HandleFeedByCategory(c *gin.Context) {
+	slug := c.Param("category")
 
 	params := c.Request.URL.Query()
 
@@ -101,17 +101,17 @@ func HandleFeedByTag(c *gin.Context) {
 
 	offset := int(page * 20)
 
-	var tag models.Tag
-	database.DB().First(&tag, "slug = ?", slug)
+	var category models.Category
+	database.DB().First(&category, "slug = ?", slug)
 
-	if tag.ID == 0 {
+	if category.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
 	var looks []*models.Look
 	err := database.DB().
-		Raw("SELECT * FROM looks JOIN look_tags lt on looks.id = lt.look_id WHERE lt.tag_id = ?", tag.ID).
+		Raw("SELECT * FROM looks JOIN look_categories lc on looks.id = lc.look_id WHERE lc.category_id = ?", category.ID).
 		Order("created_at desc").
 		Offset(offset).Preload("Items.Urls.Brand").
 		Limit(FeedPagination).Find(&looks).Error
@@ -120,8 +120,8 @@ func HandleFeedByTag(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"looks": looks,
-		"tag":   tag,
+		"looks":    looks,
+		"category": category,
 	})
 }
 
@@ -181,7 +181,7 @@ func HandleGetLookItem(c *gin.Context) {
 	}
 
 	var looks []models.Look
-	database.DB().Raw("SELECT looks.* FROM looks JOIN look_items li on looks.id = li.look_id WHERE li.look_id = ? AND looks.id != ? LIMIT 10", item.ID, look.ID).Scan(&looks)
+	database.DB().Raw("SELECT looks.* FROM looks JOIN look_items li on looks.id = li.look_id WHERE li.look_id = ? AND looks.id != ? LIMIT 20", item.ID, look.ID).Scan(&looks)
 
 	c.JSON(200, gin.H{
 		"item":  item,

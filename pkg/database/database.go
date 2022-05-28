@@ -42,6 +42,18 @@ const (
 
 	CREATE INDEX IF NOT EXISTS idx_tsv_looks ON looks USING gin(tsv);
 	CREATE INDEX IF NOT EXISTS idx_tsv_topics ON topics USING gin(tsv);
+
+	DROP TRIGGER IF EXISTS looks_tsv_insert on looks;
+	CREATE TRIGGER looks_tsv_insert BEFORE INSERT OR UPDATE
+    ON looks
+    FOR EACH ROW EXECUTE PROCEDURE
+    tsvector_update_trigger(tsv, 'pg_catalog.russian', name, "desc");
+
+	DROP TRIGGER IF EXISTS topics_tsv_insert on topics;
+	CREATE TRIGGER topics_tsv_insert BEFORE INSERT OR UPDATE
+    ON topics
+    FOR EACH ROW EXECUTE PROCEDURE
+    tsvector_update_trigger(tsv, 'pg_catalog.russian', name, "desc");
 	`
 )
 
@@ -144,7 +156,6 @@ func migrate(db *gorm.DB) error {
 		&models.User{},
 		&models.WardrobeCategory{},
 		&models.WardrobeItem{},
-		&models.Tag{},
 		&models.Look{},
 		&models.ItemURL{},
 		&models.Category{},

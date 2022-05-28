@@ -51,7 +51,7 @@ func Initialize() *gin.Engine {
 	r.DELETE("/api/looks/:look/dislike", middleware.AuthMiddleware, handlers.HandleUndislikeLook)
 	r.GET("/api/liked", middleware.AuthMiddleware, handlers.GetLikedLooks)
 	r.GET("/api/feed", middleware.AuthMiddleware, handlers.HandleFeed)
-	r.GET("/api/feed/:tag", middleware.AuthMiddleware, handlers.HandleFeedByTag)
+	r.GET("/api/feed/:category", middleware.AuthMiddleware, handlers.HandleFeedByCategory)
 	r.GET("/api/get-wardrobe-items", middleware.AuthMiddleware, handlers.HandleGetWardrobeItems)
 
 	/// Profile
