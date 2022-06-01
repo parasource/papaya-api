@@ -17,6 +17,7 @@
 package main
 
 import (
+	vault "github.com/hashicorp/vault/api"
 	"github.com/lightswitch/papaya-api/pkg"
 	"github.com/lightswitch/papaya-api/pkg/database"
 	"github.com/sirupsen/logrus"
@@ -55,6 +56,8 @@ func init() {
 	rootCmd.Flags().String("db_password", "", "file server http port")
 	rootCmd.Flags().String("adviser_host", "gorse-server", "adviser host")
 	rootCmd.Flags().String("adviser_port", "8087", "adviser port")
+	rootCmd.Flags().String("vault_addr", "http://vault:8200", "vault address")
+	rootCmd.Flags().String("vault_token", "vault-plaintext-root-token", "vault token")
 	rootCmd.Flags().Int("shutdown_timeout", 30, "node graceful shutdown timeout")
 
 	viper.BindPFlag("http_host", rootCmd.Flags().Lookup("http_host"))
@@ -66,6 +69,8 @@ func init() {
 	viper.BindPFlag("db_password", rootCmd.Flags().Lookup("db_password"))
 	viper.BindPFlag("adviser_host", rootCmd.Flags().Lookup("adviser_host"))
 	viper.BindPFlag("adviser_port", rootCmd.Flags().Lookup("adviser_port"))
+	viper.BindPFlag("vault_addr", rootCmd.Flags().Lookup("vault_addr"))
+	viper.BindPFlag("vault_token", rootCmd.Flags().Lookup("vault_token"))
 	viper.BindPFlag("shutdown_timeout", rootCmd.Flags().Lookup("shutdown_timeout"))
 }
 
@@ -80,7 +85,7 @@ var rootCmd = &cobra.Command{
 		bindEnvs := []string{
 			"http_host", "http_port",
 			"db_host", "db_port", "db_database", "db_user", "db_password",
-			"adviser_host", "adviser_port",
+			"adviser_host", "adviser_port", "vault_addr", "vault_token",
 			"shutdown_timeout",
 		}
 		for _, env := range bindEnvs {
@@ -112,6 +117,8 @@ var rootCmd = &cobra.Command{
 		adviserHost := v.GetString("adviser_host")
 		adviserPort := v.GetString("adviser_port")
 
+		testVault()
+
 		papaya, err := papaya.NewPapaya(papaya.Config{
 			HttpHost:    httpHost,
 			HttpPort:    httpPort,
@@ -133,6 +140,56 @@ var rootCmd = &cobra.Command{
 		}
 
 	},
+}
+
+func testVault() {
+	v := viper.GetViper()
+	vaultAddr := v.GetString("vault_addr")
+	vaultToken := v.GetString("vault_token")
+	logrus.Infof("vault addr: %v -- token: %v", vaultAddr, vaultToken)
+
+	config := vault.DefaultConfig()
+
+	config.Address = vaultAddr
+
+	client, err := vault.NewClient(config)
+	if err != nil {
+		logrus.Errorf("unable to initialize Vault client: %v", err)
+		return
+	}
+	client.SetToken(vaultToken)
+
+	// Writing test data
+	secretData := map[string]interface{}{
+		"data": map[string]interface{}{
+			"password": "Hashi123",
+		},
+	}
+	_, err = client.Logical().Write("secret/data/my-secret-password", secretData)
+	if err != nil {
+		logrus.Errorf("Unable to write secret: %v", err)
+		return
+	}
+	logrus.Info("Secret written successfully.")
+
+	secret, err := client.Logical().Read("secret/data/my-secret-password")
+	if err != nil {
+		logrus.Errorf("Unable to read secret: %v", err)
+		return
+	}
+
+	data, ok := secret.Data["data"].(map[string]interface{})
+	if !ok {
+		logrus.Errorf("Data type assertion failed: %T %#v", secret.Data["data"], secret.Data["data"])
+		return
+	}
+
+	value, ok := data["password"].(string)
+	if !ok {
+		logrus.Errorf("Value type assertion failed: %T %#v", data["password"], data["password"])
+		return
+	}
+	logrus.Infof("password from vault: %v", value)
 }
 
 func printWelcome() {
