@@ -17,6 +17,7 @@
 package main
 
 import (
+	"errors"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/lightswitch/papaya-api/pkg"
 	"github.com/lightswitch/papaya-api/pkg/database"
@@ -36,8 +37,6 @@ var configDefaults = map[string]interface{}{
 	"db_host":     "database",
 	"db_port":     "5432",
 	"db_database": "papaya",
-	"db_user":     "papaya-api",
-	"db_password": "6TKE+J({K$>*^fD",
 
 	"adviser_host": "gorse-server",
 	"adviser_port": "8087",
@@ -52,8 +51,6 @@ func init() {
 	rootCmd.Flags().String("db_host", "localhost", "database host")
 	rootCmd.Flags().String("db_port", "5432", "database port")
 	rootCmd.Flags().String("db_database", "papaya", "database name")
-	rootCmd.Flags().String("db_user", "", "database username")
-	rootCmd.Flags().String("db_password", "", "file server http port")
 	rootCmd.Flags().String("adviser_host", "gorse-server", "adviser host")
 	rootCmd.Flags().String("adviser_port", "8087", "adviser port")
 	rootCmd.Flags().String("vault_addr", "http://vault:8200", "vault address")
@@ -65,8 +62,6 @@ func init() {
 	viper.BindPFlag("db_host", rootCmd.Flags().Lookup("db_host"))
 	viper.BindPFlag("db_port", rootCmd.Flags().Lookup("db_port"))
 	viper.BindPFlag("db_database", rootCmd.Flags().Lookup("db_database"))
-	viper.BindPFlag("db_user", rootCmd.Flags().Lookup("db_user"))
-	viper.BindPFlag("db_password", rootCmd.Flags().Lookup("db_password"))
 	viper.BindPFlag("adviser_host", rootCmd.Flags().Lookup("adviser_host"))
 	viper.BindPFlag("adviser_port", rootCmd.Flags().Lookup("adviser_port"))
 	viper.BindPFlag("vault_addr", rootCmd.Flags().Lookup("vault_addr"))
@@ -84,7 +79,7 @@ var rootCmd = &cobra.Command{
 
 		bindEnvs := []string{
 			"http_host", "http_port",
-			"db_host", "db_port", "db_database", "db_user", "db_password",
+			"db_host", "db_port", "db_database",
 			"adviser_host", "adviser_port", "vault_addr", "vault_token",
 			"shutdown_timeout",
 		}
@@ -108,29 +103,19 @@ var rootCmd = &cobra.Command{
 		httpHost := v.GetString("http_host")
 		httpPort := v.GetString("http_port")
 
-		dbHost := v.GetString("db_host")
-		dbPort := v.GetString("db_port")
-		dbDatabase := v.GetString("db_database")
-		dbUser := v.GetString("db_user")
-		dbPass := v.GetString("db_password")
-
 		adviserHost := v.GetString("adviser_host")
 		adviserPort := v.GetString("adviser_port")
 
-		testVault()
-
+		dbConfig, err := getDatabaseConfig(v)
+		if err != nil {
+			logrus.Fatalf("eror getting database config: %v", err)
+		}
 		papaya, err := papaya.NewPapaya(papaya.Config{
 			HttpHost:    httpHost,
 			HttpPort:    httpPort,
 			AdviserHost: adviserHost,
 			AdviserPort: adviserPort,
-		}, database.Config{
-			Host:     dbHost,
-			Port:     dbPort,
-			Database: dbDatabase,
-			User:     dbUser,
-			Password: dbPass,
-		})
+		}, dbConfig)
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -142,10 +127,10 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func testVault() {
-	v := viper.GetViper()
+func getDatabaseConfig(v *viper.Viper) (database.Config, error) {
 	vaultAddr := v.GetString("vault_addr")
 	vaultToken := v.GetString("vault_token")
+
 	logrus.Infof("vault addr: %v -- token: %v", vaultAddr, vaultToken)
 
 	config := vault.DefaultConfig()
@@ -154,42 +139,38 @@ func testVault() {
 
 	client, err := vault.NewClient(config)
 	if err != nil {
-		logrus.Errorf("unable to initialize Vault client: %v", err)
-		return
+		return database.Config{}, err
 	}
 	client.SetToken(vaultToken)
 
-	// Writing test data
-	secretData := map[string]interface{}{
-		"data": map[string]interface{}{
-			"password": "Hashi123",
-		},
-	}
-	_, err = client.Logical().Write("secret/data/my-secret-password", secretData)
+	client.Logical()
+
+	secret, err := client.Logical().Read("database/creds/api")
 	if err != nil {
-		logrus.Errorf("Unable to write secret: %v", err)
-		return
+		return database.Config{}, err
 	}
-	logrus.Info("Secret written successfully.")
+	logrus.Infof("vault response data: %v", secret.Data)
+	logrus.Infof("vault response warnings: %v", secret.Warnings)
 
-	secret, err := client.Logical().Read("secret/data/my-secret-password")
-	if err != nil {
-		logrus.Errorf("Unable to read secret: %v", err)
-		return
-	}
-
-	data, ok := secret.Data["data"].(map[string]interface{})
+	username, ok := secret.Data["username"].(string)
 	if !ok {
-		logrus.Errorf("Data type assertion failed: %T %#v", secret.Data["data"], secret.Data["data"])
-		return
+		return database.Config{}, errors.New("error casting result from vault")
 	}
-
-	value, ok := data["password"].(string)
+	password, ok := secret.Data["password"].(string)
 	if !ok {
-		logrus.Errorf("Value type assertion failed: %T %#v", data["password"], data["password"])
-		return
+		return database.Config{}, errors.New("error casting result from vault")
 	}
-	logrus.Infof("password from vault: %v", value)
+	dbDatabase := v.GetString("db_database")
+	dbHost := v.GetString("db_host")
+	dbPort := v.GetString("db_port")
+
+	return database.Config{
+		Host:     dbHost,
+		Port:     dbPort,
+		Database: dbDatabase,
+		User:     username,
+		Password: password,
+	}, nil
 }
 
 func printWelcome() {

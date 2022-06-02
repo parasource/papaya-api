@@ -98,10 +98,10 @@ func New(cfg Config) error {
 		logrus.Fatalf("error connecting to postgres: %v", err)
 	}
 
-	err = migrate(db)
-	if err != nil {
-		logrus.Fatalf("error migrating: %v", err)
-	}
+	//err = migrate(db)
+	//if err != nil {
+	//	logrus.Fatalf("error migrating: %v", err)
+	//}
 
 	// Running database setup script
 	err = db.Exec(setupScript).Error
@@ -113,7 +113,7 @@ func New(cfg Config) error {
 
 	conn = db
 
-	return err
+	return nil
 }
 
 func DB() *gorm.DB {
