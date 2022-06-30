@@ -33,6 +33,7 @@ func Initialize() *gin.Engine {
 
 	/// Search
 	r.GET("/api/search", middleware.AuthMiddleware, handlers.HandleSearch)
+	r.GET("/api/search/history", middleware.AuthMiddleware, handlers.HandleSearchHistory)
 
 	/// Topics
 	r.GET("/api/topics/recommended", middleware.AuthMiddleware, handlers.HandleGetRecommendedTopics)

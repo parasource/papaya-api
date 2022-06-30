@@ -115,3 +115,22 @@ func HandleSearch(c *gin.Context) {
 		"topics": topics,
 	})
 }
+
+func HandleSearchHistory(c *gin.Context) {
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	var sr []*models.SearchRecord
+	err = database.DB().Where("user_id = ?", user.ID).Find(&sr).Error
+	if err != nil {
+		logrus.Errorf("error getting search records: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	c.JSON(200, sr)
+}
