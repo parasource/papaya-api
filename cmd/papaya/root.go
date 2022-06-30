@@ -145,7 +145,7 @@ func getDatabaseConfig(v *viper.Viper) (database.Config, error) {
 
 	client.Logical()
 
-	secret, err := client.Logical().Read("database/creds/api")
+	secret, err := client.Logical().Read("database/static-creds/api")
 	if err != nil {
 		return database.Config{}, err
 	}

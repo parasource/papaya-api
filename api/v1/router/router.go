@@ -42,6 +42,14 @@ func Initialize() *gin.Engine {
 	r.PUT("/api/topics/:topic/save", middleware.AuthMiddleware, handlers.HandleSaveTopic)
 	r.DELETE("/api/topics/:topic/unsave", middleware.AuthMiddleware, handlers.HandleUnsaveTopic)
 
+	/// Collections
+	r.GET("/api/collections", middleware.AuthMiddleware, handlers.HandleGetCollections)
+	r.POST("/api/collections/create", middleware.AuthMiddleware, handlers.HandleCreateCollection)
+	r.DELETE("/api/collections/:collection/delete", middleware.AuthMiddleware, handlers.HandleDeleteCollection)
+	r.PUT("/api/collections/:collection/add/:look", middleware.AuthMiddleware, handlers.HandleCollectionAddLook)
+	r.DELETE("/api/collections/:collection/remove/:look", middleware.AuthMiddleware, handlers.HandleCollectionRemoveLook)
+	r.GET("/api/collections/:collection", middleware.AuthMiddleware, handlers.HandleGetCollection)
+
 	/// Feed and looks
 	r.GET("/api/looks/:look", middleware.AuthMiddleware, handlers.HandleGetLook)
 	r.GET("/api/looks/:look/item/:item", middleware.AuthMiddleware, handlers.HandleGetLookItem)

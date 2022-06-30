@@ -35,7 +35,7 @@ func HandleGetCollections(c *gin.Context) {
 	}
 
 	var collections []*models.Collection
-	err = database.DB().Model(&user).Association("Collections").Find(&collections)
+	err = database.DB().Model(&user).Preload("Looks").Association("Collections").Find(&collections)
 	if err != nil {
 		logrus.Errorf("error getting user's collections: %v", err)
 		c.AbortWithStatus(500)

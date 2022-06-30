@@ -181,7 +181,7 @@ func HandleGetLookItem(c *gin.Context) {
 	}
 
 	var looks []models.Look
-	database.DB().Raw("SELECT looks.* FROM looks JOIN look_items li on looks.id = li.look_id WHERE li.look_id = ? AND looks.id != ? LIMIT 20", item.ID, look.ID).Scan(&looks)
+	database.DB().Raw("SELECT looks.* FROM looks JOIN look_items li on looks.id = li.look_id WHERE li.wardrobe_item_id = ? AND looks.id != ? LIMIT 20", item.ID, look.ID).Scan(&looks)
 
 	c.JSON(200, gin.H{
 		"item":  item,
