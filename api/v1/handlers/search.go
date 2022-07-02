@@ -36,6 +36,11 @@ func HandleSearch(c *gin.Context) {
 	params := c.Request.URL.Query()
 
 	q := params["q"]
+	if q[0] == "" {
+		c.JSON(204, []int{})
+		return
+	}
+
 	var page int64
 	if _, ok := params["page"]; !ok {
 		page = 0
@@ -51,6 +56,14 @@ func HandleSearch(c *gin.Context) {
 	if err != nil {
 		logrus.Errorf("erorr searching: %v", err)
 		c.AbortWithStatus(500)
+		return
+	}
+
+	if len(res) == 0 {
+		c.JSON(200, gin.H{
+			"looks":  []int{},
+			"topics": []int{},
+		})
 		return
 	}
 
@@ -125,9 +138,52 @@ func HandleSearchHistory(c *gin.Context) {
 	}
 
 	var sr []*models.SearchRecord
-	err = database.DB().Where("user_id = ?", user.ID).Find(&sr).Error
+	err = database.DB().Where("user_id = ?", user.ID).Order("id desc").Limit(10).Find(&sr).Error
 	if err != nil {
 		logrus.Errorf("error getting search records: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	c.JSON(200, sr)
+}
+
+func HandleSearchPopular(c *gin.Context) {
+	var looks []*models.Look
+	var topics []*models.Topic
+
+	err := database.DB().Order("RANDOM()").Limit(10).Find(&looks).Error
+	if err != nil {
+		logrus.Errorf("error getting popular looks: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	err = database.DB().Order("RANDOM()").Limit(10).Find(&topics).Error
+	if err != nil {
+		logrus.Errorf("error getting popular topics: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"looks":  looks,
+		"topics": topics,
+	})
+}
+
+func HandleSearchSuggestions(c *gin.Context) {
+	params := c.Request.URL.Query()
+	q := params["q"]
+	if q[0] == "" {
+		c.JSON(204, []int{})
+		return
+	}
+
+	var sr []*models.SearchRecord
+	err := database.DB().Raw("SELECT search_records.*, ts_rank(search_records.tsv, plainto_tsquery('russian', ?)) as rank FROM search_records WHERE search_records.tsv @@ plainto_tsquery('russian', ?) LIMIT ?", q[0], q[0], 10).Find(&sr).Error
+	if err != nil {
+		logrus.Errorf("erorr searching: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}

@@ -22,4 +22,5 @@ type SearchRecord struct {
 	gorm.Model
 	Query  string `json:"query"`
 	UserID uint   `json:"user_id"`
+	Tsv    string `json:"-" gorm:"type:tsvector"`
 }

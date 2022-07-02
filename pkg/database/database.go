@@ -39,9 +39,11 @@ const (
 
 	UPDATE looks SET tsv = to_tsvector('russian', looks.name) || to_tsvector('russian', looks.desc) WHERE tsv IS NULL;
 	UPDATE topics SET tsv = to_tsvector('russian', topics.name) || to_tsvector('russian', topics.desc) WHERE tsv IS NULL;
+	UPDATE search_records SET tsv = to_tsvector('russian', search_records.query) WHERE tsv IS NULL;
 
 	CREATE INDEX IF NOT EXISTS idx_tsv_looks ON looks USING gin(tsv);
 	CREATE INDEX IF NOT EXISTS idx_tsv_topics ON topics USING gin(tsv);
+	CREATE INDEX IF NOT EXISTS idx_tsv_searches ON search_records USING gin(tsv);
 
 	DROP TRIGGER IF EXISTS looks_tsv_insert on looks;
 	CREATE TRIGGER looks_tsv_insert BEFORE INSERT OR UPDATE
@@ -54,6 +56,12 @@ const (
     ON topics
     FOR EACH ROW EXECUTE PROCEDURE
     tsvector_update_trigger(tsv, 'pg_catalog.russian', name, "desc");
+
+	DROP TRIGGER IF EXISTS searches_tsv_insert on search_records;
+	CREATE TRIGGER searches_tsv_insert BEFORE INSERT OR UPDATE
+    ON search_records
+    FOR EACH ROW EXECUTE PROCEDURE
+    tsvector_update_trigger(tsv, 'pg_catalog.russian', query);
 	`
 )
 
@@ -98,10 +106,10 @@ func New(cfg Config) error {
 		logrus.Fatalf("error connecting to postgres: %v", err)
 	}
 
-	//err = migrate(db)
-	//if err != nil {
-	//	logrus.Fatalf("error migrating: %v", err)
-	//}
+	err = migrate(db)
+	if err != nil {
+		logrus.Fatalf("error migrating: %v", err)
+	}
 
 	// Running database setup script
 	err = db.Exec(setupScript).Error
