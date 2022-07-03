@@ -19,8 +19,8 @@ package main
 import (
 	"errors"
 	vault "github.com/hashicorp/vault/api"
-	"github.com/lightswitch/papaya-api/pkg"
-	"github.com/lightswitch/papaya-api/pkg/database"
+	"github.com/parasource/papaya-api/pkg"
+	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

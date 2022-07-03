@@ -1,4 +1,4 @@
-module github.com/lightswitch/papaya-api
+module github.com/parasource/papaya-api
 
 go 1.17
 

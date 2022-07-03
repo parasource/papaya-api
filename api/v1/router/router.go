@@ -18,8 +18,8 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/papaya-api/api/v1/handlers"
-	"github.com/lightswitch/papaya-api/api/v1/middleware"
+	"github.com/parasource/papaya-api/api/v1/handlers"
+	"github.com/parasource/papaya-api/api/v1/middleware"
 )
 
 func Initialize() *gin.Engine {

@@ -19,10 +19,10 @@ package papaya
 import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/papaya-api/api/v1/router"
-	"github.com/lightswitch/papaya-api/pkg/adviser"
-	"github.com/lightswitch/papaya-api/pkg/database"
-	models2 "github.com/lightswitch/papaya-api/pkg/database/models"
+	"github.com/parasource/papaya-api/api/v1/router"
+	"github.com/parasource/papaya-api/pkg/adviser"
+	"github.com/parasource/papaya-api/pkg/database"
+	models2 "github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 	"net"
 )

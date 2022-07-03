@@ -18,8 +18,8 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/papaya-api/pkg/database"
-	"github.com/lightswitch/papaya-api/pkg/database/models"
+	"github.com/parasource/papaya-api/pkg/database"
+	"github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 	"strconv"
 )

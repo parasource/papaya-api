@@ -18,7 +18,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lightswitch/papaya-api/pkg/util"
+	"github.com/parasource/papaya-api/pkg/util"
 	"net/http"
 	"strings"
 )
