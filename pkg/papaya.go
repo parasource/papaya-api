@@ -22,7 +22,7 @@ import (
 	"github.com/parasource/papaya-api/api/v1/router"
 	"github.com/parasource/papaya-api/pkg/adviser"
 	"github.com/parasource/papaya-api/pkg/database"
-	models2 "github.com/parasource/papaya-api/pkg/database/models"
+	models "github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 	"net"
 )
@@ -68,11 +68,11 @@ func NewPapaya(cfg Config, dbCfg database.Config) (*Papaya, error) {
 		{
 			Name: "Renew today's look",
 			F: func() {
-				var users []models2.User
+				var users []models.User
 				database.DB().Find(&users)
 
 				for _, user := range users {
-					var look models2.Look
+					var look models.Look
 
 					err := database.DB().Limit(1).Order("random()").Find(&look).Error
 					if err != nil {

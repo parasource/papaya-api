@@ -41,13 +41,19 @@ func HandleSearch(c *gin.Context) {
 		return
 	}
 
+	//user, err := GetUser(c)
+	//if err != nil {
+	//	logrus.Errorf("error getting user: %v", err)
+	//	c.AbortWithStatus(403)
+	//	return
+	//}
+
 	var page int64
 	if _, ok := params["page"]; !ok {
 		page = 0
 	} else {
 		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
 	}
-
 	offset := int(page * 20)
 
 	var res []*SearchDBResult

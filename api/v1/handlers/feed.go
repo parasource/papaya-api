@@ -101,6 +101,13 @@ func HandleFeedByCategory(c *gin.Context) {
 
 	offset := int(page * 20)
 
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
 	var category models.Category
 	database.DB().First(&category, "slug = ?", slug)
 
@@ -110,8 +117,8 @@ func HandleFeedByCategory(c *gin.Context) {
 	}
 
 	var looks []*models.Look
-	err := database.DB().
-		Raw("SELECT * FROM looks JOIN look_categories lc on looks.id = lc.look_id WHERE lc.category_id = ?", category.ID).
+	err = database.DB().
+		Raw("SELECT * FROM looks JOIN look_categories lc on looks.id = lc.look_id WHERE lc.category_id = ? AND looks.sex = ?", category.ID, user.Sex).
 		Order("created_at desc").
 		Offset(offset).Preload("Items.Urls.Brand").
 		Limit(FeedPagination).Find(&looks).Error
@@ -328,8 +335,15 @@ func GetLikedLooks(c *gin.Context) {
 }
 
 func HandleGetWardrobeItems(c *gin.Context) {
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
 	var items []*models.WardrobeCategory
-	err := database.DB().Preload("Items").Find(&items).Error
+	err = database.DB().Where("sex = ?", user.Sex).Preload("Items").Find(&items).Error
 	if err != nil {
 		logrus.Errorf("error getting wardrobe items from database: %v", err)
 		c.AbortWithStatus(500)
