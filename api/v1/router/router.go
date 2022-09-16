@@ -45,6 +45,12 @@ func Initialize() *gin.Engine {
 	r.PUT("/api/topics/:topic/save", middleware.AuthMiddleware, handlers.HandleSaveTopic)
 	r.DELETE("/api/topics/:topic/unsave", middleware.AuthMiddleware, handlers.HandleUnsaveTopic)
 
+	/// Saved
+
+	r.GET("/api/saved", middleware.AuthMiddleware, handlers.HandleSaved)
+	r.POST("/api/saved/:look", middleware.AuthMiddleware, handlers.HandleSavedAdd)
+	r.DELETE("/api/saved/:look", middleware.AuthMiddleware, handlers.HandleSavedRemove)
+
 	/// Collections
 	r.GET("/api/collections", middleware.AuthMiddleware, handlers.HandleGetCollections)
 	r.POST("/api/collections/create", middleware.AuthMiddleware, handlers.HandleCreateCollection)

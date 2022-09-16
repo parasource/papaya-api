@@ -37,6 +37,7 @@ type Look struct {
 	Sex        string          `json:"sex"`
 	Topics     []*Topic        `json:"topics" gorm:"many2many:topic_looks;"`
 	UsersLiked []*User         `json:"-" gorm:"many2many:liked_looks;"`
+	UsersSaved []*User         `json:"-" gorm:"many2many:saved_looks;"`
 	Tsv        string          `json:"-" gorm:"type:tsvector"`
 	Rank       float32         `gorm:"-" json:"rank"`
 }
