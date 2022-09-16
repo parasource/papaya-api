@@ -15,7 +15,3 @@
  */
 
 package requests
-
-type CreateCollectionRequest struct {
-	Name string `json:"name" binding:"required"`
-}

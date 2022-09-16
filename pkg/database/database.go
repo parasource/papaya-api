@@ -167,7 +167,6 @@ func migrate(db *gorm.DB) error {
 		&models.Look{},
 		&models.ItemURL{},
 		&models.Category{},
-		&models.Collection{},
 		&models.SearchRecord{},
 	)
 	if err != nil {
