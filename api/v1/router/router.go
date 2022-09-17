@@ -34,6 +34,7 @@ func Initialize() *gin.Engine {
 	/// Search
 	r.GET("/api/search", middleware.AuthMiddleware, handlers.HandleSearch)
 	r.GET("/api/search/suggestions", middleware.AuthMiddleware, handlers.HandleSearchSuggestions)
+	r.POST("/api/search/clear-history", middleware.AuthMiddleware, handlers.HandleSearchClearHistory)
 	r.GET("/api/search/autofill", middleware.AuthMiddleware, handlers.HandleSearchAutofill)
 
 	/// Topics

@@ -135,7 +135,7 @@ func (d *Database) DB() *gorm.DB {
 func GetUserByEmail(email string) *models.User {
 	var user models.User
 
-	conn.Preload("Wardrobe").Preload("SavedTopics").Preload("Collections").First(&user, "email = ?", email)
+	conn.Preload("Wardrobe").Preload("SavedTopics").First(&user, "email = ?", email)
 	if user.ID == 0 {
 		return nil
 	}

@@ -45,12 +45,21 @@ func HandleSearch(c *gin.Context) {
 		return
 	}
 
-	//user, err := GetUser(c)
-	//if err != nil {
-	//	logrus.Errorf("error getting user: %v", err)
-	//	c.AbortWithStatus(403)
-	//	return
-	//}
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+	sr := models.SearchRecord{
+		Query:   q[0],
+		UserID:  user.ID,
+		Visible: true,
+	}
+	err = database.DB().Create(&sr).Error
+	if err != nil {
+		logrus.Errorf("error recording user search: %v", err)
+	}
 
 	var page int64
 	if _, ok := params["page"]; !ok {
@@ -62,7 +71,7 @@ func HandleSearch(c *gin.Context) {
 
 	var res []*SearchDBResult
 
-	err := database.DB().Raw("SELECT searches.*, ts_rank(searches.tsv, plainto_tsquery('russian', ?)) as rank FROM searches WHERE searches.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", q[0], q[0], offset, 20).Find(&res).Error
+	err = database.DB().Raw("SELECT searches.*, ts_rank(searches.tsv, plainto_tsquery('russian', ?)) as rank FROM searches WHERE searches.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", q[0], q[0], offset, 20).Find(&res).Error
 	if err != nil {
 		logrus.Errorf("erorr searching: %v", err)
 		c.AbortWithStatus(500)
@@ -118,21 +127,6 @@ func HandleSearch(c *gin.Context) {
 		topic.Rank = ranks[topic.ID]
 	}
 
-	user, err := GetUser(c)
-	if err != nil {
-		logrus.Errorf("error getting user: %v", err)
-		c.AbortWithStatus(403)
-		return
-	}
-	sr := models.SearchRecord{
-		Query:  q[0],
-		UserID: user.ID,
-	}
-	err = database.DB().Create(&sr).Error
-	if err != nil {
-		logrus.Errorf("error recording user search: %v", err)
-	}
-
 	c.JSON(200, gin.H{
 		"looks":  looks,
 		"topics": topics,
@@ -148,7 +142,7 @@ func HandleSearchSuggestions(c *gin.Context) {
 	}
 
 	var sr []*models.SearchRecord
-	err = database.DB().Where("user_id = ?", user.ID).Order("id desc").Limit(10).Find(&sr).Error
+	err = database.DB().Where("user_id = ?", user.ID).Where("visible = ?", true).Order("id desc").Limit(10).Find(&sr).Error
 	if err != nil {
 		logrus.Errorf("error getting search records: %v", err)
 		c.AbortWithStatus(500)
@@ -189,6 +183,24 @@ func HandleSearchSuggestions(c *gin.Context) {
 		"looks":  looks,
 		"topics": topics,
 	})
+}
+
+func HandleSearchClearHistory(c *gin.Context) {
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	err = database.DB().Model(&models.SearchRecord{}).Where("user_id = ?", user.ID).Update("visible", false).Error
+	if err != nil {
+		logrus.Errorf("error clearing user search history: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	c.Status(200)
 }
 
 func HandleSearchAutofill(c *gin.Context) {
