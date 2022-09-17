@@ -25,50 +25,6 @@ import (
 	"strconv"
 )
 
-func HandleGetRecommendedTopics(c *gin.Context) {
-	var result []models.Topic
-
-	params := c.Request.URL.Query()
-
-	var page int64
-	if _, ok := params["page"]; !ok {
-		page = 0
-	} else {
-		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
-	}
-
-	offset := int(page * 20)
-	err := database.DB().Order("created_at desc").Limit(20).Offset(offset).Find(&result).Error
-	if err != nil {
-		logrus.Errorf("error getting all selections")
-		c.AbortWithStatus(500)
-	}
-
-	c.JSON(200, result)
-}
-
-func HandleGetPopularTopics(c *gin.Context) {
-	var result []models.Topic
-
-	params := c.Request.URL.Query()
-
-	var page int64
-	if _, ok := params["page"]; !ok {
-		page = 0
-	} else {
-		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
-	}
-
-	offset := int(page * 20)
-	err := database.DB().Order("created_at desc").Limit(20).Offset(offset).Find(&result).Error
-	if err != nil {
-		logrus.Errorf("error getting all selections")
-		c.AbortWithStatus(500)
-	}
-
-	c.JSON(200, result)
-}
-
 func HandleGetSavedTopics(c *gin.Context) {
 	user, err := GetUser(c)
 	if err != nil {

@@ -31,6 +31,10 @@ type SearchDBResult struct {
 	Rank        float32 `json:"rank"`
 }
 
+type SearchSuggestion struct {
+	Query string `json:"query"`
+}
+
 func HandleSearch(c *gin.Context) {
 
 	params := c.Request.URL.Query()
@@ -135,7 +139,7 @@ func HandleSearch(c *gin.Context) {
 	})
 }
 
-func HandleSearchHistory(c *gin.Context) {
+func HandleSearchSuggestions(c *gin.Context) {
 	user, err := GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
@@ -151,14 +155,19 @@ func HandleSearchHistory(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, sr)
-}
+	var suggestions []*SearchSuggestion
 
-func HandleSearchPopular(c *gin.Context) {
+	err = database.DB().Raw(`SELECT query, count(id) AS c FROM search_records
+                             WHERE created_at >= NOW() - interval '7 day'
+                             GROUP BY search_records.query ORDER BY c DESC;`).Find(&suggestions).Error
+	if err != nil {
+		logrus.Errorf("error getting search suggestions: %v", err)
+	}
+
 	var looks []*models.Look
 	var topics []*models.Topic
 
-	err := database.DB().Order("RANDOM()").Limit(10).Find(&looks).Error
+	err = database.DB().Order("RANDOM()").Limit(10).Find(&looks).Error
 	if err != nil {
 		logrus.Errorf("error getting popular looks: %v", err)
 		c.AbortWithStatus(500)
@@ -173,12 +182,16 @@ func HandleSearchPopular(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
+		"search": gin.H{
+			"history":     sr,
+			"suggestions": suggestions,
+		},
 		"looks":  looks,
 		"topics": topics,
 	})
 }
 
-func HandleSearchSuggestions(c *gin.Context) {
+func HandleSearchAutofill(c *gin.Context) {
 	params := c.Request.URL.Query()
 	q := params["q"]
 	if q[0] == "" {

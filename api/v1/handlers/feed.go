@@ -161,10 +161,14 @@ func HandleGetLook(c *gin.Context) {
 	var isDisliked bool
 	database.DB().Raw("SELECT COUNT(1) FROM disliked_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isDisliked)
 
+	var isSaved bool
+	database.DB().Raw("SELECT COUNT(1) FROM saved_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isSaved)
+
 	c.JSON(200, gin.H{
 		"look":       look,
 		"isLiked":    isLiked,
 		"isDisliked": isDisliked,
+		"isSaved":    isSaved,
 	})
 }
 
