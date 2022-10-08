@@ -20,10 +20,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/api/v1/handlers"
 	"github.com/parasource/papaya-api/api/v1/middleware"
+	"github.com/sirupsen/logrus"
 )
 
 func Initialize() *gin.Engine {
 	r := gin.Default()
+	logrus.Info("INITIALIZING ROUTER")
 
 	/// Authentication & Authorization
 	r.POST("/api/auth/register", handlers.HandleRegister)
