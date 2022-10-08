@@ -200,7 +200,7 @@ func HandleSearchClearHistory(c *gin.Context) {
 		return
 	}
 
-	c.Status(200)
+	c.JSON(200, []struct{}{})
 }
 
 func HandleSearchAutofill(c *gin.Context) {

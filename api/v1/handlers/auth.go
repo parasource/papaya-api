@@ -68,13 +68,12 @@ func HandleRegister(c *gin.Context) {
 }
 
 func HandleAuthVK(c *gin.Context) {
-	//acf := oauth.NewAuthCodeFlowUser(oauth.UserParams{
-	//	ClientID: 123123,
-	//	RedirectURI: "https://papaya.io",
-	//	Scope: oauth.ScopeUserPhotos + oauth.ScopeUserEmail,
-	//}, "")
-	//
-	//
+	//acf := NewAuthCodeFlowUser(oauth.UserParams{
+	//	ClientID:    123456,
+	//	RedirectURI: "https://example.com/callback",
+	//	Scope:       oauth.ScopeUserPhotos + oauth.ScopeUserDocs,
+	//}, clientSecret)
+
 	//c.JSON(200, )
 }
 

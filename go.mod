@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/SevereCloud/vksdk v1.10.0 // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/cenkalti/backoff/v3 v3.0.0 // indirect
