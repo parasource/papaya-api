@@ -7,5 +7,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="dutchman-app" />
     <orderEntry type="module" module-name="deployment" />
+    <orderEntry type="module" module-name="papaya-hooks" />
   </component>
 </module>
