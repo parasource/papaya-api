@@ -29,12 +29,12 @@ const (
 	setupScript = `
 	CREATE OR REPLACE VIEW searches AS
 
-    SELECT text 'looks' as origin_table, id, tsv, sex
+    SELECT text 'looks' as origin_table, id, tsv
     FROM looks
 
     UNION ALL
 
-    SELECT text 'topics' as origin_table, id, tsv, sex
+    SELECT text 'topics' as origin_table, id, tsv
     FROM topics;
 
 	UPDATE looks SET tsv = to_tsvector('russian', looks.name) || to_tsvector('russian', looks.desc) WHERE tsv IS NULL;
