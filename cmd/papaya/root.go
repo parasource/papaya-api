@@ -76,8 +76,6 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		printWelcome()
 
-		logrus.Infof("TESTING DEV1")
-
 		for k, v := range configDefaults {
 			viper.SetDefault(k, v)
 		}
@@ -85,7 +83,7 @@ var rootCmd = &cobra.Command{
 		bindEnvs := []string{
 			"http_host", "http_port",
 			"db_host", "db_port", "db_database",
-			"adviser_host", "adviser_port", "vault_addr", "vault_token",
+			"adviser_host", "adviser_port", "vault_addr", "vault_token", "vault_role",
 			"shutdown_timeout",
 		}
 		for _, env := range bindEnvs {
