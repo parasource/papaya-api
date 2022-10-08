@@ -18,6 +18,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/parasource/papaya-api/pkg"
 	"github.com/parasource/papaya-api/pkg/database"
@@ -55,6 +56,7 @@ func init() {
 	rootCmd.Flags().String("adviser_port", "8087", "adviser port")
 	rootCmd.Flags().String("vault_addr", "http://vault:8200", "vault address")
 	rootCmd.Flags().String("vault_token", "vault-plaintext-root-token", "vault token")
+	rootCmd.Flags().String("vault_role", "api", "vault role")
 	rootCmd.Flags().Int("shutdown_timeout", 30, "node graceful shutdown timeout")
 
 	viper.BindPFlag("http_host", rootCmd.Flags().Lookup("http_host"))
@@ -66,6 +68,7 @@ func init() {
 	viper.BindPFlag("adviser_port", rootCmd.Flags().Lookup("adviser_port"))
 	viper.BindPFlag("vault_addr", rootCmd.Flags().Lookup("vault_addr"))
 	viper.BindPFlag("vault_token", rootCmd.Flags().Lookup("vault_token"))
+	viper.BindPFlag("vault_role", rootCmd.Flags().Lookup("vault_role"))
 	viper.BindPFlag("shutdown_timeout", rootCmd.Flags().Lookup("shutdown_timeout"))
 }
 
@@ -130,6 +133,7 @@ var rootCmd = &cobra.Command{
 func getDatabaseConfig(v *viper.Viper) (database.Config, error) {
 	vaultAddr := v.GetString("vault_addr")
 	vaultToken := v.GetString("vault_token")
+	vaultRole := v.GetString("vault_role")
 
 	logrus.Infof("vault addr: %v -- token: %v", vaultAddr, vaultToken)
 
@@ -145,7 +149,7 @@ func getDatabaseConfig(v *viper.Viper) (database.Config, error) {
 
 	client.Logical()
 
-	secret, err := client.Logical().Read("database/static-creds/api")
+	secret, err := client.Logical().Read(fmt.Sprintf("database/static-creds/%v", vaultRole))
 	if err != nil {
 		return database.Config{}, err
 	}
