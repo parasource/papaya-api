@@ -76,6 +76,8 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		printWelcome()
 
+		logrus.Infof("TESTING DEV1")
+
 		for k, v := range configDefaults {
 			viper.SetDefault(k, v)
 		}
