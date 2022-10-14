@@ -17,12 +17,14 @@
 package handlers
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/api/v1/requests"
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/parasource/papaya-api/pkg/util"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -121,6 +123,101 @@ func HandleLogin(c *gin.Context) {
 		"token":         token,
 		"refresh_token": refreshToken,
 	})
+}
+
+func HandleGoogleLoginOrRegister(c *gin.Context) {
+	var r requests.GoogleUserInput
+	err := c.BindJSON(&r)
+	if err != nil {
+		logrus.Errorf("error binding google request: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	endpoint := "https://www.googleapis.com/userinfo/v2/me"
+
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", endpoint, nil)
+	header := "Bearer " + r.AccessToken
+	req.Header.Set("Authorization", header)
+	res, googleErr := client.Do(req)
+	if googleErr != nil {
+		logrus.Errorf("error getting user information from google while signing up: %v", err)
+		c.JSON(500, gin.H{
+			"success": false,
+		})
+		return
+	}
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		logrus.Errorf("error reading google response body: %v", err)
+		c.JSON(500, gin.H{
+			"success": false,
+		})
+		return
+	}
+
+	var googleRes requests.GoogleUserRes
+	json.Unmarshal(body, &googleRes)
+
+	if googleRes.Email != "" {
+		var user models.User
+		err = database.DB().Model(&user).Where("email = ?", googleRes.Email).First(&user).Error
+		if err != nil {
+			logrus.Errorf("error getting user by email while signing up: %v", err)
+		}
+
+		// User is not found, so we'll sign him up
+		if user.ID == 0 {
+			user := models.NewUser(googleRes.Email, googleRes.Name, "")
+			user.Sex = googleRes.Gender
+			database.CreateUser(user)
+
+			token, err := util.GenerateToken(user)
+			if err != nil {
+				logrus.Errorf("error generating token: %v", err)
+				c.AbortWithStatus(500)
+				return
+			}
+			refreshToken, err := util.GenerateRefreshToken(user.ID)
+			if err != nil {
+				logrus.Errorf("error generating refresh token: %v", err)
+				c.AbortWithStatus(500)
+				return
+			}
+
+			c.JSON(200, gin.H{
+				"success":       true,
+				"token":         token,
+				"refresh_token": refreshToken,
+			})
+		} else {
+			token, err := util.GenerateToken(&user)
+			if err != nil {
+				logrus.Errorf("error generating token: %v", err)
+				c.JSON(500, gin.H{
+					"success": false,
+				})
+				return
+			}
+			refreshToken, err := util.GenerateRefreshToken(user.ID)
+			if err != nil {
+				logrus.Errorf("error generating refresh token: %v", err)
+				c.JSON(500, gin.H{
+					"success": false,
+				})
+				return
+			}
+
+			c.JSON(200, gin.H{
+				"success":       true,
+				"token":         token,
+				"refresh_token": refreshToken,
+			})
+		}
+	}
 }
 
 func HandleRefresh(c *gin.Context) {
