@@ -27,3 +27,16 @@ type RegisterRequest struct {
 	Name     string `json:"name" binding:"required"`
 	Sex      string `json:"sex" binding:"required"`
 }
+
+type GoogleUserInput struct {
+	AccessToken string `json:"accessToken" validate:"required"`
+}
+
+type GoogleUserRes struct {
+	ID         string `json:"id"`
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	GivenName  string `json:"given_name"`
+	FamilyName string `json:"family_name"`
+	Gender     string `json:"gender"`
+}
