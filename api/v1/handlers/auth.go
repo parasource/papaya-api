@@ -167,16 +167,18 @@ func HandleGoogleLoginOrRegister(c *gin.Context) {
 
 	if googleRes.Email != "" {
 		var user models.User
-		err = database.DB().Model(&user).Where("email = ?", googleRes.Email).First(&user).Error
-		if err != nil {
-			logrus.Errorf("error getting user by email while signing up: %v", err)
-		}
+		database.DB().Model(&user).Where("email = ?", googleRes.Email).First(&user)
 
 		// User is not found, so we'll sign him up
 		if user.ID == 0 {
 			user := models.NewUser(googleRes.Email, googleRes.Name, "")
 			user.Sex = googleRes.Gender
 			database.CreateUser(user)
+
+			err = associateTodayLook(user)
+			if err != nil {
+				logrus.Errorf("error adding today's look to new user: %v", err)
+			}
 
 			token, err := util.GenerateToken(user)
 			if err != nil {
@@ -278,21 +280,20 @@ func HandleAppleLoginOrRegister(c *gin.Context) {
 	}
 
 	email := fmt.Sprint(token.Claims.(jwt.MapClaims)["email"])
-	name := fmt.Sprint(token.Claims.(jwt.MapClaims)["full_name"])
-	logrus.Info("response from apple: %v", token.Claims.(jwt.MapClaims))
-
 	if email != "" {
 		var user models.User
-		err = database.DB().Model(&user).Where("email = ?", email).First(&user).Error
-		if err != nil {
-			logrus.Errorf("error getting user by email while signing up: %v", err)
-		}
+		database.DB().Model(&user).Where("email = ?", email).First(&user)
 
 		// User is not found, so we'll sign him up
 		if user.ID == 0 {
-			user := models.NewUser(email, name, "")
+			user := models.NewUser(email, fmt.Sprintf("Пользователь"), "")
 			user.Sex = "male"
 			database.CreateUser(user)
+
+			err = associateTodayLook(user)
+			if err != nil {
+				logrus.Errorf("error adding today's look to new user: %v", err)
+			}
 
 			token, err := util.GenerateToken(user)
 			if err != nil {
@@ -337,6 +338,21 @@ func HandleAppleLoginOrRegister(c *gin.Context) {
 			})
 		}
 	}
+}
+
+func associateTodayLook(user *models.User) error {
+	var look models.Look
+	err := database.DB().Limit(1).Order("random()").Find(&look).Error
+	if err != nil {
+		return err
+	}
+
+	err = database.DB().Model(&user).Association("TodayLook").Append(&look)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func HandleRefresh(c *gin.Context) {
