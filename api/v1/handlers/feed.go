@@ -347,7 +347,7 @@ func HandleGetWardrobeItems(c *gin.Context) {
 	}
 
 	var items []*models.WardrobeCategory
-	err = database.DB().Where("sex = ?", user.Sex).Preload("Items").Find(&items).Error
+	err = database.DB().Preload("Items").Find(&items).Error
 	if err != nil {
 		logrus.Errorf("error getting wardrobe items from database: %v", err)
 		c.AbortWithStatus(500)
@@ -356,7 +356,7 @@ func HandleGetWardrobeItems(c *gin.Context) {
 
 	var preview string
 	for _, item := range items {
-		database.DB().Raw("SELECT image FROM wardrobe_items WHERE wardrobe_category_id = ? ORDER BY id LIMIT 1", item.ID).Scan(&preview)
+		database.DB().Raw("SELECT image FROM wardrobe_items WHERE sex = ? AND wardrobe_category_id = ? ORDER BY id LIMIT 1", user.Sex, item.ID).Scan(&preview)
 		item.Preview = preview
 	}
 	c.JSON(200, items)
