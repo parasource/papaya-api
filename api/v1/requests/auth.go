@@ -32,6 +32,10 @@ type GoogleUserInput struct {
 	AccessToken string `json:"accessToken" validate:"required"`
 }
 
+type AppleUserInput struct {
+	IdentityToken string `json:"identityToken" validate:"required"`
+}
+
 type GoogleUserRes struct {
 	ID         string `json:"id"`
 	Email      string `json:"email"`
