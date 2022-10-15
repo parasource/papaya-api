@@ -27,15 +27,6 @@ import (
 
 const (
 	setupScript = `
-	CREATE OR REPLACE VIEW searches AS
-
-    SELECT text 'looks' as origin_table, id, tsv
-    FROM looks
-
-    UNION ALL
-
-    SELECT text 'topics' as origin_table, id, tsv
-    FROM topics;
 
 	UPDATE looks SET tsv = to_tsvector('russian', looks.name) || to_tsvector('russian', looks.desc) WHERE tsv IS NULL;
 	UPDATE topics SET tsv = to_tsvector('russian', topics.name) || to_tsvector('russian', topics.desc) WHERE tsv IS NULL;
@@ -62,6 +53,16 @@ const (
     ON search_records
     FOR EACH ROW EXECUTE PROCEDURE
     tsvector_update_trigger(tsv, 'pg_catalog.russian', query);
+
+	CREATE OR REPLACE VIEW searches AS
+
+    SELECT text 'looks' as origin_table, id, tsv, sex, season
+    FROM looks
+
+    UNION ALL
+
+    SELECT text 'topics' as origin_table, id, tsv, sex, season
+    FROM topics;
 	`
 )
 
@@ -106,10 +107,10 @@ func New(cfg Config) error {
 		logrus.Fatalf("error connecting to postgres: %v", err)
 	}
 
-	//err = migrate(db)
-	//if err != nil {
-	//	logrus.Fatalf("error migrating: %v", err)
-	//}
+	err = migrate(db)
+	if err != nil {
+		logrus.Fatalf("error migrating: %v", err)
+	}
 
 	// Running database setup script
 	err = db.Exec(setupScript).Error
@@ -165,6 +166,7 @@ func migrate(db *gorm.DB) error {
 		&models.WardrobeCategory{},
 		&models.WardrobeItem{},
 		&models.Look{},
+		&models.Topic{},
 		&models.ItemURL{},
 		&models.Category{},
 		&models.SearchRecord{},

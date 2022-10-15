@@ -26,6 +26,8 @@ type Topic struct {
 	Slug      string  `json:"slug"`
 	Desc      string  `json:"desc"`
 	Image     string  `json:"image"`
+	Sex       string  `json:"sex"`
+	Season    string  `json:"season"`
 	Looks     []*Look `json:"looks" gorm:"many2many:topic_looks;"`
 	IsWatched bool    `json:"isSaved" gorm:"-"`
 	Tsv       string  `json:"-" gorm:"type:tsvector"`

@@ -39,18 +39,19 @@ func HandleSearch(c *gin.Context) {
 
 	params := c.Request.URL.Query()
 
-	q := params["q"]
-	if q[0] == "" {
-		c.JSON(204, []int{})
-		return
-	}
-
 	user, err := GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
 		return
 	}
+
+	q := params["q"]
+	if q[0] == "" {
+		c.JSON(204, []int{})
+		return
+	}
+
 	sr := models.SearchRecord{
 		Query:   q[0],
 		UserID:  user.ID,
@@ -71,7 +72,7 @@ func HandleSearch(c *gin.Context) {
 
 	var res []*SearchDBResult
 
-	err = database.DB().Raw("SELECT searches.*, ts_rank(searches.tsv, plainto_tsquery('russian', ?)) as rank FROM searches WHERE searches.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", q[0], q[0], offset, 20).Find(&res).Error
+	err = database.DB().Raw("SELECT searches.*, ts_rank(searches.tsv, plainto_tsquery('russian', ?)) as rank FROM searches WHERE searches.sex = ? AND searches.season = ? AND searches.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", q[0], user.Sex, q[0], offset, 20).Find(&res).Error
 	if err != nil {
 		logrus.Errorf("erorr searching: %v", err)
 		c.AbortWithStatus(500)
