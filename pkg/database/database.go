@@ -32,9 +32,9 @@ const (
 	UPDATE topics SET tsv = to_tsvector('russian', topics.name) || to_tsvector('russian', topics.desc) WHERE tsv IS NULL;
 	UPDATE search_records SET tsv = to_tsvector('russian', search_records.query) WHERE tsv IS NULL;
 
-	CREATE INDEX IF NOT EXISTS idx_tsv_looks ON looks USING rum(tsv);
-	CREATE INDEX IF NOT EXISTS idx_tsv_topics ON topics USING rum(tsv);
-	CREATE INDEX IF NOT EXISTS idx_tsv_searches ON search_records USING rum(tsv);
+	CREATE INDEX IF NOT EXISTS idx_tsv_looks ON looks USING gin(tsv);
+	CREATE INDEX IF NOT EXISTS idx_tsv_topics ON topics USING gin(tsv);
+	CREATE INDEX IF NOT EXISTS idx_tsv_searches ON search_records USING gin(tsv);
 
 	DROP TRIGGER IF EXISTS looks_tsv_insert on looks;
 	CREATE TRIGGER looks_tsv_insert BEFORE INSERT OR UPDATE
