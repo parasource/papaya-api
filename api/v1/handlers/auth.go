@@ -18,7 +18,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/MicahParks/keyfunc"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/parasource/papaya-api/api/v1/requests"
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
@@ -173,6 +176,122 @@ func HandleGoogleLoginOrRegister(c *gin.Context) {
 		if user.ID == 0 {
 			user := models.NewUser(googleRes.Email, googleRes.Name, "")
 			user.Sex = googleRes.Gender
+			database.CreateUser(user)
+
+			token, err := util.GenerateToken(user)
+			if err != nil {
+				logrus.Errorf("error generating token: %v", err)
+				c.AbortWithStatus(500)
+				return
+			}
+			refreshToken, err := util.GenerateRefreshToken(user.ID)
+			if err != nil {
+				logrus.Errorf("error generating refresh token: %v", err)
+				c.AbortWithStatus(500)
+				return
+			}
+
+			c.JSON(200, gin.H{
+				"success":       true,
+				"token":         token,
+				"refresh_token": refreshToken,
+			})
+		} else {
+			token, err := util.GenerateToken(&user)
+			if err != nil {
+				logrus.Errorf("error generating token: %v", err)
+				c.JSON(500, gin.H{
+					"success": false,
+				})
+				return
+			}
+			refreshToken, err := util.GenerateRefreshToken(user.ID)
+			if err != nil {
+				logrus.Errorf("error generating refresh token: %v", err)
+				c.JSON(500, gin.H{
+					"success": false,
+				})
+				return
+			}
+
+			c.JSON(200, gin.H{
+				"success":       true,
+				"token":         token,
+				"refresh_token": refreshToken,
+			})
+		}
+	}
+}
+
+func HandleAppleLoginOrRegister(c *gin.Context) {
+	var r requests.AppleUserInput
+	err := c.BindJSON(&r)
+	if err != nil {
+		logrus.Errorf("error binding google request: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	res, httpErr := http.Get("https://appleid.apple.com/auth/keys")
+	if httpErr != nil {
+		logrus.Errorf("error sending request to apple auth service: %v", err)
+		c.JSON(500, gin.H{
+			"success": false,
+		})
+		return
+	}
+
+	defer res.Body.Close()
+
+	body, bodyErr := ioutil.ReadAll(res.Body)
+	if bodyErr != nil {
+		logrus.Errorf("error reading response body: %v", err)
+		c.JSON(500, gin.H{
+			"success": false,
+		})
+		return
+	}
+
+	jwks, err := keyfunc.NewJSON(body)
+	if err != nil {
+		logrus.Errorf("keyfunc error: %v", err)
+		c.JSON(500, gin.H{
+			"success": false,
+		})
+		return
+	}
+	token, err := jwt.Parse(r.IdentityToken, jwks.Keyfunc)
+	if err != nil {
+		logrus.Errorf("error parsing apple token: %v", err)
+		c.JSON(500, gin.H{
+			"success": false,
+		})
+		return
+	}
+
+	if !token.Valid {
+		logrus.Errorf("apple invalid token: %v", err)
+		c.JSON(500, gin.H{
+			"success": false,
+		})
+		return
+	}
+
+	email := fmt.Sprint(token.Claims.(jwt.MapClaims)["email"])
+	name := fmt.Sprint(token.Claims.(jwt.MapClaims)["full_name"])
+	logrus.Info("response from apple: %v", token.Claims.(jwt.MapClaims))
+
+	if email != "" {
+		var user models.User
+		err = database.DB().Model(&user).Where("email = ?", email).First(&user).Error
+		if err != nil {
+			logrus.Errorf("error getting user by email while signing up: %v", err)
+		}
+
+		// User is not found, so we'll sign him up
+		if user.ID == 0 {
+			user := models.NewUser(email, name, "")
+			user.Sex = "male"
 			database.CreateUser(user)
 
 			token, err := util.GenerateToken(user)
