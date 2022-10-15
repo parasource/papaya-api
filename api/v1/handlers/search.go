@@ -46,14 +46,18 @@ func HandleSearch(c *gin.Context) {
 		return
 	}
 
-	q := params["q"]
-	if q[0] == "" {
+	if len(params["q"]) != 1 {
+		c.AbortWithStatus(400)
+		return
+	}
+	searchQuery := params["q"][0]
+	if searchQuery == "" {
 		c.JSON(204, []int{})
 		return
 	}
 
 	sr := models.SearchRecord{
-		Query:   q[0],
+		Query:   searchQuery,
 		UserID:  user.ID,
 		Visible: true,
 	}
@@ -72,11 +76,29 @@ func HandleSearch(c *gin.Context) {
 
 	var res []*SearchDBResult
 
-	err = database.DB().Raw("SELECT searches.*, ts_rank(searches.tsv, plainto_tsquery('russian', ?)) as rank FROM searches WHERE searches.sex = ? AND searches.season = ? AND searches.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", q[0], user.Sex, q[0], offset, 20).Find(&res).Error
-	if err != nil {
-		logrus.Errorf("erorr searching: %v", err)
-		c.AbortWithStatus(500)
-		return
+	searchSex := user.Sex
+	if len(params["sex"]) == 1 && params["sex"][0] != "" {
+		searchSex = params["sex"][0]
+	}
+
+	if len(params["season"]) == 1 && params["season"][0] != "" {
+		dbQuery := "SELECT searches.*, ts_rank(searches.tsv, plainto_tsquery('russian', ?)) as rank FROM searches WHERE searches.sex = ? AND searches.season = ? AND searches.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?"
+
+		err = database.DB().Raw(dbQuery, searchQuery, searchSex, params["season"][0], searchQuery, offset, 20).Find(&res).Error
+		if err != nil {
+			logrus.Errorf("erorr searching: %v", err)
+			c.AbortWithStatus(500)
+			return
+		}
+	} else {
+		dbQuery := "SELECT searches.*, ts_rank(searches.tsv, plainto_tsquery('russian', ?)) as rank FROM searches WHERE searches.sex = ? AND searches.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?"
+
+		err = database.DB().Raw(dbQuery, searchQuery, searchSex, searchQuery, offset, 20).Find(&res).Error
+		if err != nil {
+			logrus.Errorf("erorr searching: %v", err)
+			c.AbortWithStatus(500)
+			return
+		}
 	}
 
 	if len(res) == 0 {
