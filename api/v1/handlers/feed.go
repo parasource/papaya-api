@@ -339,25 +339,16 @@ func GetLikedLooks(c *gin.Context) {
 }
 
 func HandleGetWardrobeItems(c *gin.Context) {
-	user, err := GetUser(c)
-	if err != nil {
-		logrus.Errorf("error getting user: %v", err)
-		c.AbortWithStatus(403)
-		return
-	}
-
 	var items []*models.WardrobeCategory
-	err = database.DB().Preload("Items").Find(&items).Error
+	err := database.DB().Preload("Items").Find(&items).Error
 	if err != nil {
 		logrus.Errorf("error getting wardrobe items from database: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
 
-	var preview string
 	for _, item := range items {
-		database.DB().Raw("SELECT image FROM wardrobe_items WHERE sex = ? AND wardrobe_category_id = ? ORDER BY id LIMIT 1", user.Sex, item.ID).Scan(&preview)
-		item.Preview = preview
+		item.Preview = item.Items[0].Image
 	}
 	c.JSON(200, items)
 }
