@@ -20,9 +20,9 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/api/v1/router"
-	"github.com/parasource/papaya-api/pkg/adviser"
 	"github.com/parasource/papaya-api/pkg/database"
 	models "github.com/parasource/papaya-api/pkg/database/models"
+	"github.com/parasource/papaya-api/pkg/gorse"
 	"github.com/sirupsen/logrus"
 	"net"
 )
@@ -43,7 +43,7 @@ type Papaya struct {
 	cfg Config
 
 	r       *gin.Engine
-	adviser *adviser.Adviser
+	adviser *gorse.Gorse
 	jobs    *JobsManager
 }
 
@@ -62,7 +62,7 @@ func NewPapaya(cfg Config, dbCfg database.Config) (*Papaya, error) {
 	}
 
 	adviserUrl := net.JoinHostPort(cfg.AdviserHost, cfg.AdviserPort)
-	adviser.New(adviserUrl, 3)
+	gorse.New(adviserUrl, 3)
 
 	jobs := []*Job{
 		{

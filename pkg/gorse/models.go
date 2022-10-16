@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package adviser
+package gorse
 
 import (
 	"encoding/json"

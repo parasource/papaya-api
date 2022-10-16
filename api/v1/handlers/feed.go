@@ -18,9 +18,9 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/parasource/papaya-api/pkg/adviser"
 	database "github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
+	"github.com/parasource/papaya-api/pkg/gorse"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -31,7 +31,7 @@ var (
 )
 
 func HandleFeed(c *gin.Context) {
-	var looks []models.Look
+	//var looks []models.Look
 
 	params := c.Request.URL.Query()
 
@@ -43,12 +43,12 @@ func HandleFeed(c *gin.Context) {
 	}
 
 	offset := int(page * 20)
-	err := database.DB().Order("created_at desc").Offset(offset).Preload("Items.Urls.Brand").Limit(FeedPagination).Find(&looks).Error
-	if err != nil {
-		logrus.Errorf("error getting looks: %v", err)
-		c.AbortWithStatus(500)
-		return
-	}
+	//err := database.DB().Order("created_at desc").Offset(offset).Preload("Items.Urls.Brand").Limit(FeedPagination).Find(&looks).Error
+	//if err != nil {
+	//	logrus.Errorf("error getting looks: %v", err)
+	//	c.AbortWithStatus(500)
+	//	return
+	//}
 
 	user, err := GetUser(c)
 	if err != nil {
@@ -63,6 +63,21 @@ func HandleFeed(c *gin.Context) {
 		logrus.Errorf("error getting categories: %v", err)
 		c.AbortWithStatus(500)
 		return
+	}
+
+	ids, err := gorse.RecommendForUser(strconv.Itoa(int(user.ID)), 20, offset)
+	if len(ids) == 0 {
+		logrus.Errorf("did not recommend anything")
+		c.JSON(500, gin.H{
+			"looks": nil,
+		})
+		return
+	}
+
+	var looks []*models.Look
+	err = database.DB().Find(&looks, ids).Error
+	if err != nil {
+		logrus.Errorf("error finding looks by recommendation: %v", err)
 	}
 
 	var todayLookId int
@@ -150,7 +165,7 @@ func HandleGetLook(c *gin.Context) {
 		return
 	}
 
-	err = adviser.Read(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	err = gorse.Read(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
 	if err != nil {
 		logrus.Errorf("error submitting 'read' feedback to adviser: %v", err)
 	}
@@ -224,9 +239,13 @@ func HandleLikeLook(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 
-	err = adviser.Like(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	err = gorse.Like(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
 	if err != nil {
 		logrus.Errorf("error submitting 'like' feedback to adviser: %v", err)
+	}
+	err = gorse.Undislike(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("gorse error disliking look: %v", err)
 	}
 
 	c.JSON(200, gin.H{
@@ -253,6 +272,11 @@ func HandleUnlikeLook(c *gin.Context) {
 	}
 
 	database.DB().Model(user).Association("LikedLooks").Delete(&look)
+
+	err = gorse.Unlike(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("gorse error unliking look: %v", err)
+	}
 
 	c.JSON(200, gin.H{
 		"success": true,
@@ -285,6 +309,15 @@ func HandleDislikeLook(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 
+	err = gorse.Unlike(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("gorse error unliking look: %v", err)
+	}
+	err = gorse.Dislike(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("gorse error disliking look: %v", err)
+	}
+
 	c.JSON(200, gin.H{
 		"success": true,
 	})
@@ -312,6 +345,11 @@ func HandleUndislikeLook(c *gin.Context) {
 	if err != nil {
 		logrus.Errorf("error adding look to favorites: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+
+	err = gorse.Undislike(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("gorse error undisliking look: %v", err)
 	}
 
 	c.JSON(200, gin.H{

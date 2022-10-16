@@ -20,7 +20,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
+	"github.com/parasource/papaya-api/pkg/gorse"
 	"github.com/sirupsen/logrus"
+	"strconv"
 )
 
 func HandleSaved(c *gin.Context) {
@@ -59,6 +61,11 @@ func HandleSavedAdd(c *gin.Context) {
 		logrus.Errorf("error adding look to saved: %v", err)
 	}
 
+	err = gorse.Star(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("gorse error starring look: %v", err)
+	}
+
 	c.Status(200)
 }
 
@@ -82,6 +89,11 @@ func HandleSavedRemove(c *gin.Context) {
 	err = database.DB().Model(&user).Association("SavedLooks").Delete(&look)
 	if err != nil {
 		logrus.Errorf("error removing look from saved: %v", err)
+	}
+
+	err = gorse.Unstar(strconv.Itoa(int(user.ID)), strconv.Itoa(int(look.ID)))
+	if err != nil {
+		logrus.Errorf("gorse error starring look: %v", err)
 	}
 
 	c.Status(200)

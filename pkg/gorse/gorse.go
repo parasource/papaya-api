@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package adviser
+package gorse
 
 import (
 	"bytes"
@@ -25,9 +25,9 @@ import (
 	"time"
 )
 
-var instance *Adviser
+var instance *Gorse
 
-type Adviser struct {
+type Gorse struct {
 	c       *http.Client
 	baseUrl string
 }
@@ -36,7 +36,7 @@ func New(url string, timeoutS int) {
 	c := &http.Client{
 		Timeout: time.Second * time.Duration(timeoutS),
 	}
-	instance = &Adviser{
+	instance = &Gorse{
 		c:       c,
 		baseUrl: url,
 	}
@@ -76,10 +76,76 @@ func Read(userId, itemId string) error {
 	return err
 }
 
-func RecommendForUser(userID string) ([]string, error) {
+func Star(userId, itemId string) error {
+	var err error
+
+	r := FeedbackRequest{
+		UserID:       userId,
+		ItemID:       itemId,
+		Timestamp:    time.Now(),
+		FeedbackType: "star",
+	}
+	rBytes, _ := json.Marshal([]FeedbackRequest{r})
+
+	url := fmt.Sprintf("http://%v/api/feedback", instance.baseUrl)
+	res, err := instance.c.Post(url, "application/json", bytes.NewReader(rBytes))
+	if res.StatusCode != 200 {
+		return fmt.Errorf("wrong status code - %v", res.StatusCode)
+	}
+
+	return err
+}
+
+func Unstar(userId, itemID string) error {
+	var err error
+
+	url := fmt.Sprintf("http://%v/api/feedback/%v/%v/%v", instance.baseUrl, "star", userId, itemID)
+	req, _ := http.NewRequest("DELETE", url, nil)
+	res, err := instance.c.Do(req)
+	if res.StatusCode != 200 {
+		return fmt.Errorf("wrong status code - %v", res.StatusCode)
+	}
+
+	return err
+}
+
+func Dislike(userId, itemId string) error {
+	var err error
+
+	r := FeedbackRequest{
+		UserID:       userId,
+		ItemID:       itemId,
+		Timestamp:    time.Now(),
+		FeedbackType: "dislike",
+	}
+	rBytes, _ := json.Marshal([]FeedbackRequest{r})
+
+	url := fmt.Sprintf("http://%v/api/feedback", instance.baseUrl)
+	res, err := instance.c.Post(url, "application/json", bytes.NewReader(rBytes))
+	if res.StatusCode != 200 {
+		return fmt.Errorf("wrong status code - %v", res.StatusCode)
+	}
+
+	return err
+}
+
+func Undislike(userId, itemID string) error {
+	var err error
+
+	url := fmt.Sprintf("http://%v/api/feedback/%v/%v/%v", instance.baseUrl, "dislike", userId, itemID)
+	req, _ := http.NewRequest("DELETE", url, nil)
+	res, err := instance.c.Do(req)
+	if res.StatusCode != 200 {
+		return fmt.Errorf("wrong status code - %v", res.StatusCode)
+	}
+
+	return err
+}
+
+func RecommendForUser(userID string, n int, offset int) ([]string, error) {
 	var ids []string
 
-	url := fmt.Sprintf("http://%v/api/recommend/%v", instance.baseUrl, userID)
+	url := fmt.Sprintf("http://%v/api/recommend/%v?n=%v&offset=%v", instance.baseUrl, userID, n, offset)
 	res, err := instance.c.Get(url)
 	if res.StatusCode != 200 {
 		return nil, fmt.Errorf("wrong status code - %v", res.StatusCode)
@@ -107,6 +173,19 @@ func Like(userId, itemID string) error {
 
 	url := fmt.Sprintf("http://%v/api/feedback", instance.baseUrl)
 	res, err := instance.c.Post(url, "application/json", bytes.NewReader(rBytes))
+	if res.StatusCode != 200 {
+		return fmt.Errorf("wrong status code - %v", res.StatusCode)
+	}
+
+	return err
+}
+
+func Unlike(userId, itemID string) error {
+	var err error
+
+	url := fmt.Sprintf("http://%v/api/feedback/%v/%v/%v", instance.baseUrl, "like", userId, itemID)
+	req, _ := http.NewRequest("DELETE", url, nil)
+	res, err := instance.c.Do(req)
 	if res.StatusCode != 200 {
 		return fmt.Errorf("wrong status code - %v", res.StatusCode)
 	}
