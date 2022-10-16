@@ -21,7 +21,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -142,7 +144,7 @@ func Undislike(userId, itemID string) error {
 	return err
 }
 
-func RecommendForUser(userID string, n int, offset int) ([]string, error) {
+func RecommendForUser(userID string, n int, offset int) ([]int, error) {
 	var ids []string
 
 	url := fmt.Sprintf("http://%v/api/recommend/%v?n=%v&offset=%v", instance.baseUrl, userID, n, offset)
@@ -156,7 +158,17 @@ func RecommendForUser(userID string, n int, offset int) ([]string, error) {
 
 	err = json.NewDecoder(res.Body).Decode(&ids)
 
-	return ids, err
+	var result []int
+	var newId int
+	for _, id := range ids {
+		newId, err = strconv.Atoi(id)
+		if err != nil {
+			logrus.Errorf("error converting response ids: %v", err)
+		}
+		result = append(result, newId)
+	}
+
+	return result, err
 
 }
 
