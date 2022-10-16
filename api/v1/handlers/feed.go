@@ -73,6 +73,7 @@ func HandleFeed(c *gin.Context) {
 		})
 		return
 	}
+	logrus.Infof("recommended: %v", ids)
 
 	var looks []*models.Look
 	err = database.DB().Find(&looks, ids).Error
