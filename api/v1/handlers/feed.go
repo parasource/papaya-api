@@ -73,7 +73,7 @@ func HandleFeed(c *gin.Context) {
 	if len(ids) == 0 {
 		logrus.Debug("did not recommend anything")
 
-		err = database.DB().Where("SELECT * FROM looks ORDER BY random() LIMIT ? OFFSET ?", 20, offset).Find(&looks).Error
+		err = database.DB().Debug().Raw("SELECT * FROM looks ORDER BY random() LIMIT ? OFFSET ?", 20, offset).Scan(&looks).Error
 	} else {
 		err = database.DB().Debug().Find(&looks, ids).Error
 		if err != nil {
