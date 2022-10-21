@@ -23,7 +23,6 @@ import (
 const (
 	SEX_MALE   = "male"
 	SEX_FEMALE = "female"
-	SEX_UNISEX = "unisex"
 )
 
 type Look struct {

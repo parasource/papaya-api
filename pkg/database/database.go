@@ -54,14 +54,26 @@ const (
     FOR EACH ROW EXECUTE PROCEDURE
     tsvector_update_trigger(tsv, 'pg_catalog.russian', query);
 
-	CREATE OR REPLACE VIEW searches AS
+	DROP VIEW searches;
 
-    SELECT text 'looks' as origin_table, id, tsv, sex, season
-    FROM looks
+	CREATE OR REPLACE VIEW searches_male AS
+
+    SELECT text 'looks' as origin_table, id, tsv
+    FROM looks WHERE sex = 'male'
 
     UNION ALL
 
-    SELECT text 'topics' as origin_table, id, tsv, sex, season
+    SELECT text 'topics' as origin_table, id, tsv
+    FROM topics;
+
+	CREATE OR REPLACE VIEW searches_female AS
+
+    SELECT text 'looks' as origin_table, id, tsv
+    FROM looks WHERE sex = 'female'
+
+    UNION ALL
+
+    SELECT text 'topics' as origin_table, id, tsv
     FROM topics;
 	`
 )

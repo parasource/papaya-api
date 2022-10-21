@@ -17,6 +17,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
@@ -76,29 +77,13 @@ func HandleSearch(c *gin.Context) {
 
 	var res []*SearchDBResult
 
-	searchSex := user.Sex
-	if len(params["sex"]) == 1 && params["sex"][0] != "" {
-		searchSex = params["sex"][0]
-	}
+	dbQuery := fmt.Sprintf("SELECT searches.*, ts_rank(searches.tsv, plainto_tsquery('russian', ?)) as rank FROM %v WHERE searches.sex = ? AND searches.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", user.Sex)
 
-	if len(params["season"]) == 1 && params["season"][0] != "" {
-		dbQuery := "SELECT searches.*, ts_rank(searches.tsv, plainto_tsquery('russian', ?)) as rank FROM searches WHERE searches.sex = ? AND searches.season = ? AND searches.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?"
-
-		err = database.DB().Raw(dbQuery, searchQuery, searchSex, params["season"][0], searchQuery, offset, 20).Find(&res).Error
-		if err != nil {
-			logrus.Errorf("erorr searching: %v", err)
-			c.AbortWithStatus(500)
-			return
-		}
-	} else {
-		dbQuery := "SELECT searches.*, ts_rank(searches.tsv, plainto_tsquery('russian', ?)) as rank FROM searches WHERE searches.sex = ? AND searches.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?"
-
-		err = database.DB().Raw(dbQuery, searchQuery, searchSex, searchQuery, offset, 20).Find(&res).Error
-		if err != nil {
-			logrus.Errorf("erorr searching: %v", err)
-			c.AbortWithStatus(500)
-			return
-		}
+	err = database.DB().Raw(dbQuery, searchQuery, user.Sex, searchQuery, offset, 20).Find(&res).Error
+	if err != nil {
+		logrus.Errorf("erorr searching: %v", err)
+		c.AbortWithStatus(500)
+		return
 	}
 
 	if len(res) == 0 {
