@@ -77,9 +77,9 @@ func HandleSearch(c *gin.Context) {
 
 	var res []*SearchDBResult
 
-	dbQuery := fmt.Sprintf("SELECT searches_%v.*, ts_rank(searches_%v.tsv, plainto_tsquery('russian', ?)) as rank FROM %v WHERE searches_%v.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", user.Sex, user.Sex, user.Sex, user.Sex)
+	dbQuery := fmt.Sprintf("SELECT searches_%v.*, ts_rank(searches_%v.tsv, plainto_tsquery('russian', ?)) as rank FROM searches_%v WHERE searches_%v.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", user.Sex, user.Sex, user.Sex, user.Sex)
 
-	err = database.DB().Raw(dbQuery, searchQuery, user.Sex, searchQuery, offset, 20).Find(&res).Error
+	err = database.DB().Raw(dbQuery, searchQuery, searchQuery, offset, 20).Find(&res).Error
 	if err != nil {
 		logrus.Errorf("erorr searching: %v", err)
 		c.AbortWithStatus(500)
