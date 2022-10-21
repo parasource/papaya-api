@@ -54,8 +54,6 @@ const (
     FOR EACH ROW EXECUTE PROCEDURE
     tsvector_update_trigger(tsv, 'pg_catalog.russian', query);
 
-	DROP VIEW searches;
-
 	CREATE OR REPLACE VIEW searches_male AS
 
     SELECT text 'looks' as origin_table, id, tsv

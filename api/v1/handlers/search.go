@@ -77,7 +77,7 @@ func HandleSearch(c *gin.Context) {
 
 	var res []*SearchDBResult
 
-	dbQuery := fmt.Sprintf("SELECT %v.*, ts_rank(%v.tsv, plainto_tsquery('russian', ?)) as rank FROM %v WHERE %v.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", user.Sex, user.Sex, user.Sex, user.Sex)
+	dbQuery := fmt.Sprintf("SELECT searches_%v.*, ts_rank(searches_%v.tsv, plainto_tsquery('russian', ?)) as rank FROM %v WHERE searches_%v.tsv @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", user.Sex, user.Sex, user.Sex, user.Sex)
 
 	err = database.DB().Raw(dbQuery, searchQuery, user.Sex, searchQuery, offset, 20).Find(&res).Error
 	if err != nil {
@@ -169,7 +169,7 @@ func HandleSearchSuggestions(c *gin.Context) {
 	var looks []*models.Look
 	var topics []*models.Topic
 
-	err = database.DB().Order("RANDOM()").Limit(10).Find(&looks).Error
+	err = database.DB().Order("RANDOM()").Where("sex = ?", user.Sex).Limit(10).Find(&looks).Error
 	if err != nil {
 		logrus.Errorf("error getting popular looks: %v", err)
 		c.AbortWithStatus(500)
