@@ -92,14 +92,23 @@ func HandleProfileUpdateSettings(c *gin.Context) {
 		return
 	}
 
-	//
 	//err = p.database.UpdateUserSettings(userId, &models.UserSettings{
 	//	ReceivePushNotifications:  r.ReceivePushNotifications,
 	//	ReceiveEmailNotifications: r.ReceiveEmailNotifications,
 	//})
+	user, err := GetUser(c)
 	if err != nil {
-		c.AbortWithStatus(500)
+		c.AbortWithStatus(403)
 		return
+	}
+
+	user.Sex = r.Sex
+	user.Name = r.Name
+	user.PushNotifications = r.ReceivePushNotifications
+
+	err = database.DB().Save(user).Error
+	if err != nil {
+		logrus.Errorf("error updating user settings: %v", err)
 	}
 
 	c.JSON(200, gin.H{

@@ -18,6 +18,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/parasource/papaya-api/api/v1/handlers"
 	"github.com/parasource/papaya-api/pkg/util"
 	"net/http"
 	"strings"
@@ -43,6 +44,12 @@ func AuthMiddleware(c *gin.Context) {
 	_, err := util.ParseToken(headerParts[1])
 	if err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	user, err := handlers.GetUser(c)
+	if err != nil || user == nil {
+		c.AbortWithStatus(403)
 		return
 	}
 }

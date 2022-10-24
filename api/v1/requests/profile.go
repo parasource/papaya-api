@@ -17,9 +17,9 @@
 package requests
 
 type UpdateSettingsRequest struct {
-	Email                     string `json:"email" bson:"email"`
-	ReceivePushNotifications  bool   `json:"receive_push_notifications" bson:"receive_push_notifications"`
-	ReceiveEmailNotifications bool   `json:"receive_email_notifications" bson:"receive_email_notifications"`
+	Name                     string `json:"name" bson:"name"`
+	Sex                      string `json:"sex" bson:"sex"`
+	ReceivePushNotifications bool   `json:"receive_push_notifications" bson:"receive_push_notifications"`
 }
 
 type SetMoodRequest struct {

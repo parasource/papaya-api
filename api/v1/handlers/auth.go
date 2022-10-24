@@ -378,8 +378,8 @@ func HandleRefresh(c *gin.Context) {
 		return
 	}
 
-	id := claims["id"].(uint)
-	user := database.GetUser(id)
+	id := claims["id"].(float64)
+	user := database.GetUser(uint(id))
 	if user == nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
