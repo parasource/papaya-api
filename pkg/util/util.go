@@ -19,6 +19,7 @@ package util
 import (
 	"errors"
 	"strings"
+	"unicode"
 )
 
 func ExtractToken(authHeader string) (string, error) {
@@ -36,4 +37,13 @@ func ExtractToken(authHeader string) (string, error) {
 	}
 
 	return headerParts[1], nil
+}
+
+func IsLetter(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
 }

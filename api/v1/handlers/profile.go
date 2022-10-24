@@ -21,6 +21,7 @@ import (
 	"github.com/parasource/papaya-api/api/v1/requests"
 	database "github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
+	"github.com/parasource/papaya-api/pkg/util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -99,6 +100,19 @@ func HandleProfileUpdateSettings(c *gin.Context) {
 	user, err := GetUser(c)
 	if err != nil {
 		c.AbortWithStatus(403)
+		return
+	}
+
+	if r.Name != "" && !util.IsLetter(r.Name) {
+		c.JSON(400, gin.H{
+			"success": "false",
+			"message": "Недопустимый формат имени",
+		})
+		return
+	}
+
+	if r.Sex != "" && (r.Sex != "male" && r.Sex != "female") {
+		c.AbortWithStatus(400)
 		return
 	}
 
