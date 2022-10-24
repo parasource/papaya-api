@@ -43,7 +43,7 @@ func GenerateToken(user *models.User) (string, error) {
 		"id":         user.ID,
 		"name":       user.Name,
 		"email":      user.Email,
-		"expires_at": time.Now().Add(time.Minute * 15).Unix(),
+		"expires_at": time.Now().Add(time.Hour * 6).Unix(),
 	})
 
 	str, err := token.SignedString([]byte(accessSecret))

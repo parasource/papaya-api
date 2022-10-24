@@ -44,3 +44,7 @@ type GoogleUserRes struct {
 	FamilyName string `json:"family_name"`
 	Gender     string `json:"gender"`
 }
+
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}

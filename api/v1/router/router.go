@@ -33,7 +33,7 @@ func Initialize() *gin.Engine {
 	r.POST("/api/auth/login/google", handlers.HandleGoogleLoginOrRegister)
 	r.POST("/api/auth/login/apple", handlers.HandleAppleLoginOrRegister)
 	r.POST("/api/auth/login/vk", handlers.HandleLogin)
-	r.POST("/api/auth/refresh", middleware.AuthMiddleware, handlers.HandleRefresh)
+	r.POST("/api/auth/refresh", handlers.HandleRefresh)
 	r.GET("/api/auth/user", middleware.AuthMiddleware, handlers.HandleUser)
 
 	/// Search

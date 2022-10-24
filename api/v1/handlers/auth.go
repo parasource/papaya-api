@@ -197,6 +197,7 @@ func HandleGoogleLoginOrRegister(c *gin.Context) {
 				"success":       true,
 				"token":         token,
 				"refresh_token": refreshToken,
+				"first_time":    true,
 			})
 		} else {
 			token, err := util.GenerateToken(&user)
@@ -220,6 +221,7 @@ func HandleGoogleLoginOrRegister(c *gin.Context) {
 				"success":       true,
 				"token":         token,
 				"refresh_token": refreshToken,
+				"first_time":    false,
 			})
 		}
 	}
@@ -312,6 +314,7 @@ func HandleAppleLoginOrRegister(c *gin.Context) {
 				"success":       true,
 				"token":         token,
 				"refresh_token": refreshToken,
+				"first_time":    true,
 			})
 		} else {
 			token, err := util.GenerateToken(&user)
@@ -335,6 +338,7 @@ func HandleAppleLoginOrRegister(c *gin.Context) {
 				"success":       true,
 				"token":         token,
 				"refresh_token": refreshToken,
+				"first_time":    false,
 			})
 		}
 	}
@@ -356,14 +360,19 @@ func associateTodayLook(user *models.User) error {
 }
 
 func HandleRefresh(c *gin.Context) {
-	refreshToken := c.PostForm("refresh_token")
+	var req requests.RefreshTokenRequest
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.AbortWithStatus(400)
+		return
+	}
 
-	if refreshToken == "" {
+	if req.RefreshToken == "" {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	claims, err := util.ParseRefreshToken(refreshToken)
+	claims, err := util.ParseRefreshToken(req.RefreshToken)
 	if err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
