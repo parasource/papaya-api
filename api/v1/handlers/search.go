@@ -25,6 +25,14 @@ import (
 	"strconv"
 )
 
+const (
+	searchSqlTemplate = `SELECT searches_%[1]v.*, 
+		ts_rank(searches_%[1]v.tsv || searches_%[1]v.wardrobe_tsv, plainto_tsquery('russian', ?)) as rank 
+		FROM searches_%[1]v 
+		WHERE searches_%[1]v.tsv || searches_%[1]v.wardrobe_tsv @@ plainto_tsquery('russian', ?) 
+		OFFSET ? LIMIT ?`
+)
+
 type SearchDBResult struct {
 	OriginTable string  `json:"origin_table"`
 	ID          uint    `json:"id"`
@@ -77,7 +85,7 @@ func HandleSearch(c *gin.Context) {
 
 	var res []*SearchDBResult
 
-	dbQuery := fmt.Sprintf("SELECT searches_%v.*, ts_rank(tsvector_concat(searches_%v.tsv, searches_%v.wardrobe_tsv), plainto_tsquery('russian', ?)) as rank FROM searches_%v WHERE tsvector_concat(searches_%v.tsv, searches_%v.wardrobe_tsv) @@ plainto_tsquery('russian', ?) OFFSET ? LIMIT ?", user.Sex, user.Sex, user.Sex, user.Sex, user.Sex, user.Sex)
+	dbQuery := fmt.Sprintf(searchSqlTemplate, user.Sex)
 
 	err = database.DB().Debug().Raw(dbQuery, searchQuery, searchQuery, offset, 20).Find(&res).Error
 	if err != nil {

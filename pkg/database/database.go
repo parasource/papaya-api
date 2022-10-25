@@ -82,7 +82,7 @@ const (
 
     UNION ALL
 
-    SELECT text 'topics' as origin_table, id, tsv, null as wardrobe_tsv
+    SELECT text 'topics' as origin_table, id, tsv, to_tsvector('pg_catalog.russian', '') as wardrobe_tsv
     FROM topics;
 
 	CREATE OR REPLACE VIEW searches_female AS
@@ -92,7 +92,7 @@ const (
 
     UNION ALL
 
-    SELECT text 'topics' as origin_table, id, tsv, null as wardrobe_tsv
+    SELECT text 'topics' as origin_table, id, tsv, to_tsvector('pg_catalog.russian', '') as wardrobe_tsv
     FROM topics;
 	`
 )
