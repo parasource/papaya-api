@@ -68,12 +68,12 @@ const (
 	/* ------------ */
 	/* SEARCH VIEWS */
 
-	drop aggregate if exists tsvector_agg(tsvector);
-	create aggregate tsvector_agg (tsvector) (
-		STYPE = pg_catalog.tsvector,
-		SFUNC = pg_catalog.tsvector_concat,
-		INITCOND = ''
-	);
+-- 	drop aggregate if exists tsvector_agg(tsvector);
+-- 	create aggregate tsvector_agg (tsvector) (
+-- 		STYPE = pg_catalog.tsvector,
+-- 		SFUNC = pg_catalog.tsvector_concat,
+-- 		INITCOND = ''
+-- 	);
 
 	CREATE OR REPLACE VIEW searches_male AS
 
@@ -87,12 +87,12 @@ const (
 
 	CREATE OR REPLACE VIEW searches_female AS
 
-    SELECT text 'looks' as origin_table, id, tsv
-    FROM looks WHERE sex = 'female'
+    SELECT text 'looks' as origin_table, looks.id, looks.tsv, tsvector_agg(wi.tsv) as wardrobe_tsv
+	FROM looks LEFT JOIN look_items li on looks.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id WHERE looks.sex = 'female' GROUP BY looks.id, text 'looks', looks.tsv
 
     UNION ALL
 
-    SELECT text 'topics' as origin_table, id, tsv
+    SELECT text 'topics' as origin_table, id, tsv, null as wardrobe_tsv
     FROM topics;
 	`
 )
