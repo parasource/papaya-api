@@ -228,7 +228,9 @@ func HandleSearchAutofill(c *gin.Context) {
 	}
 
 	var sr []*models.SearchRecord
-	err := database.DB().Raw("SELECT search_records.*, ts_rank(search_records.tsv, plainto_tsquery('russian', ?)) as rank FROM search_records WHERE search_records.tsv @@ plainto_tsquery('russian', ?) LIMIT ?", q[0], q[0], 10).Find(&sr).Error
+	err := database.DB().Raw(`SELECT search_records.query, ts_rank(search_records.tsv, plainto_tsquery('pg_catalog.russian', ?)) as rank FROM search_records
+WHERE search_records.tsv @@ plainto_tsquery('pg_catalog.russian', ?)
+GROUP BY search_records.query, search_records.tsv, ts_rank(search_records.tsv, plainto_tsquery('pg_catalog.russian', ?)) LIMIT ?`, q[0], q[0], q[0], 10).Find(&sr).Error
 	if err != nil {
 		logrus.Errorf("erorr searching: %v", err)
 		c.AbortWithStatus(500)
