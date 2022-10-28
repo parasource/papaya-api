@@ -62,7 +62,10 @@ func Initialize() *gin.Engine {
 	r.GET("/api/liked", middleware.AuthMiddleware, handlers.GetLikedLooks)
 	r.GET("/api/feed", middleware.AuthMiddleware, handlers.HandleFeed)
 	r.GET("/api/feed/:category", middleware.AuthMiddleware, handlers.HandleFeedByCategory)
-	r.GET("/api/get-wardrobe-items", middleware.AuthMiddleware, handlers.HandleGetWardrobeItems)
+
+	/// Wardrobe
+	r.GET("/api/wardrobe", middleware.AuthMiddleware, handlers.HandleGetWardrobeCategories)
+	r.GET("/api/wardrobe/:category", middleware.AuthMiddleware, handlers.HandleGetWardrobeItems)
 
 	/// Profile
 	r.POST("/api/profile/set-wardrobe", middleware.AuthMiddleware, handlers.HandleProfileSetWardrobe)

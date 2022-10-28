@@ -377,17 +377,42 @@ func GetLikedLooks(c *gin.Context) {
 	c.JSON(200, looks)
 }
 
-func HandleGetWardrobeItems(c *gin.Context) {
-	var items []*models.WardrobeCategory
-	err := database.DB().Preload("Items").Find(&items).Error
+func HandleGetWardrobeCategories(c *gin.Context) {
+	var categories []*models.WardrobeCategory
+
+	err := database.DB().Find(&categories).Error
 	if err != nil {
-		logrus.Errorf("error getting wardrobe items from database: %v", err)
+		logrus.Errorf("error getting all wardrobe categories: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
 
-	for _, item := range items {
-		item.Preview = item.Items[0].Image
+	for _, category := range categories {
+		var preview string
+		err = database.DB().Raw("SELECT image FROM wardrobe_items WHERE wardrobe_category_id = ? LIMIT 1", category.ID).Scan(&preview).Error
+		if err != nil {
+			logrus.Errorf("error getting preview for wardrobe category: %v", err)
+		}
+		category.Preview = preview
 	}
+
+	c.JSON(200, categories)
+}
+
+func HandleGetWardrobeItems(c *gin.Context) {
+	category := c.Param("category")
+	if category == "" {
+		c.AbortWithStatus(400)
+		return
+	}
+
+	var items []*models.WardrobeItem
+	err := database.DB().Where("wardrobe_category_id = ?", category).Find(&items).Error
+	if err != nil {
+		logrus.Errorf("error getting wardrobe items: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
 	c.JSON(200, items)
 }
