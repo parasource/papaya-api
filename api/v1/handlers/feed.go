@@ -67,15 +67,15 @@ func HandleFeed(c *gin.Context) {
 
 	var looks []*models.Look
 
-	ids, err := gorse.RecommendForUser(strconv.Itoa(int(user.ID)), 20, offset)
+	items, err := gorse.RecommendForUserAndCategory(strconv.Itoa(int(user.ID)), user.Sex, 20, offset)
 
 	// TODO
-	if len(ids) == 0 {
+	if len(items) == 0 {
 		logrus.Debug("did not recommend anything")
 
-		err = database.DB().Debug().Raw("SELECT * FROM looks WHERE looks.deleted_at IS NULL ORDER BY random() LIMIT ? OFFSET ?", 20, offset).Scan(&looks).Error
+		err = database.DB().Debug().Raw("SELECT * FROM looks WHERE looks.deleted_at IS NULL AND sex = ? ORDER BY random() LIMIT ? OFFSET ?", user.Sex, 20, offset).Scan(&looks).Error
 	} else {
-		err = database.DB().Debug().Find(&looks, ids).Error
+		err = database.DB().Debug().Where("slug IN ?", items).Find(&looks).Error
 		if err != nil {
 			logrus.Errorf("error finding looks by recommendation: %v", err)
 		}

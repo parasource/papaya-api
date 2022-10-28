@@ -21,9 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -144,8 +142,8 @@ func Undislike(userId, itemID string) error {
 	return err
 }
 
-func RecommendForUser(userID string, n int, offset int) ([]int, error) {
-	var ids []string
+func RecommendForUser(userID string, n int, offset int) ([]string, error) {
+	var items []string
 
 	url := fmt.Sprintf("http://%v/api/recommend/%v?n=%v&offset=%v", instance.baseUrl, userID, n, offset)
 	res, err := instance.c.Get(url)
@@ -156,20 +154,24 @@ func RecommendForUser(userID string, n int, offset int) ([]int, error) {
 		return nil, err
 	}
 
-	err = json.NewDecoder(res.Body).Decode(&ids)
+	err = json.NewDecoder(res.Body).Decode(&items)
+	return items, err
+}
 
-	var result []int
-	var newId int
-	for _, id := range ids {
-		newId, err = strconv.Atoi(id)
-		if err != nil {
-			logrus.Errorf("error converting response ids: %v", err)
-		}
-		result = append(result, newId)
+func RecommendForUserAndCategory(userID string, category string, n int, offset int) ([]string, error) {
+	var items []string
+
+	url := fmt.Sprintf("http://%v/api/recommend/%v/%v?n=%v&offset=%v", instance.baseUrl, userID, category, n, offset)
+	res, err := instance.c.Get(url)
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("wrong status code - %v", res.StatusCode)
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	return result, err
-
+	err = json.NewDecoder(res.Body).Decode(&items)
+	return items, err
 }
 
 func Like(userId, itemID string) error {
