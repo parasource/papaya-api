@@ -30,6 +30,7 @@ type WardrobeCategory struct {
 	Slug           string         `json:"slug"`
 	Items          []WardrobeItem `json:"items"`
 	Preview        string         `json:"preview" gorm:"-"`
+	ItemsCount     int            `json:"items_count" gorm:"-"`
 	ParentCategory string         `json:"parent_category"`
 }
 
