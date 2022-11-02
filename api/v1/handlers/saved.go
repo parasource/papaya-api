@@ -34,7 +34,12 @@ func HandleSaved(c *gin.Context) {
 		c.AbortWithStatus(403)
 		return
 	}
-	database.DB().Model(&user).Association("SavedLooks").Find(&result)
+	err = database.DB().Raw("SELECT * FROM looks JOIN saved_looks sl on looks.id = sl.look_id WHERE sl.user_id = ? ORDER BY id DESC", user.ID).Scan(&result).Error
+	if err != nil {
+		logrus.Errorf("error getting saved looks: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
 
 	c.JSON(200, result)
 }
