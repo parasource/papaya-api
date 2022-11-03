@@ -41,7 +41,7 @@ const feedWardrobeRecommendationTemplate = `select looks.* from looks
                  AND looks.id NOT IN (SELECT saved_looks.look_id FROM saved_looks WHERE saved_looks.user_id = ?)
                  AND looks.sex = ?
                  AND looks.deleted_at IS NULL
-               GROUP BY looks.id ORDER BY random() LIMIT ? OFFSET ?;`
+               GROUP BY looks.id ORDER BY looks.id DESC LIMIT ? OFFSET ?;`
 
 type Adviser struct {
 	cache *redis.Client
@@ -58,6 +58,17 @@ func (a *Adviser) Feed(user *models.User, limit int, offset int) ([]*models.Look
 	var looks []*models.Look
 
 	// So first we grab half of page items from recommendations
+
+	err := database.DB().Debug().Raw(feedWardrobeRecommendationTemplate, user.ID, user.ID, user.Sex, limit/2, offset/2).Scan(&looks).Error
+	if err != nil {
+		return nil, err
+	}
+	if len(looks) == 0 {
+		return looks, nil
+	}
+
+	// Then, if there are still wardrobe recommendations, we complete them with gorse recommendations
+	var looks1 []*models.Look
 	items, err := gorse.RecommendForUserAndCategory(strconv.Itoa(int(user.ID)), user.Sex, limit/2, offset/2)
 	if err != nil {
 		return nil, err
@@ -65,21 +76,16 @@ func (a *Adviser) Feed(user *models.User, limit int, offset int) ([]*models.Look
 	if len(items) == 0 {
 		logrus.Debug("did not recommend anything")
 
-		err = database.DB().Debug().Raw("SELECT * FROM looks WHERE sex = ? ORDER BY random()", user.Sex).Scan(&looks).Error
+		err = database.DB().Debug().Raw("SELECT * FROM looks WHERE sex = ? ORDER BY random() LIMIT ? OFFSET ?", user.Sex, limit/2, offset/2).Scan(&looks1).Error
 	} else {
-		err = database.DB().Debug().Where("slug IN ?", items).Find(&looks).Error
+		err = database.DB().Debug().Where("slug IN ?", items).Find(&looks1).Error
 		if err != nil {
 			logrus.Errorf("error finding looks by recommendation: %v", err)
 		}
 	}
+	looks = append(looks, looks1...)
 
-	var looksWardrobe []*models.Look
-	err = database.DB().Debug().Raw(feedWardrobeRecommendationTemplate, user.ID, user.ID, user.Sex, limit/2, offset/2).Scan(&looksWardrobe).Error
-	if err != nil {
-		return nil, err
-	}
-	looks = append(looks, looksWardrobe...)
-
+	// Random sorting for entropy
 	rand.Seed(time.Now().UnixNano())
 	for i := len(looks) - 1; i > 0; i-- { // Fisher–Yates shuffle
 		j := rand.Intn(i + 1)
