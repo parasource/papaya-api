@@ -26,6 +26,20 @@ import (
 	"strconv"
 )
 
+// 1 - user id
+// 2 - user id
+// 3 - user sex
+// 4 - limit
+// 5 - offset
+const feedWardrobeRecommendationTemplate = `select looks.* from looks
+    join look_items li on looks.id = li.look_id
+    right join users_wardrobe uw on li.wardrobe_item_id = uw.wardrobe_item_id
+               WHERE uw.user_id = ?
+                 AND looks.id NOT IN (SELECT saved_looks.look_id FROM saved_looks WHERE saved_looks.user_id = ?)
+                 AND looks.sex = ?
+                 AND looks.deleted_at IS NULL
+               GROUP BY looks.id ORDER BY random() LIMIT ? OFFSET ?;`
+
 var (
 	FeedPagination = 10
 )
@@ -67,13 +81,13 @@ func HandleFeed(c *gin.Context) {
 
 	var looks []*models.Look
 
-	items, err := gorse.RecommendForUserAndCategory(strconv.Itoa(int(user.ID)), user.Sex, 20, offset)
+	items, err := gorse.RecommendForUserAndCategory(strconv.Itoa(999), user.Sex, 20, offset)
 
 	// TODO
 	if len(items) == 0 {
 		logrus.Debug("did not recommend anything")
 
-		err = database.DB().Debug().Raw("SELECT * FROM looks WHERE looks.deleted_at IS NULL AND sex = ? ORDER BY random() LIMIT ? OFFSET ?", user.Sex, 20, offset).Scan(&looks).Error
+		err = database.DB().Debug().Raw(feedWardrobeRecommendationTemplate, user.ID, user.ID, user.Sex, 20, offset).Scan(&looks).Error
 	} else {
 		err = database.DB().Debug().Where("slug IN ?", items).Find(&looks).Error
 		if err != nil {
