@@ -158,6 +158,22 @@ func RecommendForUser(userID string, n int, offset int) ([]string, error) {
 	return items, err
 }
 
+func RecommendPopular(sex string, n int) ([]string, error) {
+	var items []string
+
+	url := fmt.Sprintf("http://%v/api/popular/%v?n=%v", instance.baseUrl, sex, n)
+	res, err := instance.c.Get(url)
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("wrong status code - %v", res.StatusCode)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.NewDecoder(res.Body).Decode(&items)
+	return items, err
+}
+
 func RecommendForUserAndCategory(userID string, category string, n int, offset int) ([]string, error) {
 	var items []string
 

@@ -21,6 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
+	"github.com/parasource/papaya-api/pkg/gorse"
 	"github.com/sirupsen/logrus"
 	"strconv"
 )
@@ -177,9 +178,16 @@ func HandleSearchSuggestions(c *gin.Context) {
 	var looks []*models.Look
 	var topics []*models.Topic
 
-	err = database.DB().Order("RANDOM()").Where("sex = ?", user.Sex).Limit(10).Find(&looks).Error
+	lookSlugs, err := gorse.RecommendPopular(user.Sex, 10)
+	//err = database.DB().Order("RANDOM()").Where("sex = ?", user.Sex).Limit(10).Find(&looks).Error
 	if err != nil {
 		logrus.Errorf("error getting popular looks: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+	err = database.DB().Debug().Where("slug in ?", lookSlugs).Find(&looks).Error
+	if err != nil {
+		logrus.Errorf("error getting popular looks from db: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}

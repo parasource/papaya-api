@@ -78,7 +78,9 @@ const (
 	CREATE OR REPLACE VIEW searches_male AS
 
     SELECT text 'looks' as origin_table, looks.id, looks.tsv, tsvector_agg(wi.tsv) as wardrobe_tsv
-	FROM looks LEFT JOIN look_items li on looks.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id WHERE looks.sex = 'male' GROUP BY looks.id, text 'looks', looks.tsv
+	FROM looks LEFT JOIN look_items li on looks.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id
+	WHERE looks.sex = 'male' AND looks.deleted_at IS NULL
+	GROUP BY looks.id, text 'looks', looks.tsv
 
     UNION ALL
 
@@ -88,7 +90,9 @@ const (
 	CREATE OR REPLACE VIEW searches_female AS
 
     SELECT text 'looks' as origin_table, looks.id, looks.tsv, tsvector_agg(wi.tsv) as wardrobe_tsv
-	FROM looks LEFT JOIN look_items li on looks.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id WHERE looks.sex = 'female' GROUP BY looks.id, text 'looks', looks.tsv
+	FROM looks LEFT JOIN look_items li on looks.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id
+	WHERE looks.sex = 'female' AND looks.deleted_at IS NULL
+	GROUP BY looks.id, text 'looks', looks.tsv
 
     UNION ALL
 

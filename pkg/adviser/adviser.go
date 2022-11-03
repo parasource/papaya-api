@@ -20,20 +20,12 @@ import (
 	"github.com/go-redis/redis/v9"
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
-	"github.com/parasource/papaya-api/pkg/gorse"
-	"github.com/sirupsen/logrus"
 	"math/rand"
-	"strconv"
 	"time"
 )
 
 var instance *Adviser
 
-// 1 - user id
-// 2 - user id
-// 3 - user sex
-// 4 - limit
-// 5 - offset
 const feedWardrobeRecommendationTemplate = `select looks.* from looks
     join look_items li on looks.id = li.look_id
     right join users_wardrobe uw on li.wardrobe_item_id = uw.wardrobe_item_id
@@ -63,27 +55,6 @@ func (a *Adviser) Feed(user *models.User, limit int, offset int) ([]*models.Look
 	if err != nil {
 		return nil, err
 	}
-	if len(looks) == 0 {
-		return looks, nil
-	}
-
-	// Then, if there are still wardrobe recommendations, we complete them with gorse recommendations
-	var looks1 []*models.Look
-	items, err := gorse.RecommendForUserAndCategory(strconv.Itoa(int(user.ID)), user.Sex, limit/2, offset/2)
-	if err != nil {
-		return nil, err
-	}
-	if len(items) == 0 {
-		logrus.Debug("did not recommend anything")
-
-		err = database.DB().Debug().Raw("SELECT * FROM looks WHERE sex = ? ORDER BY random() LIMIT ? OFFSET ?", user.Sex, limit/2, offset/2).Scan(&looks1).Error
-	} else {
-		err = database.DB().Debug().Where("slug IN ?", items).Find(&looks1).Error
-		if err != nil {
-			logrus.Errorf("error finding looks by recommendation: %v", err)
-		}
-	}
-	looks = append(looks, looks1...)
 
 	// Random sorting for entropy
 	rand.Seed(time.Now().UnixNano())
