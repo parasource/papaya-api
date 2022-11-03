@@ -18,6 +18,7 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/parasource/papaya-api/pkg/adviser"
 	database "github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/parasource/papaya-api/pkg/gorse"
@@ -41,11 +42,16 @@ const feedWardrobeRecommendationTemplate = `select looks.* from looks
                GROUP BY looks.id ORDER BY random() LIMIT ? OFFSET ?;`
 
 var (
-	FeedPagination = 10
+	FeedPagination = 20
 )
 
 func HandleFeed(c *gin.Context) {
-	//var looks []models.Look
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
 
 	params := c.Request.URL.Query()
 
@@ -55,46 +61,17 @@ func HandleFeed(c *gin.Context) {
 	} else {
 		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
 	}
+	offset := int(page) * FeedPagination
 
-	offset := int(page * 20)
-	//err := database.DB().Order("created_at desc").Offset(offset).Preload("Items.Urls.Brand").Limit(FeedPagination).Find(&looks).Error
-	//if err != nil {
-	//	logrus.Errorf("error getting looks: %v", err)
-	//	c.AbortWithStatus(500)
-	//	return
-	//}
-
-	user, err := GetUser(c)
+	// Feed looks
+	looks, err := adviser.Get().Feed(user, FeedPagination, offset)
 	if err != nil {
-		logrus.Errorf("error getting user: %v", err)
-		c.AbortWithStatus(403)
-		return
-	}
-
-	var categories []models.Category
-	err = database.DB().Find(&categories).Error
-	if err != nil {
-		logrus.Errorf("error getting categories: %v", err)
+		logrus.Errorf("error getting feed: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
 
-	var looks []*models.Look
-
-	items, err := gorse.RecommendForUserAndCategory(strconv.Itoa(999), user.Sex, 20, offset)
-
-	// TODO
-	if len(items) == 0 {
-		logrus.Debug("did not recommend anything")
-
-		err = database.DB().Debug().Raw(feedWardrobeRecommendationTemplate, user.ID, user.ID, user.Sex, 20, offset).Scan(&looks).Error
-	} else {
-		err = database.DB().Debug().Where("slug IN ?", items).Find(&looks).Error
-		if err != nil {
-			logrus.Errorf("error finding looks by recommendation: %v", err)
-		}
-	}
-
+	// Today look
 	var todayLookId int
 	database.DB().Raw("SELECT look_id FROM today_looks WHERE user_id = ? LIMIT 1", user.ID).Scan(&todayLookId)
 
@@ -104,6 +81,15 @@ func HandleFeed(c *gin.Context) {
 	err = database.DB().Model(&user).Association("TodayLook").Find(&todayLook)
 	if err != nil {
 		logrus.Errorf("error getting today's look: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	// Categories
+	var categories []models.Category
+	err = database.DB().Find(&categories).Error
+	if err != nil {
+		logrus.Errorf("error getting categories: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
