@@ -179,17 +179,21 @@ func HandleSearchSuggestions(c *gin.Context) {
 	var topics []*models.Topic
 
 	lookSlugs, err := gorse.RecommendPopular(user.Sex, 10)
-	//err = database.DB().Order("RANDOM()").Where("sex = ?", user.Sex).Limit(10).Find(&looks).Error
 	if err != nil {
 		logrus.Errorf("error getting popular looks: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
-	err = database.DB().Debug().Where("slug in ?", lookSlugs).Find(&looks).Error
-	if err != nil {
-		logrus.Errorf("error getting popular looks from db: %v", err)
-		c.AbortWithStatus(500)
-		return
+
+	if len(lookSlugs) == 0 {
+		err = database.DB().Order("RANDOM()").Where("sex = ?", user.Sex).Limit(10).Find(&looks).Error
+	} else {
+		err = database.DB().Debug().Where("slug in ?", lookSlugs).Find(&looks).Error
+		if err != nil {
+			logrus.Errorf("error getting popular looks from db: %v", err)
+			c.AbortWithStatus(500)
+			return
+		}
 	}
 
 	err = database.DB().Order("RANDOM()").Limit(10).Find(&topics).Error

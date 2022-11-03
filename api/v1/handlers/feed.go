@@ -119,9 +119,9 @@ func HandleFeedByCategory(c *gin.Context) {
 	}
 
 	var looks []*models.Look
-	err = database.DB().
-		Raw("SELECT * FROM looks JOIN look_categories lc on looks.id = lc.look_id WHERE lc.category_id = ? AND looks.sex = ?", category.ID, user.Sex).
-		Order("created_at desc").
+	err = database.DB().Debug().
+		Raw("SELECT * FROM looks JOIN look_categories lc on looks.id = lc.look_id WHERE looks.deleted_at IS NULL AND lc.category_id = ? AND looks.sex = ?", category.ID, user.Sex).
+		Order("id DESC").
 		Offset(offset).Preload("Items.Urls.Brand").
 		Limit(FeedPagination).Find(&looks).Error
 	if err != nil {
@@ -131,6 +131,7 @@ func HandleFeedByCategory(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"looks":    looks,
 		"category": category,
+		"page":     page,
 	})
 }
 
