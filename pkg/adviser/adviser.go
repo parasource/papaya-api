@@ -17,10 +17,11 @@
 package adviser
 
 import (
-	"github.com/go-redis/redis/v9"
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
+	"github.com/parasource/papaya-api/pkg/gorse"
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -33,10 +34,20 @@ const feedWardrobeRecommendationTemplate = `select looks.* from looks
                  AND looks.id NOT IN (SELECT saved_looks.look_id FROM saved_looks WHERE saved_looks.user_id = ?)
                  AND looks.sex = ?
                  AND looks.deleted_at IS NULL
+               	 AND looks.slug NOT IN ?
+               GROUP BY looks.id ORDER BY looks.id DESC LIMIT ? OFFSET ?;`
+
+const feedWardrobeRecommendationFallbackTemplate = `select looks.* from looks
+    join look_items li on looks.id = li.look_id
+    right join users_wardrobe uw on li.wardrobe_item_id = uw.wardrobe_item_id
+               WHERE uw.user_id = ?
+                 AND looks.id NOT IN (SELECT saved_looks.look_id FROM saved_looks WHERE saved_looks.user_id = ?)
+                 AND looks.sex = ?
+                 AND looks.deleted_at IS NULL
                GROUP BY looks.id ORDER BY looks.id DESC LIMIT ? OFFSET ?;`
 
 type Adviser struct {
-	cache *redis.Client
+	cache *Cache
 }
 
 func Get() *Adviser {
@@ -46,15 +57,42 @@ func Get() *Adviser {
 	return instance
 }
 
-func (a *Adviser) Feed(user *models.User, limit int, offset int) ([]*models.Look, error) {
+func (a *Adviser) Feed(user *models.User, page int) ([]*models.Look, error) {
 	var looks []*models.Look
 
-	// So first we grab half of page items from recommendations
-
-	err := database.DB().Debug().Raw(feedWardrobeRecommendationTemplate, user.ID, user.ID, user.Sex, limit/2, offset/2).Scan(&looks).Error
+	// So first we grab major part of page items from gorse
+	slugs, err := gorse.RecommendForUserAndCategory(strconv.Itoa(int(user.ID)), user.Sex, 15, 15*page)
 	if err != nil {
 		return nil, err
 	}
+	if slugs == nil {
+		slugs = []string{}
+	}
+	err = database.DB().Where("slug in ?", slugs).Find(&looks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Then we need looks, which contain at least one item from user's wardrobe
+	var wardrobeLooks []*models.Look
+
+	// This is the main scenario, but we need a fallback when there are no recommendation from gorse
+	if len(slugs) > 0 {
+		err = database.DB().Debug().Raw(feedWardrobeRecommendationTemplate, user.ID, user.ID, user.Sex, slugs, 5, 5*page).Scan(&wardrobeLooks).Error
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = database.DB().Debug().Raw(feedWardrobeRecommendationFallbackTemplate, user.ID, user.ID, user.Sex, 20, 20*page).Scan(&wardrobeLooks).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+	for _, look := range wardrobeLooks {
+		look.IsFromWardrobe = true
+	}
+
+	looks = append(looks, wardrobeLooks...)
 
 	// Random sorting for entropy
 	rand.Seed(time.Now().UnixNano())
@@ -64,4 +102,18 @@ func (a *Adviser) Feed(user *models.User, limit int, offset int) ([]*models.Look
 	}
 
 	return looks, nil
+}
+
+func concatenateToPostgresArr(arr []string) string {
+	str := "("
+	for i := 0; i < len(arr); i++ {
+		if len(arr)-i == 1 {
+			str += arr[i]
+		} else {
+			str += arr[i] + ", "
+		}
+	}
+	str += ")"
+
+	return str
 }

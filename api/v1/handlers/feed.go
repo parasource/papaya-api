@@ -47,10 +47,9 @@ func HandleFeed(c *gin.Context) {
 	} else {
 		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
 	}
-	offset := int(page) * FeedPagination
 
 	// Feed looks
-	looks, err := adviser.Get().Feed(user, FeedPagination, offset)
+	looks, err := adviser.Get().Feed(user, int(page))
 	if err != nil {
 		logrus.Errorf("error getting feed: %v", err)
 		c.AbortWithStatus(500)

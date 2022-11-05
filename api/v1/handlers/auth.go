@@ -172,7 +172,7 @@ func HandleGoogleLoginOrRegister(c *gin.Context) {
 		// User is not found, so we'll sign him up
 		if user.ID == 0 {
 			user := models.NewUser(googleRes.Email, googleRes.Name, "")
-			user.Sex = googleRes.Gender
+			user.Sex = "male"
 			database.CreateUser(user)
 
 			err = associateTodayLook(user)
