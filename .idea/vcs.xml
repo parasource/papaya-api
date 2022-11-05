@@ -2,6 +2,6 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../papaya-hooks" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../../parasource/papaya-jobs" vcs="Git" />
   </component>
 </project>

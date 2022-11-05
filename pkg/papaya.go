@@ -21,7 +21,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/api/v1/router"
 	"github.com/parasource/papaya-api/pkg/database"
-	models "github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/parasource/papaya-api/pkg/gorse"
 	"github.com/sirupsen/logrus"
 	"net"
@@ -44,7 +43,6 @@ type Papaya struct {
 
 	r       *gin.Engine
 	adviser *gorse.Gorse
-	jobs    *JobsManager
 }
 
 func NewPapaya(cfg Config, dbCfg database.Config) (*Papaya, error) {
@@ -63,36 +61,6 @@ func NewPapaya(cfg Config, dbCfg database.Config) (*Papaya, error) {
 
 	adviserUrl := net.JoinHostPort(cfg.AdviserHost, cfg.AdviserPort)
 	gorse.New(adviserUrl, 3)
-
-	jobs := []*Job{
-		{
-			Name: "Renew today's look",
-			F: func() {
-				var users []models.User
-				database.DB().Find(&users)
-
-				for _, user := range users {
-					var look models.Look
-
-					err := database.DB().Limit(1).Order("random()").Find(&look).Error
-					if err != nil {
-						logrus.Errorf("error running job: %v", err)
-					}
-
-					err = database.DB().Model(&user).Association("TodayLook").Replace(&look)
-					if err != nil {
-						logrus.Errorf("error running job: %v", err)
-					}
-				}
-			},
-			Interval: IntervalDaily,
-		},
-	}
-	jm, err := NewJobsManager(jobs)
-	if err != nil {
-		logrus.Fatalf("error running jobs manager: %v", err)
-	}
-	d.jobs = jm
 
 	return d, nil
 }

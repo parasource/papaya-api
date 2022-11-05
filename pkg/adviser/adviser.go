@@ -65,9 +65,6 @@ func (a *Adviser) Feed(user *models.User, page int) ([]*models.Look, error) {
 	if err != nil {
 		return nil, err
 	}
-	if slugs == nil {
-		slugs = []string{}
-	}
 	err = database.DB().Where("slug in ?", slugs).Find(&looks).Error
 	if err != nil {
 		return nil, err
@@ -102,18 +99,4 @@ func (a *Adviser) Feed(user *models.User, page int) ([]*models.Look, error) {
 	}
 
 	return looks, nil
-}
-
-func concatenateToPostgresArr(arr []string) string {
-	str := "("
-	for i := 0; i < len(arr); i++ {
-		if len(arr)-i == 1 {
-			str += arr[i]
-		} else {
-			str += arr[i] + ", "
-		}
-	}
-	str += ")"
-
-	return str
 }
