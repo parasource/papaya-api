@@ -159,7 +159,9 @@ func RecommendForUser(userID string, n int, offset int) ([]string, error) {
 }
 
 func RecommendPopular(sex string, n int) ([]string, error) {
-	var items []string
+	var items []struct {
+		ID string `json:"Id"`
+	}
 
 	url := fmt.Sprintf("http://%v/api/popular/%v?n=%v", instance.baseUrl, sex, n)
 	res, err := instance.c.Get(url)
@@ -171,7 +173,12 @@ func RecommendPopular(sex string, n int) ([]string, error) {
 	}
 
 	err = json.NewDecoder(res.Body).Decode(&items)
-	return items, err
+
+	var resItems []string
+	for _, item := range items {
+		resItems = append(resItems, item.ID)
+	}
+	return resItems, err
 }
 
 func RecommendForUserAndCategory(userID string, category string, n int, offset int) ([]string, error) {
