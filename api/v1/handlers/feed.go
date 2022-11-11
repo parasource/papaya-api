@@ -45,7 +45,11 @@ func HandleFeed(c *gin.Context) {
 	if _, ok := params["page"]; !ok {
 		page = 0
 	} else {
-		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
+		page, err = strconv.ParseInt(params["page"][0], 10, 64)
+		if err != nil {
+			c.AbortWithStatus(400)
+			return
+		}
 	}
 
 	// Feed looks
@@ -89,6 +93,7 @@ func HandleFeed(c *gin.Context) {
 }
 
 func HandleFeedByCategory(c *gin.Context) {
+	var err error
 	slug := c.Param("category")
 
 	params := c.Request.URL.Query()
@@ -97,7 +102,11 @@ func HandleFeedByCategory(c *gin.Context) {
 	if _, ok := params["page"]; !ok {
 		page = 0
 	} else {
-		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
+		page, err = strconv.ParseInt(params["page"][0], 10, 64)
+		if err != nil {
+			c.AbortWithStatus(400)
+			return
+		}
 	}
 
 	offset := int(page * 20)
@@ -282,7 +291,6 @@ func HandleDislikeLook(c *gin.Context) {
 	}
 
 	// user
-
 	user, err := GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
