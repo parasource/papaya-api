@@ -30,6 +30,7 @@ type Look struct {
 	Name           string          `json:"name"`
 	Slug           string          `json:"slug" gorm:"unique"`
 	Image          string          `json:"image"`
+	ImageRatio     string          `json:"imageRatio"`
 	Desc           string          `json:"desc"`
 	Items          []*WardrobeItem `json:"items" gorm:"many2many:look_items;"`
 	Categories     []*Category     `json:"categories" gorm:"many2many:look_categories;"`
