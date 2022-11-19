@@ -137,6 +137,8 @@ func HandleGoogleLoginOrRegister(c *gin.Context) {
 		return
 	}
 
+	logrus.Infof("google auth with token %v", r.AccessToken)
+
 	endpoint := "https://www.googleapis.com/userinfo/v2/me"
 
 	client := &http.Client{}
@@ -224,6 +226,9 @@ func HandleGoogleLoginOrRegister(c *gin.Context) {
 				"first_time":    false,
 			})
 		}
+	} else {
+		logrus.Errorf("google auth responded with empty email")
+		c.AbortWithStatus(http.StatusUnauthorized)
 	}
 }
 
@@ -235,6 +240,8 @@ func HandleAppleLoginOrRegister(c *gin.Context) {
 		c.AbortWithStatus(500)
 		return
 	}
+
+	logrus.Infof("apple auth with token %v", r.IdentityToken)
 
 	res, httpErr := http.Get("https://appleid.apple.com/auth/keys")
 	if httpErr != nil {
@@ -341,6 +348,9 @@ func HandleAppleLoginOrRegister(c *gin.Context) {
 				"first_time":    false,
 			})
 		}
+	} else {
+		logrus.Errorf("apple auth responded with empty email")
+		c.AbortWithStatus(http.StatusUnauthorized)
 	}
 }
 
