@@ -26,6 +26,22 @@ import (
 )
 
 func HandleSaved(c *gin.Context) {
+	params := c.Request.URL.Query()
+
+	var err error
+	var page int64
+	if _, ok := params["page"]; !ok {
+		page = 0
+	} else {
+		page, err = strconv.ParseInt(params["page"][0], 10, 64)
+		if err != nil {
+			c.AbortWithStatus(400)
+			return
+		}
+	}
+
+	offset := int(page * 20)
+
 	var result []models.Look
 
 	user, err := GetUser(c)
@@ -34,7 +50,7 @@ func HandleSaved(c *gin.Context) {
 		c.AbortWithStatus(403)
 		return
 	}
-	err = database.DB().Raw("SELECT * FROM looks JOIN saved_looks sl on looks.id = sl.look_id WHERE sl.user_id = ? ORDER BY id DESC", user.ID).Scan(&result).Error
+	err = database.DB().Raw("SELECT * FROM looks JOIN saved_looks sl on looks.id = sl.look_id WHERE sl.user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?", user.ID, 20, offset).Scan(&result).Error
 	if err != nil {
 		logrus.Errorf("error getting saved looks: %v", err)
 		c.AbortWithStatus(500)
