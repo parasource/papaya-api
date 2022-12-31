@@ -31,6 +31,17 @@ import (
 	"net/http"
 )
 
+const getTodayLookSql = `
+select looks.id from looks
+	 join look_items li on looks.id = li.look_id
+	 right join users_wardrobe uw on li.wardrobe_item_id = uw.wardrobe_item_id
+	WHERE uw.user_id = ?
+	  AND looks.id NOT IN (SELECT saved_looks.look_id FROM saved_looks WHERE saved_looks.user_id = ?)
+	  AND looks.id NOT IN (SELECT disliked_looks.look_id FROM disliked_looks WHERE disliked_looks.user_id = ?)
+	  AND looks.sex = ?
+	  AND looks.deleted_at IS NULL
+	GROUP BY looks.id ORDER BY random() DESC LIMIT 1`
+
 func HandleRegister(c *gin.Context) {
 	var r requests.RegisterRequest
 	err := c.BindJSON(&r)
@@ -355,22 +366,21 @@ func HandleAppleLoginOrRegister(c *gin.Context) {
 }
 
 func associateTodayLook(user *models.User) error {
-	var lookMale models.Look
-	err := database.DB().Where("sex", "male").Limit(1).Order("random()").Find(&lookMale).Error
+	var todayLookMale, todayLookFemale uint
+	err := database.DB().Debug().Raw(getTodayLookSql, user.ID, user.ID, user.ID, "male").Scan(&todayLookMale).Error
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting today male look for new user: %v", err)
 	}
-	var lookFemale models.Look
-	err = database.DB().Where("sex", "female").Limit(1).Order("random()").Find(&lookMale).Error
+	err = database.DB().Debug().Raw(getTodayLookSql, user.ID, user.ID, user.ID, "female").Scan(&todayLookFemale).Error
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting today female look for new user: %v", err)
 	}
 
-	err = database.DB().Raw("INSERT INTO today_looks (user_id, look_id, sex) VALUES (?, ?, ?)", user.ID, lookMale.ID, "male").Error
+	err = database.DB().Raw("INSERT INTO today_looks (user_id, look_id, sex) VALUES (?, ?, ?)", user.ID, todayLookMale, "male").Error
 	if err != nil {
 		return fmt.Errorf("error setting male today look: %v", err)
 	}
-	err = database.DB().Raw("INSERT INTO today_looks (user_id, look_id, sex) VALUES (?, ?, ?)", user.ID, lookFemale.ID, "female").Error
+	err = database.DB().Raw("INSERT INTO today_looks (user_id, look_id, sex) VALUES (?, ?, ?)", user.ID, todayLookFemale, "female").Error
 	if err != nil {
 		return fmt.Errorf("error setting female today look: %v", err)
 	}
