@@ -355,15 +355,24 @@ func HandleAppleLoginOrRegister(c *gin.Context) {
 }
 
 func associateTodayLook(user *models.User) error {
-	var look models.Look
-	err := database.DB().Limit(1).Order("random()").Find(&look).Error
+	var lookMale models.Look
+	err := database.DB().Where("sex", "male").Limit(1).Order("random()").Find(&lookMale).Error
+	if err != nil {
+		return err
+	}
+	var lookFemale models.Look
+	err = database.DB().Where("sex", "female").Limit(1).Order("random()").Find(&lookMale).Error
 	if err != nil {
 		return err
 	}
 
-	err = database.DB().Model(&user).Association("TodayLook").Append(&look)
+	err = database.DB().Raw("INSERT INTO today_looks (user_id, look_id, sex) VALUES (?, ?, ?)", user.ID, lookMale.ID, "male").Error
 	if err != nil {
-		return err
+		return fmt.Errorf("error setting male today look: %v", err)
+	}
+	err = database.DB().Raw("INSERT INTO today_looks (user_id, look_id, sex) VALUES (?, ?, ?)", user.ID, lookFemale.ID, "female").Error
+	if err != nil {
+		return fmt.Errorf("error setting female today look: %v", err)
 	}
 
 	return nil

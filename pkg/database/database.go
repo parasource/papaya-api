@@ -195,8 +195,12 @@ func CreateUser(user *models.User) {
 }
 
 func migrate(db *gorm.DB) error {
+	err := db.SetupJoinTable(&models.User{}, "TodayLooks", &models.TodayLook{})
+	if err != nil {
+		return fmt.Errorf("error setting up today looks table: %v", err)
+	}
 
-	err := db.AutoMigrate(
+	err = db.AutoMigrate(
 		&models.User{},
 		&models.WardrobeCategory{},
 		&models.WardrobeItem{},

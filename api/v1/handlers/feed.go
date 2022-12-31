@@ -62,7 +62,7 @@ func HandleFeed(c *gin.Context) {
 
 	// Today look
 	var todayLookId int
-	database.DB().Raw("SELECT look_id FROM today_looks WHERE user_id = ? LIMIT 1", user.ID).Scan(&todayLookId)
+	database.DB().Raw("SELECT look_id FROM today_looks WHERE today_looks.user_id = ? AND today_looks.sex = ? LIMIT 1", user.ID, user.Sex).Scan(&todayLookId)
 
 	var todayLook models.Look
 	database.DB().Preload("Items").First(&todayLook, "id = ?", todayLookId)

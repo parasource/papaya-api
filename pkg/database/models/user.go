@@ -37,7 +37,7 @@ type User struct {
 	SavedTopics   []*Topic `json:"saved_topics" gorm:"many2many:saved_topics;"`
 	LikedLooks    []*Look  `json:"-" gorm:"many2many:liked_looks;"`
 	DislikedLooks []*Look  `json:"-" gorm:"many2many:disliked_looks;"`
-	TodayLook     []*Look  `json:"today_look" gorm:"many2many:today_looks;"`
+	TodayLooks    []*Look  `json:"today_look" gorm:"many2many:today_looks;"`
 	SavedLooks    []*Look  `json:"-" gorm:"many2many:saved_looks;"`
 
 	EmailNotifications bool `json:"email_notifications"`
