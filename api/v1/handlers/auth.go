@@ -36,8 +36,6 @@ select looks.id from looks
 	 join look_items li on looks.id = li.look_id
 	 right join users_wardrobe uw on li.wardrobe_item_id = uw.wardrobe_item_id
 	WHERE uw.user_id = ?
-	  AND looks.id NOT IN (SELECT saved_looks.look_id FROM saved_looks WHERE saved_looks.user_id = ?)
-	  AND looks.id NOT IN (SELECT disliked_looks.look_id FROM disliked_looks WHERE disliked_looks.user_id = ?)
 	  AND looks.sex = ?
 	  AND looks.deleted_at IS NULL
 	GROUP BY looks.id ORDER BY random() DESC LIMIT 1`
