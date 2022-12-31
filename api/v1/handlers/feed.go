@@ -61,13 +61,8 @@ func HandleFeed(c *gin.Context) {
 	}
 
 	// Today look
-	var todayLookId int
-	database.DB().Raw("SELECT look_id FROM today_looks WHERE today_looks.user_id = ? AND today_looks.sex = ? LIMIT 1", user.ID, user.Sex).Scan(&todayLookId)
-
-	var todayLook models.Look
-	database.DB().Preload("Items").First(&todayLook, "id = ?", todayLookId)
-
-	err = database.DB().Model(&user).Association("TodayLook").Find(&todayLook)
+	var todayLook *models.Look
+	err = database.DB().Raw("SELECT l.* FROM today_looks JOIN looks l on today_looks.look_id = l.id WHERE today_looks.user_id = ? AND today_looks.sex = ? LIMIT 1", user.ID, user.Sex).Scan(&todayLook).Error
 	if err != nil {
 		logrus.Errorf("error getting today's look: %v", err)
 		c.AbortWithStatus(500)
