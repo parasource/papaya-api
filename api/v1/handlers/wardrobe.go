@@ -33,17 +33,24 @@ func HandleGetWardrobeCategories(c *gin.Context) {
 		return
 	}
 
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
 	var preview string
 	var count int
 
 	for _, category := range categories {
-		err = database.DB().Raw("SELECT image FROM wardrobe_items WHERE wardrobe_category_id = ? LIMIT 1", category.ID).Scan(&preview).Error
+		err = database.DB().Raw("SELECT image FROM wardrobe_items WHERE wardrobe_category_id = ? AND sex = ? LIMIT 1", category.ID, user.Sex).Scan(&preview).Error
 		if err != nil {
 			logrus.Errorf("error getting preview for wardrobe category: %v", err)
 		}
 		category.Preview = preview
 
-		err = database.DB().Raw("SELECT COUNT(*) AS count FROM wardrobe_items WHERE wardrobe_category_id = ?", category.ID).Scan(&count).Error
+		err = database.DB().Raw("SELECT COUNT(*) AS count FROM wardrobe_items WHERE wardrobe_category_id = ? AND sex = ?", category.ID, user.Sex).Scan(&count).Error
 		if err != nil {
 			logrus.Errorf("error getting items count for wardrobe category: %v", err)
 		}
@@ -60,8 +67,15 @@ func HandleGetWardrobeItems(c *gin.Context) {
 		return
 	}
 
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
 	var items []*models.WardrobeItem
-	err := database.DB().Where("wardrobe_category_id = ?", category).Find(&items).Error
+	err = database.DB().Where("wardrobe_category_id = ?", category).Where("sex", user.Sex).Find(&items).Error
 	if err != nil {
 		logrus.Errorf("error getting wardrobe items: %v", err)
 		c.AbortWithStatus(500)

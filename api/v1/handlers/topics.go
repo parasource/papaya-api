@@ -55,6 +55,13 @@ func HandleGetTopic(c *gin.Context) {
 		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
 	}
 
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
 	var topic models.Topic
 	database.DB().First(&topic, "slug = ?", slug)
 
@@ -66,17 +73,11 @@ func HandleGetTopic(c *gin.Context) {
 	offset := int(page * 20)
 	var looks []models.Look
 
-	err := database.DB().Model(topic).Order("created_at desc").Limit(20).Offset(offset).Association("Looks").Find(&looks)
+	err = database.DB().Raw("select * from looks join topic_looks tl on looks.id = tl.look_id where tl.topic_id = ? and looks.sex = ? order by created_at desc limit ? offset ?", topic.ID, user.Sex, 20, offset).Find(&looks).Error
+	//err := database.DB().Model(topic).Order("created_at desc").Limit(20).Offset(offset).Association("Looks").Find(&looks)
 	if err != nil {
 		logrus.Errorf("error getting topic looks: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	user, err := GetUser(c)
-	if err != nil {
-		logrus.Errorf("error getting user: %v", err)
-		c.AbortWithStatus(403)
 		return
 	}
 
@@ -131,7 +132,6 @@ func HandleUnsaveTopic(c *gin.Context) {
 		return
 	}
 
-	// user
 	user, err := GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
