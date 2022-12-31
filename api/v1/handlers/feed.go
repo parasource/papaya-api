@@ -68,6 +68,12 @@ func HandleFeed(c *gin.Context) {
 		c.AbortWithStatus(500)
 		return
 	}
+	err = database.DB().Raw("SELECT * FROM wardrobe_items JOIN look_items li on wardrobe_items.id = li.wardrobe_item_id WHERE li.look_id = ?", todayLook.ID).Find(todayLook.Items).Error
+	if err != nil {
+		logrus.Errorf("error getting today's looks items: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
 
 	// Categories
 	var categories []models.Category
