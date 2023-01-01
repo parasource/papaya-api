@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ type Look struct {
 	Name           string          `json:"name"`
 	Slug           string          `json:"slug" gorm:"unique"`
 	Image          string          `json:"image"`
+	ImageResized   string          `json:"imageResized"`
 	ImageRatio     string          `json:"imageRatio"`
 	Desc           string          `json:"desc"`
 	Items          []*WardrobeItem `json:"items" gorm:"many2many:look_items;"`
