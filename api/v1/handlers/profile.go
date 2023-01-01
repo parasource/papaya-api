@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,5 +138,13 @@ func HandleProfileGetWardrobe(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, user.Wardrobe)
+	var items []models.WardrobeItem
+	err = database.DB().Raw("select * from wardrobe_items join users_wardrobe uw on wardrobe_items.id = uw.wardrobe_item_id where wardrobe_items.sex = ? and uw.user_id = ?", user.Sex, user.ID).Find(&items).Error
+	if err != nil {
+		logrus.Errorf("error getting user's wardrobe: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	c.JSON(200, items)
 }
