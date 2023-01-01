@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,6 +70,13 @@ func HandleRegister(c *gin.Context) {
 	refreshToken, err := util.GenerateRefreshToken(user.ID)
 	if err != nil {
 		logrus.Errorf("error generating refresh token: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	err = associateTodayLook(user)
+	if err != nil {
+		logrus.Errorf("error associating today's look: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
@@ -365,20 +372,32 @@ func HandleAppleLoginOrRegister(c *gin.Context) {
 
 func associateTodayLook(user *models.User) error {
 	var todayLookMale, todayLookFemale uint
-	err := database.DB().Debug().Raw(getTodayLookSql, user.ID, user.ID, user.ID, "male").Scan(&todayLookMale).Error
+	err := database.DB().Debug().Raw(getTodayLookSql, user.ID, "male").Scan(&todayLookMale).Error
 	if err != nil {
 		return fmt.Errorf("error getting today male look for new user: %v", err)
 	}
-	err = database.DB().Debug().Raw(getTodayLookSql, user.ID, user.ID, user.ID, "female").Scan(&todayLookFemale).Error
+	if todayLookMale == 0 {
+		err = database.DB().Debug().Raw("select looks.id from looks where sex = ? order by random() limit 1", "male").Find(&todayLookMale).Error
+		if err != nil {
+			return fmt.Errorf("error getting fallback male look for new user: %v", err)
+		}
+	}
+	err = database.DB().Debug().Raw(getTodayLookSql, user.ID, "female").Scan(&todayLookFemale).Error
 	if err != nil {
 		return fmt.Errorf("error getting today female look for new user: %v", err)
 	}
+	if todayLookFemale == 0 {
+		err = database.DB().Debug().Raw("select looks.id from looks where sex = ? order by random() limit 1", "female").Find(&todayLookFemale).Error
+		if err != nil {
+			return fmt.Errorf("error getting fallback male look for new user: %v", err)
+		}
+	}
 
-	err = database.DB().Raw("INSERT INTO today_looks (user_id, look_id, sex) VALUES (?, ?, ?)", user.ID, todayLookMale, "male").Error
+	err = database.DB().Debug().Exec("INSERT INTO today_looks (user_id, look_id, sex) VALUES (?, ?, ?)", user.ID, todayLookMale, "male").Error
 	if err != nil {
 		return fmt.Errorf("error setting male today look: %v", err)
 	}
-	err = database.DB().Raw("INSERT INTO today_looks (user_id, look_id, sex) VALUES (?, ?, ?)", user.ID, todayLookFemale, "female").Error
+	err = database.DB().Debug().Exec("INSERT INTO today_looks (user_id, look_id, sex) VALUES (?, ?, ?)", user.ID, todayLookFemale, "female").Error
 	if err != nil {
 		return fmt.Errorf("error setting female today look: %v", err)
 	}
