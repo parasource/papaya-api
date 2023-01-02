@@ -75,7 +75,7 @@ func HandleGetWardrobeItems(c *gin.Context) {
 	}
 
 	var items []*models.WardrobeItem
-	err = database.DB().Raw("select * from wardrobe_items where wardrobe_category_id = ? AND (sex = ? OR sex = 'unisex')", category, user.Sex).Error
+	err = database.DB().Raw("select * from wardrobe_items where wardrobe_category_id = ? AND (sex = ? OR sex = 'unisex')", category, user.Sex).Find(&items).Error
 	//err = database.DB().Where("wardrobe_category_id = ?", category).Where("sex", user.Sex).Find(&items).Error
 	if err != nil {
 		logrus.Errorf("error getting wardrobe items: %v", err)
