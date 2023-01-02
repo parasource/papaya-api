@@ -23,20 +23,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	selectCategoriesSql = `select wardrobe_categories.* from wardrobe_categories
+    join wardrobe_items wi on wardrobe_categories.id = wi.wardrobe_category_id
+         where (wi.sex = ? or wi.sex = 'unisex') group by wardrobe_categories.id;`
+)
+
 func HandleGetWardrobeCategories(c *gin.Context) {
-	var categories []*models.WardrobeCategory
-
-	err := database.DB().Find(&categories).Error
-	if err != nil {
-		logrus.Errorf("error getting all wardrobe categories: %v", err)
-		c.AbortWithStatus(500)
-		return
-	}
-
 	user, err := GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
 		c.AbortWithStatus(403)
+		return
+	}
+
+	var categories []*models.WardrobeCategory
+
+	err = database.DB().Raw(selectCategoriesSql, user.Sex).Find(&categories).Error
+	//err = database.DB().Find(&categories).Error
+	if err != nil {
+		logrus.Errorf("error getting all wardrobe categories: %v", err)
+		c.AbortWithStatus(500)
 		return
 	}
 
