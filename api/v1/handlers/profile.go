@@ -139,7 +139,7 @@ func HandleProfileGetWardrobe(c *gin.Context) {
 	}
 
 	var items []models.WardrobeItem
-	err = database.DB().Raw("select * from wardrobe_items join users_wardrobe uw on wardrobe_items.id = uw.wardrobe_item_id where wardrobe_items.sex = ? and uw.user_id = ?", user.Sex, user.ID).Find(&items).Error
+	err = database.DB().Raw("select * from wardrobe_items join users_wardrobe uw on wardrobe_items.id = uw.wardrobe_item_id where (wardrobe_items.sex = ? or wardrobe_items.sex = 'unisex') and uw.user_id = ?", user.Sex, user.ID).Find(&items).Error
 	if err != nil {
 		logrus.Errorf("error getting user's wardrobe: %v", err)
 		c.AbortWithStatus(500)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,13 +44,13 @@ func HandleGetWardrobeCategories(c *gin.Context) {
 	var count int
 
 	for _, category := range categories {
-		err = database.DB().Raw("SELECT image FROM wardrobe_items WHERE wardrobe_category_id = ? AND sex = ? LIMIT 1", category.ID, user.Sex).Scan(&preview).Error
+		err = database.DB().Raw("SELECT image FROM wardrobe_items WHERE wardrobe_category_id = ? AND (sex = ? OR sex = 'unisex') LIMIT 1", category.ID, user.Sex).Scan(&preview).Error
 		if err != nil {
 			logrus.Errorf("error getting preview for wardrobe category: %v", err)
 		}
 		category.Preview = preview
 
-		err = database.DB().Raw("SELECT COUNT(*) AS count FROM wardrobe_items WHERE wardrobe_category_id = ? AND sex = ?", category.ID, user.Sex).Scan(&count).Error
+		err = database.DB().Raw("SELECT COUNT(*) AS count FROM wardrobe_items WHERE wardrobe_category_id = ? AND (sex = ? OR sex = 'unisex')", category.ID, user.Sex).Scan(&count).Error
 		if err != nil {
 			logrus.Errorf("error getting items count for wardrobe category: %v", err)
 		}
@@ -75,7 +75,8 @@ func HandleGetWardrobeItems(c *gin.Context) {
 	}
 
 	var items []*models.WardrobeItem
-	err = database.DB().Where("wardrobe_category_id = ?", category).Where("sex", user.Sex).Find(&items).Error
+	err = database.DB().Raw("select * from wardrobe_items where wardrobe_category_id = ? AND (sex = ? OR sex = 'unisex')", category, user.Sex).Error
+	//err = database.DB().Where("wardrobe_category_id = ?", category).Where("sex", user.Sex).Find(&items).Error
 	if err != nil {
 		logrus.Errorf("error getting wardrobe items: %v", err)
 		c.AbortWithStatus(500)
