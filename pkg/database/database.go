@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,11 +104,7 @@ const (
 var conn *gorm.DB
 
 type Config struct {
-	Host     string
-	Port     string
-	Database string
-	User     string
-	Password string
+	Address string
 }
 
 type Database struct {
@@ -118,8 +114,6 @@ type Database struct {
 }
 
 func New(cfg Config) error {
-	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=disable", cfg.Host, cfg.User, cfg.Password, cfg.Database, cfg.Port)
-
 	var (
 		db      *gorm.DB
 		err     error
@@ -130,7 +124,7 @@ func New(cfg Config) error {
 			logrus.Fatalf("error connecting to postgres")
 		}
 
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		db, err = gorm.Open(postgres.Open(cfg.Address), &gorm.Config{})
 		if err == nil {
 			break
 		}

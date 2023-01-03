@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,6 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	vault "github.com/hashicorp/vault/api"
 	"github.com/parasource/papaya-api/pkg"
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/sirupsen/logrus"
@@ -35,9 +32,7 @@ var configDefaults = map[string]interface{}{
 	"http_host": "127.0.0.1",
 	"http_port": "8000",
 
-	"db_host":     "database",
-	"db_port":     "5432",
-	"db_database": "papaya",
+	"db_address": "postgres://postgres:5432/papaya",
 
 	"adviser_host": "gorse-server",
 	"adviser_port": "8087",
@@ -49,26 +44,16 @@ var configDefaults = map[string]interface{}{
 func init() {
 	rootCmd.Flags().String("http_host", "127.0.0.1", "file server http host")
 	rootCmd.Flags().String("http_port", "8000", "file server http port")
-	rootCmd.Flags().String("db_host", "localhost", "database host")
-	rootCmd.Flags().String("db_port", "5432", "database port")
-	rootCmd.Flags().String("db_database", "papaya", "database name")
+	rootCmd.Flags().String("db_address", "postgres://postgres:5432/papaya", "database url")
 	rootCmd.Flags().String("adviser_host", "gorse-server", "adviser host")
 	rootCmd.Flags().String("adviser_port", "8087", "adviser port")
-	rootCmd.Flags().String("vault_addr", "http://vault:8200", "vault address")
-	rootCmd.Flags().String("vault_token", "vault-plaintext-root-token", "vault token")
-	rootCmd.Flags().String("vault_role", "api", "vault role")
 	rootCmd.Flags().Int("shutdown_timeout", 30, "node graceful shutdown timeout")
 
 	viper.BindPFlag("http_host", rootCmd.Flags().Lookup("http_host"))
 	viper.BindPFlag("http_port", rootCmd.Flags().Lookup("http_port"))
-	viper.BindPFlag("db_host", rootCmd.Flags().Lookup("db_host"))
-	viper.BindPFlag("db_port", rootCmd.Flags().Lookup("db_port"))
-	viper.BindPFlag("db_database", rootCmd.Flags().Lookup("db_database"))
+	viper.BindPFlag("db_address", rootCmd.Flags().Lookup("db_address"))
 	viper.BindPFlag("adviser_host", rootCmd.Flags().Lookup("adviser_host"))
 	viper.BindPFlag("adviser_port", rootCmd.Flags().Lookup("adviser_port"))
-	viper.BindPFlag("vault_addr", rootCmd.Flags().Lookup("vault_addr"))
-	viper.BindPFlag("vault_token", rootCmd.Flags().Lookup("vault_token"))
-	viper.BindPFlag("vault_role", rootCmd.Flags().Lookup("vault_role"))
 	viper.BindPFlag("shutdown_timeout", rootCmd.Flags().Lookup("shutdown_timeout"))
 }
 
@@ -82,8 +67,7 @@ var rootCmd = &cobra.Command{
 
 		bindEnvs := []string{
 			"http_host", "http_port",
-			"db_host", "db_port", "db_database",
-			"adviser_host", "adviser_port", "vault_addr", "vault_token", "vault_role",
+			"adviser_host", "adviser_port", "db_address",
 			"shutdown_timeout",
 		}
 		for _, env := range bindEnvs {
@@ -131,49 +115,10 @@ var rootCmd = &cobra.Command{
 }
 
 func getDatabaseConfig(v *viper.Viper) (database.Config, error) {
-	vaultAddr := v.GetString("vault_addr")
-	vaultToken := v.GetString("vault_token")
-	vaultRole := v.GetString("vault_role")
-
-	logrus.Infof("vault addr: %v -- token: %v", vaultAddr, vaultToken)
-
-	config := vault.DefaultConfig()
-
-	config.Address = vaultAddr
-
-	client, err := vault.NewClient(config)
-	if err != nil {
-		return database.Config{}, err
-	}
-	client.SetToken(vaultToken)
-
-	client.Logical()
-
-	secret, err := client.Logical().Read(fmt.Sprintf("database/static-creds/%v", vaultRole))
-	if err != nil {
-		return database.Config{}, err
-	}
-	logrus.Infof("vault response data: %v", secret.Data)
-	logrus.Infof("vault response warnings: %v", secret.Warnings)
-
-	username, ok := secret.Data["username"].(string)
-	if !ok {
-		return database.Config{}, errors.New("error casting result from vault")
-	}
-	password, ok := secret.Data["password"].(string)
-	if !ok {
-		return database.Config{}, errors.New("error casting result from vault")
-	}
-	dbDatabase := v.GetString("db_database")
-	dbHost := v.GetString("db_host")
-	dbPort := v.GetString("db_port")
+	dbAddress := v.GetString("db_address")
 
 	return database.Config{
-		Host:     dbHost,
-		Port:     dbPort,
-		Database: dbDatabase,
-		User:     username,
-		Password: password,
+		Address: dbAddress,
 	}, nil
 }
 
