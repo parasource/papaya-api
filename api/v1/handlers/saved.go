@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ func HandleSaved(c *gin.Context) {
 		c.AbortWithStatus(403)
 		return
 	}
-	err = database.DB().Raw("SELECT * FROM looks JOIN saved_looks sl on looks.id = sl.look_id WHERE sl.user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?", user.ID, 20, offset).Scan(&result).Error
+	err = database.DB().Raw("SELECT * FROM looks JOIN saved_looks sl on looks.id = sl.look_id WHERE sl.user_id = ? AND looks.sex = ? ORDER BY id DESC LIMIT ? OFFSET ?", user.ID, user.Sex, 20, offset).Scan(&result).Error
 	if err != nil {
 		logrus.Errorf("error getting saved looks: %v", err)
 		c.AbortWithStatus(500)
