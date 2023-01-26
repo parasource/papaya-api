@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,4 +28,8 @@ type SetMoodRequest struct {
 
 type SetWardrobeRequest struct {
 	Wardrobe []uint `json:"wardrobe"`
+}
+
+type SetAPNSTokenRequest struct {
+	ApnsToken string `json:"apns_token"`
 }

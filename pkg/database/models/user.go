@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Name     string `json:"name"`
-	Email    string `json:"email" gorm:"unique"`
-	Password string `json:"-"`
+	Name      string `json:"name"`
+	Email     string `json:"email" gorm:"unique"`
+	Password  string `json:"-"`
+	ApnsToken string `json:"apns_token"`
+	FcmToken  string `json:"fcm_token"`
 
 	Sex    string `json:"sex"`
 	Age    int    `json:"age"`

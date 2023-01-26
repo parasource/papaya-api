@@ -311,7 +311,7 @@ func HandleAppleLoginOrRegister(c *gin.Context) {
 
 		// User is not found, so we'll sign him up
 		if user.ID == 0 {
-			user := models.NewUser(email, fmt.Sprintf("Пользователь"), "")
+			user := models.NewUser(email, "Пользователь", "")
 			user.Sex = "male"
 			database.CreateUser(user)
 

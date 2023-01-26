@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,5 +72,6 @@ func Initialize() *gin.Engine {
 	r.POST("/api/profile/set-mood", middleware.AuthMiddleware, handlers.HandleProfileSetMood)
 	r.POST("/api/profile/update-settings", middleware.AuthMiddleware, handlers.HandleProfileUpdateSettings)
 	r.GET("/api/profile/get-wardrobe", middleware.AuthMiddleware, handlers.HandleProfileGetWardrobe)
+	r.GET("/api/profile/set-apns-token", middleware.AuthMiddleware, handlers.HandleSetAPNSToken)
 	return r
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -193,6 +193,13 @@ func HandleGetLookItem(c *gin.Context) {
 	var look models.Look
 	database.DB().First(&look, "slug = ?", slugLook)
 
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -208,7 +215,7 @@ func HandleGetLookItem(c *gin.Context) {
 	}
 
 	var looks []models.Look
-	database.DB().Raw("SELECT looks.* FROM looks JOIN look_items li on looks.id = li.look_id WHERE li.wardrobe_item_id = ? AND looks.id != ? LIMIT 20", item.ID, look.ID).Scan(&looks)
+	database.DB().Raw("SELECT looks.* FROM looks JOIN look_items li on looks.id = li.look_id WHERE looks.sex = ? AND li.wardrobe_item_id = ? AND looks.id != ? LIMIT 20", user.Sex, item.ID, look.ID).Scan(&looks)
 
 	c.JSON(200, gin.H{
 		"item":  item,

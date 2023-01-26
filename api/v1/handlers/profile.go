@@ -117,8 +117,37 @@ func HandleProfileUpdateSettings(c *gin.Context) {
 	}
 
 	user.Sex = r.Sex
-	user.Name = r.Name
+	if r.Name != "" {
+		user.Name = r.Name
+	}
 	user.PushNotifications = r.ReceivePushNotifications
+
+	err = database.DB().Save(user).Error
+	if err != nil {
+		logrus.Errorf("error updating user settings: %v", err)
+	}
+
+	c.JSON(200, gin.H{
+		"success": true,
+	})
+}
+
+func HandleSetAPNSToken(c *gin.Context) {
+	var r requests.SetAPNSTokenRequest
+	err := c.BindJSON(&r)
+	if err != nil {
+		logrus.Errorf("error binding update profile settings request: %v", err)
+		return
+	}
+
+	user, err := GetUser(c)
+	if err != nil {
+		logrus.Errorf("error getting user: %v", err)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	user.ApnsToken = r.ApnsToken
 
 	err = database.DB().Save(user).Error
 	if err != nil {
