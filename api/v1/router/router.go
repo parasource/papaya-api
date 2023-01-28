@@ -72,6 +72,6 @@ func Initialize() *gin.Engine {
 	r.POST("/api/profile/set-mood", middleware.AuthMiddleware, handlers.HandleProfileSetMood)
 	r.POST("/api/profile/update-settings", middleware.AuthMiddleware, handlers.HandleProfileUpdateSettings)
 	r.GET("/api/profile/get-wardrobe", middleware.AuthMiddleware, handlers.HandleProfileGetWardrobe)
-	r.GET("/api/profile/set-apns-token", middleware.AuthMiddleware, handlers.HandleSetAPNSToken)
+	r.POST("/api/profile/set-apns-token", middleware.AuthMiddleware, handlers.HandleSetAPNSToken)
 	return r
 }
