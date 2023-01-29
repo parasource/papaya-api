@@ -20,27 +20,27 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	SEX_MALE   = "male"
-	SEX_FEMALE = "female"
-)
-
 type Look struct {
 	gorm.Model
-	Name           string          `json:"name"`
-	Slug           string          `json:"slug" gorm:"unique"`
-	Image          string          `json:"image"`
-	ImageResized   string          `json:"imageResized"`
-	ImageRatio     string          `json:"imageRatio"`
-	Desc           string          `json:"desc"`
-	Items          []*WardrobeItem `json:"items" gorm:"many2many:look_items;"`
-	Categories     []*Category     `json:"categories" gorm:"many2many:look_categories;"`
-	Sex            string          `json:"sex"`
-	Season         string          `json:"season"`
-	Topics         []*Topic        `json:"topics" gorm:"many2many:topic_looks;"`
-	UsersLiked     []*User         `json:"-" gorm:"many2many:liked_looks;"`
-	UsersSaved     []*User         `json:"-" gorm:"many2many:saved_looks;"`
-	Tsv            string          `json:"-" gorm:"type:tsvector"`
-	Rank           float32         `gorm:"-" json:"rank"`
-	IsFromWardrobe bool            `gorm:"-" json:"isFromWardrobe"`
+	Name         string          `json:"name"`
+	Slug         string          `json:"slug" gorm:"unique"`
+	Image        string          `json:"image"`
+	ImageResized string          `json:"imageResized"`
+	ImageRatio   string          `json:"imageRatio"`
+	Desc         string          `json:"desc"`
+	Items        []*WardrobeItem `json:"items" gorm:"many2many:look_items;"`
+	Categories   []*Category     `json:"categories" gorm:"many2many:look_categories;"`
+	Sex          string          `json:"sex"`
+	Season       string          `json:"season"`
+	Topics       []*Topic        `json:"topics" gorm:"many2many:topic_looks;"`
+	UsersLiked   []*User         `json:"-" gorm:"many2many:liked_looks;"`
+	UsersSaved   []*User         `json:"-" gorm:"many2many:saved_looks;"`
+	Tsv          string          `json:"-" gorm:"type:tsvector"`
+	Rank         float32         `gorm:"-" json:"rank"`
+
+	Status string `json:"status"`
+	UserID *uint
+	User   *User `json:"user"`
+
+	IsFromWardrobe bool `gorm:"-" json:"isFromWardrobe"`
 }

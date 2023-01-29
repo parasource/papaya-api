@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,6 @@
 package models
 
 import "gorm.io/gorm"
-
-const (
-	MaleSex   = "male"
-	FemaleSex = "female"
-	AnySex    = "any"
-)
 
 type WardrobeCategory struct {
 	gorm.Model
@@ -44,6 +38,10 @@ type WardrobeItem struct {
 	Tsv                string    `json:"-" gorm:"type:tsvector"`
 	Users              []*User   `json:"users" gorm:"many2many:users_wardrobe;"`
 	Urls               []ItemURL `json:"urls" gorm:"foreignKey:item_id"`
+
+	Status string `json:"status"`
+	UserID *uint
+	User   *User `json:"user"`
 }
 
 type ItemURL struct {
