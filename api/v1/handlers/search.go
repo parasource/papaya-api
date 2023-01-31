@@ -241,7 +241,7 @@ func HandleSearchAutofill(c *gin.Context) {
 	}
 
 	var sr []*models.SearchRecord
-	err := database.DB().Raw("select * from search_records where query like ?", q[0]+"%").Find(&sr).Error
+	err := database.DB().Raw("select query, count(id) as freq from search_records where query like ? group by query order by freq desc limit ?", q[0]+"%", 10).Find(&sr).Error
 	if err != nil {
 		logrus.Errorf("erorr searching: %v", err)
 		c.AbortWithStatus(500)
