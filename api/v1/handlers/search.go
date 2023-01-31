@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import (
 	"github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/parasource/papaya-api/pkg/gorse"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"strconv"
 )
 
@@ -126,13 +127,13 @@ func HandleSearch(c *gin.Context) {
 	err = database.DB().Find(&looks, lookIDs).Error
 	if err != nil {
 		logrus.Errorf("error finding looks by ids: %v", err)
-		c.AbortWithStatus(500)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	err = database.DB().Find(&topics, topicIDs).Error
 	if err != nil {
 		logrus.Errorf("error finding topics by ids: %v", err)
-		c.AbortWithStatus(500)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
@@ -154,7 +155,7 @@ func HandleSearchSuggestions(c *gin.Context) {
 	user, err := GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
-		c.AbortWithStatus(403)
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
@@ -162,7 +163,7 @@ func HandleSearchSuggestions(c *gin.Context) {
 	err = database.DB().Where("user_id = ?", user.ID).Where("visible = ?", true).Order("id desc").Limit(10).Find(&sr).Error
 	if err != nil {
 		logrus.Errorf("error getting search records: %v", err)
-		c.AbortWithStatus(500)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
@@ -217,14 +218,14 @@ func HandleSearchClearHistory(c *gin.Context) {
 	user, err := GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
-		c.AbortWithStatus(403)
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	err = database.DB().Model(&models.SearchRecord{}).Where("user_id = ?", user.ID).Update("visible", false).Error
 	if err != nil {
 		logrus.Errorf("error clearing user search history: %v", err)
-		c.AbortWithStatus(500)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
@@ -235,14 +236,12 @@ func HandleSearchAutofill(c *gin.Context) {
 	params := c.Request.URL.Query()
 	q := params["q"]
 	if q[0] == "" {
-		c.JSON(204, []int{})
+		c.JSON(http.StatusNoContent, []int{})
 		return
 	}
 
 	var sr []*models.SearchRecord
-	err := database.DB().Raw(`SELECT search_records.query, ts_rank(search_records.tsv, plainto_tsquery('pg_catalog.russian', ?)) as rank FROM search_records
-WHERE search_records.tsv @@ plainto_tsquery('pg_catalog.russian', ?)
-GROUP BY search_records.query, search_records.tsv, ts_rank(search_records.tsv, plainto_tsquery('pg_catalog.russian', ?)) LIMIT ?`, q[0], q[0], q[0], 10).Find(&sr).Error
+	err := database.DB().Raw("select * from search_records where query like ?", q[0]+"%").Find(&sr).Error
 	if err != nil {
 		logrus.Errorf("erorr searching: %v", err)
 		c.AbortWithStatus(500)

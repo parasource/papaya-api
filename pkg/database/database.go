@@ -38,6 +38,8 @@ const (
 	CREATE INDEX IF NOT EXISTS idx_tsv_searches ON search_records USING gin(tsv);
 	CREATE INDEX IF NOT EXISTS idx_tsv_wardrobe_items ON wardrobe_items USING gin(tsv);
 
+	CREATE INDEX IF NOT EXISTS idx_search_records ON search_records (lower(query) text_pattern_ops);
+
 	/* ------------------- */
 	/* UPDATE TSV TRIGGERS */
 
@@ -136,10 +138,10 @@ func New(cfg Config) error {
 		logrus.Fatalf("error connecting to postgres: %v", err)
 	}
 
-	err = migrate(db)
-	if err != nil {
-		logrus.Fatalf("error migrating: %v", err)
-	}
+	//err = migrate(db)
+	//if err != nil {
+	//	logrus.Fatalf("error migrating: %v", err)
+	//}
 
 	// Running database setup script
 	err = db.Exec(setupScript).Error
