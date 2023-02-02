@@ -22,6 +22,7 @@ import (
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/parasource/papaya-api/pkg/gorse"
+	"github.com/rs/zerolog/log"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -29,11 +30,22 @@ import (
 
 const (
 	searchSqlTemplate = `SELECT searches_%[1]v.*, 
-		ts_rank(searches_%[1]v.tsv || searches_%[1]v.wardrobe_tsv, plainto_tsquery('russian', ?)) as rank 
-		FROM searches_%[1]v 
-		WHERE searches_%[1]v.tsv || searches_%[1]v.wardrobe_tsv @@ plainto_tsquery('russian', ?) 
+		ts_rank(searches_%[1]v.tsv, plainto_tsquery('russian', ?)) as rank 
+		FROM searches_%[1]v
+		LEFT JOIN look_items li on searches_%[1]v.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id
+		JOIN (
+            VALUES %[2]v
+        ) AS x (id, ordering) ON wi.id = x.id
+		WHERE searches_%[1]v.tsv @@ plainto_tsquery('russian', ?)
+		OR wi.id IN (?)
+		ORDER BY x.ordering ASC, rank desc
 		OFFSET ? LIMIT ?`
 )
+
+type SearchDBWardrobe struct {
+	ID   int     `json:"id"`
+	Rank float32 `json:"rank"`
+}
 
 type SearchDBResult struct {
 	OriginTable string  `json:"origin_table"`
@@ -53,7 +65,7 @@ func HandleSearch(c *gin.Context) {
 	user, err := GetUser(c)
 	if err != nil {
 		logrus.Errorf("error getting user: %v", err)
-		c.AbortWithStatus(403)
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
@@ -63,7 +75,7 @@ func HandleSearch(c *gin.Context) {
 	}
 	searchQuery := params["q"][0]
 	if searchQuery == "" {
-		c.JSON(204, []int{})
+		c.JSON(http.StatusNoContent, []int{})
 		return
 	}
 
@@ -87,12 +99,30 @@ func HandleSearch(c *gin.Context) {
 
 	var res []*SearchDBResult
 
-	dbQuery := fmt.Sprintf(searchSqlTemplate, user.Sex)
-
-	err = database.DB().Debug().Raw(dbQuery, searchQuery, searchQuery, offset, 20).Find(&res).Error
+	// First we need to query wardrobe matches,
+	// as it is our main goal
+	sqlQueryWardrobe := `select wardrobe_items.id, ts_rank(tsv, plainto_tsquery('pg_catalog.russian', ?)) as rank
+from wardrobe_items
+where tsv @@ plainto_tsquery('pg_catalog.russian', ?)
+order by rank desc limit 5;`
+	var wardrobeSearchResult []SearchDBWardrobe
+	err = database.DB().Debug().Raw(sqlQueryWardrobe, searchQuery, searchQuery).Scan(&wardrobeSearchResult).Error
 	if err != nil {
-		logrus.Errorf("erorr searching: %v", err)
-		c.AbortWithStatus(500)
+		log.Error().Err(err).Msg("error querying wardrobe")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	var wardrobeIds []int
+	for _, item := range wardrobeSearchResult {
+		wardrobeIds = append(wardrobeIds, item.ID)
+	}
+
+	dbQuery := fmt.Sprintf(searchSqlTemplate, user.Sex, idsToInClauseWithOrdering(wardrobeIds))
+
+	err = database.DB().Debug().Raw(dbQuery, searchQuery, searchQuery, wardrobeIds, offset, 20).Find(&res).Error
+	if err != nil {
+		logrus.Errorf("error searching: %v", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
@@ -149,6 +179,18 @@ func HandleSearch(c *gin.Context) {
 		"looks":  looks,
 		"topics": topics,
 	})
+}
+
+func idsToInClauseWithOrdering(ids []int) string {
+	clause := ""
+	for i := 0; i < len(ids); i++ {
+		if i == len(ids)-1 {
+			clause += fmt.Sprintf("(%v, %v)", ids[i], i+1)
+			break
+		}
+		clause += fmt.Sprintf("(%v, %v), ", ids[i], i+1)
+	}
+	return clause
 }
 
 func HandleSearchSuggestions(c *gin.Context) {

@@ -35,6 +35,7 @@ type WardrobeItem struct {
 	Slug               string    `json:"slug"`
 	Sex                string    `json:"sex"`
 	WardrobeCategoryID uint      `json:"category_id"`
+	Tags               string    `json:"tags"`
 	Tsv                string    `json:"-" gorm:"type:tsvector"`
 	Users              []*User   `json:"users" gorm:"many2many:users_wardrobe;"`
 	Urls               []ItemURL `json:"urls" gorm:"foreignKey:item_id"`

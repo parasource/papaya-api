@@ -65,7 +65,7 @@ const (
 	CREATE TRIGGER wardrobe_items_tsv_insert BEFORE INSERT OR UPDATE
     ON wardrobe_items
     FOR EACH ROW EXECUTE PROCEDURE
-    tsvector_update_trigger(tsv, 'pg_catalog.russian', name);
+    tsvector_update_trigger(tsv, 'pg_catalog.russian', name, tags);
 
 	/* ------------ */
 	/* SEARCH VIEWS */
@@ -79,26 +79,26 @@ const (
 
 	CREATE OR REPLACE VIEW searches_male AS
 
-    SELECT text 'looks' as origin_table, looks.id, looks.tsv, tsvector_agg(wi.tsv) as wardrobe_tsv
-	FROM looks LEFT JOIN look_items li on looks.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id
+    SELECT text 'looks' as origin_table, looks.id, looks.tsv
+	FROM looks
 	WHERE looks.sex = 'male' AND looks.deleted_at IS NULL
 	GROUP BY looks.id, text 'looks', looks.tsv
 
     UNION ALL
 
-    SELECT text 'topics' as origin_table, id, tsv, to_tsvector('pg_catalog.russian', '') as wardrobe_tsv
+    SELECT text 'topics' as origin_table, id, tsv
     FROM topics;
 
 	CREATE OR REPLACE VIEW searches_female AS
 
-    SELECT text 'looks' as origin_table, looks.id, looks.tsv, tsvector_agg(wi.tsv) as wardrobe_tsv
-	FROM looks LEFT JOIN look_items li on looks.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id
+    SELECT text 'looks' as origin_table, looks.id, looks.tsv
+	FROM looks
 	WHERE looks.sex = 'female' AND looks.deleted_at IS NULL
 	GROUP BY looks.id, text 'looks', looks.tsv
 
     UNION ALL
 
-    SELECT text 'topics' as origin_table, id, tsv, to_tsvector('pg_catalog.russian', '') as wardrobe_tsv
+    SELECT text 'topics' as origin_table, id, tsv
     FROM topics;
 	`
 )
@@ -138,10 +138,10 @@ func New(cfg Config) error {
 		logrus.Fatalf("error connecting to postgres: %v", err)
 	}
 
-	//err = migrate(db)
-	//if err != nil {
-	//	logrus.Fatalf("error migrating: %v", err)
-	//}
+	err = migrate(db)
+	if err != nil {
+		logrus.Fatalf("error migrating: %v", err)
+	}
 
 	// Running database setup script
 	err = db.Exec(setupScript).Error
