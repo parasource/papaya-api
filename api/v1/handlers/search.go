@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	searchSqlTemplate = `SELECT searches_%[1]v.*, 
+	searchSql = `SELECT searches_%[1]v.*, 
 		ts_rank(searches_%[1]v.tsv, plainto_tsquery('russian', ?)) as rank 
 		FROM searches_%[1]v
 		LEFT JOIN look_items li on searches_%[1]v.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id
@@ -39,6 +39,14 @@ const (
 		WHERE searches_%[1]v.tsv @@ plainto_tsquery('russian', ?)
 		OR wi.id IN (?)
 		ORDER BY x.ordering ASC, rank desc
+		OFFSET ? LIMIT ?`
+
+	searchSqlNoWardrobeFound = `SELECT searches_%[1]v.*, 
+		ts_rank(searches_%[1]v.tsv, plainto_tsquery('russian', ?)) as rank 
+		FROM searches_%[1]v
+		LEFT JOIN look_items li on searches_%[1]v.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id
+		WHERE searches_%[1]v.tsv @@ plainto_tsquery('russian', ?)
+		ORDER BY rank desc
 		OFFSET ? LIMIT ?`
 )
 
@@ -117,9 +125,16 @@ order by rank desc limit 5;`
 		wardrobeIds = append(wardrobeIds, item.ID)
 	}
 
-	dbQuery := fmt.Sprintf(searchSqlTemplate, user.Sex, idsToInClauseWithOrdering(wardrobeIds))
+	dbQuery := fmt.Sprintf(searchSql, user.Sex, idsToInClauseWithOrdering(wardrobeIds))
+	if len(wardrobeIds) == 0 {
+		dbQuery = fmt.Sprintf(searchSqlNoWardrobeFound, user.Sex)
+	}
 
-	err = database.DB().Debug().Raw(dbQuery, searchQuery, searchQuery, wardrobeIds, offset, 20).Find(&res).Error
+	if len(wardrobeIds) > 0 {
+		err = database.DB().Debug().Raw(dbQuery, searchQuery, searchQuery, wardrobeIds, offset, 20).Find(&res).Error
+	} else {
+		err = database.DB().Debug().Raw(dbQuery, searchQuery, searchQuery, offset, 20).Find(&res).Error
+	}
 	if err != nil {
 		logrus.Errorf("error searching: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
