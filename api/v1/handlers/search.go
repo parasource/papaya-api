@@ -38,7 +38,7 @@ const (
         ) AS x (id, ordering) ON wi.id = x.id
 		WHERE searches_%[1]v.tsv @@ plainto_tsquery('russian', ?)
 		OR wi.id IN (?)
-		ORDER BY x.ordering ASC, rank desc
+		ORDER BY x.ordering DESC, rank desc
 		OFFSET ? LIMIT ?`
 
 	searchSqlNoWardrobeFound = `SELECT searches_%[1]v.*, 
