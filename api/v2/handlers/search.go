@@ -22,8 +22,10 @@ import (
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/parasource/papaya-api/pkg/gorse"
+	"github.com/rs/zerolog/log"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -33,14 +35,42 @@ const (
 		ORDER BY rank DESC
 		LIMIT ?
 	`
+
+	searchSql = `SELECT looks.*,
+        ts_rank(looks.tsv, plainto_tsquery('russian', ?)) as rank
+FROM looks
+		LEFT JOIN look_items li on looks.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id
+    JOIN (
+        VALUES %[1]v
+    ) AS x (id, ordering) ON wi.id = x.id
+	WHERE (looks.tsv @@ plainto_tsquery('russian', ?)
+   	OR wi.id IN (?))
+	AND looks.sex = ?
+	ORDER BY x.ordering DESC, rank desc
+	OFFSET 0 LIMIT 10
+`
+
+	searchSqlNoWardrobeFound = `SELECT looks.*,
+        ts_rank(looks.tsv, plainto_tsquery('russian', ?)) as rank
+FROM looks
+		LEFT JOIN look_items li on looks.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id
+		WHERE looks.tsv @@ plainto_tsquery('russian', ?)
+		AND looks.sex = ?
+		ORDER BY rank desc
+		OFFSET ? LIMIT ?
+`
 )
 
 type SearchSuggestion struct {
 	Query string `json:"query"`
 }
 
-func HandleSearch(c *gin.Context) {
+type SearchDBWardrobe struct {
+	ID   int     `json:"id"`
+	Rank float32 `json:"rank"`
+}
 
+func HandleSearch(c *gin.Context) {
 	params := c.Request.URL.Query()
 
 	user, err := GetUser(c)
@@ -70,103 +100,55 @@ func HandleSearch(c *gin.Context) {
 		logrus.Errorf("error recording user search: %v", err)
 	}
 
-	//var page int64
-	//if _, ok := params["page"]; !ok {
-	//	page = 0
-	//} else {
-	//	page, _ = strconv.ParseInt(params["page"][0], 10, 64)
-	//}
-	//offset := int(page * 20)
+	var page int64
+	if _, ok := params["page"]; !ok {
+		page = 0
+	} else {
+		page, _ = strconv.ParseInt(params["page"][0], 10, 64)
+	}
+	offset := int(page * 20)
 
-	//	var res []*SearchDBResult
-	//
-	//	// First we need to query wardrobe matches,
-	//	// as it is our main goal
-	//	sqlQueryWardrobe := `select wardrobe_items.id, ts_rank(tsv, plainto_tsquery('pg_catalog.russian', ?)) as rank
-	//from wardrobe_items
-	//where tsv @@ plainto_tsquery('pg_catalog.russian', ?)
-	//order by rank desc limit 5;`
-	//	var wardrobeSearchResult []SearchDBWardrobe
-	//	err = database.DB().Debug().Raw(sqlQueryWardrobe, searchQuery, searchQuery).Scan(&wardrobeSearchResult).Error
-	//	if err != nil {
-	//		log.Error().Err(err).Msg("error querying wardrobe")
-	//		c.AbortWithStatus(http.StatusInternalServerError)
-	//		return
-	//	}
-	//	var wardrobeIds []int
-	//	for _, item := range wardrobeSearchResult {
-	//		wardrobeIds = append(wardrobeIds, item.ID)
-	//	}
-	//
-	//	dbQuery := fmt.Sprintf(searchSql, user.Sex, idsToInClauseWithOrdering(wardrobeIds))
-	//	if len(wardrobeIds) == 0 {
-	//		dbQuery = fmt.Sprintf(searchSqlNoWardrobeFound, user.Sex)
-	//	}
-	//
-	//	if len(wardrobeIds) > 0 {
-	//		err = database.DB().Debug().Raw(dbQuery, searchQuery, searchQuery, wardrobeIds, offset, 20).Find(&res).Error
-	//	} else {
-	//		err = database.DB().Debug().Raw(dbQuery, searchQuery, searchQuery, offset, 20).Find(&res).Error
-	//	}
-	//	if err != nil {
-	//		logrus.Errorf("error searching: %v", err)
-	//		c.AbortWithStatus(http.StatusInternalServerError)
-	//		return
-	//	}
-	//
-	//	if len(res) == 0 {
-	//		c.JSON(200, gin.H{
-	//			"looks":  []int{},
-	//			"topics": []int{},
-	//		})
-	//		return
-	//	}
+	// First we need to query wardrobe matches,
+	// as it is our main goal
+	sqlQueryWardrobe := `select wardrobe_items.id, ts_rank(tsv, plainto_tsquery('pg_catalog.russian', ?)) as rank
+from wardrobe_items
+where tsv @@ plainto_tsquery('pg_catalog.russian', ?)
+order by rank desc limit 5;`
+	var wardrobeSearchResult []SearchDBWardrobe
+	err = database.DB().Debug().Raw(sqlQueryWardrobe, searchQuery, searchQuery).Scan(&wardrobeSearchResult).Error
+	if err != nil {
+		log.Error().Err(err).Msg("error querying wardrobe")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	var wardrobeIds []int
+	for _, item := range wardrobeSearchResult {
+		wardrobeIds = append(wardrobeIds, item.ID)
+	}
 
-	//lookIDs := make([]uint, len(res))
-	//topicIDs := make([]uint, len(res))
-	//
-	//ranks := make(map[uint]float32, len(res))
-	//var l, t = 0, 0
-	//for _, result := range res {
-	//	if result.OriginTable == "looks" {
-	//		lookIDs[l] = result.ID
-	//		l++
-	//	} else if result.OriginTable == "topics" {
-	//		topicIDs[t] = result.ID
-	//		t++
-	//	}
-	//	// Recording rank score
-	//	ranks[result.ID] = result.Rank
-	//}
-	//
-	//var looks []*models.Look
-	//var topics []*models.Topic
-	//
-	//err = database.DB().Find(&looks, lookIDs).Error
-	//if err != nil {
-	//	logrus.Errorf("error finding looks by ids: %v", err)
-	//	c.AbortWithStatus(http.StatusInternalServerError)
-	//	return
-	//}
-	//err = database.DB().Find(&topics, topicIDs).Error
-	//if err != nil {
-	//	logrus.Errorf("error finding topics by ids: %v", err)
-	//	c.AbortWithStatus(http.StatusInternalServerError)
-	//	return
-	//}
-	//
-	//// Filling out ranks for models
-	//for _, look := range looks {
-	//	look.Rank = ranks[look.ID]
-	//}
-	//for _, topic := range topics {
-	//	topic.Rank = ranks[topic.ID]
-	//}
-	//
-	//c.JSON(200, gin.H{
-	//	"looks":  looks,
-	//	"topics": topics,
-	//})
+	dbQuery := fmt.Sprintf(searchSql, idsToInClauseWithOrdering(wardrobeIds))
+	if len(wardrobeIds) == 0 {
+		dbQuery = searchSqlNoWardrobeFound
+	}
+
+	var looks []models.Look
+	if len(wardrobeIds) > 0 {
+		err = database.DB().Debug().Raw(dbQuery, searchQuery, searchQuery, wardrobeIds, user.Sex, offset, 20).Find(&looks).Error
+	} else {
+		err = database.DB().Debug().Raw(dbQuery, searchQuery, searchQuery, user.Sex, offset, 20).Find(&looks).Error
+	}
+	if err != nil {
+		logrus.Errorf("error searching: %v", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	if len(looks) == 0 {
+		c.JSON(200, gin.H{})
+		return
+	}
+
+	c.JSON(200, looks)
 }
 
 func idsToInClauseWithOrdering(ids []int) string {

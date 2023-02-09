@@ -79,11 +79,21 @@ func HandleFeed(c *gin.Context) {
 		return
 	}
 
+	// Articles
+	var articles []models.Article
+	err = database.DB().Order("RANDOM()").Limit(3).Find(&articles).Error
+	if err != nil {
+		logrus.Errorf("error getting articles: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
 	result := gin.H{
 		"page":       page,
 		"topics":     topics,
 		"looks":      looks,
 		"categories": categories,
+		"articles":   articles,
 	}
 	c.JSON(200, result)
 }

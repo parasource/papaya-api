@@ -57,6 +57,36 @@ const (
     ON wardrobe_items
     FOR EACH ROW EXECUTE PROCEDURE
     tsvector_update_trigger(tsv, 'pg_catalog.russian', name, tags);
+
+
+	/* ------------ */
+	/* SEARCH VIEWS */
+
+	--- For backward compatibility
+
+	CREATE OR REPLACE VIEW searches_male AS
+
+    SELECT text 'looks' as origin_table, looks.id, looks.tsv
+	FROM looks
+	WHERE looks.sex = 'male' AND looks.deleted_at IS NULL
+	GROUP BY looks.id, text 'looks', looks.tsv
+
+    UNION ALL
+
+    SELECT text 'topics' as origin_table, id, tsv
+    FROM topics;
+
+	CREATE OR REPLACE VIEW searches_female AS
+
+    SELECT text 'looks' as origin_table, looks.id, looks.tsv
+	FROM looks
+	WHERE looks.sex = 'female' AND looks.deleted_at IS NULL
+	GROUP BY looks.id, text 'looks', looks.tsv
+
+    UNION ALL
+
+    SELECT text 'topics' as origin_table, id, tsv
+    FROM topics;
 	`
 )
 
