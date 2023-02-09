@@ -18,9 +18,9 @@ package models
 
 import "gorm.io/gorm"
 
-type SearchRecord struct {
+type Article struct {
 	gorm.Model
-	Query   string `json:"query"`
-	UserID  uint   `json:"user_id"`
-	Visible bool   `json:"visible"`
+	Title string
+	Slug  string
+	Text  string `gorm:"type:text"`
 }

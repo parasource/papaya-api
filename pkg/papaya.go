@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@ package papaya
 import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gin-gonic/gin"
-	"github.com/parasource/papaya-api/api/v1/router"
+	"github.com/parasource/papaya-api/api/v1"
+	v2 "github.com/parasource/papaya-api/api/v2"
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/gorse"
 	"github.com/sirupsen/logrus"
@@ -50,7 +51,12 @@ func NewPapaya(cfg Config, dbCfg database.Config) (*Papaya, error) {
 		cfg: cfg,
 	}
 
-	r := router.Initialize()
+	r := gin.Default()
+
+	// Embedding version routes
+	v1.Routes(r)
+	v2.Routes(r)
+
 	d.r = r
 
 	// Database

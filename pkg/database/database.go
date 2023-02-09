@@ -17,7 +17,6 @@
 package database
 
 import (
-	"fmt"
 	"github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
@@ -30,12 +29,10 @@ const (
 
 	UPDATE looks SET tsv = to_tsvector('russian', looks.name) || to_tsvector('russian', looks.desc) WHERE tsv IS NULL;
 	UPDATE topics SET tsv = to_tsvector('russian', topics.name) || to_tsvector('russian', topics.desc) WHERE tsv IS NULL;
-	UPDATE search_records SET tsv = to_tsvector('russian', search_records.query) WHERE tsv IS NULL;
 	UPDATE wardrobe_items SET tsv = to_tsvector('russian', wardrobe_items.name) WHERE tsv IS NULL;
 
 	CREATE INDEX IF NOT EXISTS idx_tsv_looks ON looks USING gin(tsv);
 	CREATE INDEX IF NOT EXISTS idx_tsv_topics ON topics USING gin(tsv);
-	CREATE INDEX IF NOT EXISTS idx_tsv_searches ON search_records USING gin(tsv);
 	CREATE INDEX IF NOT EXISTS idx_tsv_wardrobe_items ON wardrobe_items USING gin(tsv);
 
 	CREATE INDEX IF NOT EXISTS idx_search_records ON search_records (lower(query) text_pattern_ops);
@@ -55,51 +52,11 @@ const (
     FOR EACH ROW EXECUTE PROCEDURE
     tsvector_update_trigger(tsv, 'pg_catalog.russian', name, "desc");
 
-	DROP TRIGGER IF EXISTS searches_tsv_insert on search_records;
-	CREATE TRIGGER searches_tsv_insert BEFORE INSERT OR UPDATE
-    ON search_records
-    FOR EACH ROW EXECUTE PROCEDURE
-    tsvector_update_trigger(tsv, 'pg_catalog.russian', query);
-
 	DROP TRIGGER IF EXISTS wardrobe_items_tsv_insert on wardrobe_items;
 	CREATE TRIGGER wardrobe_items_tsv_insert BEFORE INSERT OR UPDATE
     ON wardrobe_items
     FOR EACH ROW EXECUTE PROCEDURE
     tsvector_update_trigger(tsv, 'pg_catalog.russian', name, tags);
-
-	/* ------------ */
-	/* SEARCH VIEWS */
-
--- 	drop aggregate if exists tsvector_agg(tsvector);
--- 	create aggregate tsvector_agg (tsvector) (
--- 		STYPE = pg_catalog.tsvector,
--- 		SFUNC = pg_catalog.tsvector_concat,
--- 		INITCOND = ''
--- 	);
-
-	CREATE OR REPLACE VIEW searches_male AS
-
-    SELECT text 'looks' as origin_table, looks.id, looks.tsv
-	FROM looks
-	WHERE looks.sex = 'male' AND looks.deleted_at IS NULL
-	GROUP BY looks.id, text 'looks', looks.tsv
-
-    UNION ALL
-
-    SELECT text 'topics' as origin_table, id, tsv
-    FROM topics;
-
-	CREATE OR REPLACE VIEW searches_female AS
-
-    SELECT text 'looks' as origin_table, looks.id, looks.tsv
-	FROM looks
-	WHERE looks.sex = 'female' AND looks.deleted_at IS NULL
-	GROUP BY looks.id, text 'looks', looks.tsv
-
-    UNION ALL
-
-    SELECT text 'topics' as origin_table, id, tsv
-    FROM topics;
 	`
 )
 
@@ -191,12 +148,7 @@ func CreateUser(user *models.User) {
 }
 
 func migrate(db *gorm.DB) error {
-	err := db.SetupJoinTable(&models.User{}, "TodayLooks", &models.TodayLook{})
-	if err != nil {
-		return fmt.Errorf("error setting up today looks table: %v", err)
-	}
-
-	err = db.AutoMigrate(
+	err := db.AutoMigrate(
 		&models.User{},
 		&models.WardrobeCategory{},
 		&models.WardrobeItem{},
@@ -205,6 +157,7 @@ func migrate(db *gorm.DB) error {
 		&models.ItemURL{},
 		&models.Category{},
 		&models.SearchRecord{},
+		&models.Article{},
 	)
 	if err != nil {
 		return err

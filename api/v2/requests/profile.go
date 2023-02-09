@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Parasource Organization
+ * Copyright 2023 Parasource Organization
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-package models
+package requests
 
-type TodayLook struct {
-	UserID int `gorm:"primaryKey"`
-	LookID int `gorm:"primaryKey"`
-	Sex    string
+type UpdateSettingsRequest struct {
+	Name                     string `json:"name" bson:"name"`
+	Sex                      string `json:"sex" bson:"sex"`
+	ReceivePushNotifications bool   `json:"receive_push_notifications" bson:"receive_push_notifications"`
+}
+
+type SetMoodRequest struct {
+	Mood string `json:"mood" binding:"required"`
+}
+
+type SetWardrobeRequest struct {
+	Wardrobe []uint `json:"wardrobe"`
+}
+
+type SetAPNSTokenRequest struct {
+	ApnsToken string `json:"apns_token"`
 }

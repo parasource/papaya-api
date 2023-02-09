@@ -14,13 +14,4 @@
  * limitations under the License.
  */
 
-package models
-
-import "gorm.io/gorm"
-
-type SearchRecord struct {
-	gorm.Model
-	Query   string `json:"query"`
-	UserID  uint   `json:"user_id"`
-	Visible bool   `json:"visible"`
-}
+package requests
