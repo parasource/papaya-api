@@ -22,5 +22,6 @@ type Article struct {
 	gorm.Model
 	Title string
 	Slug  string
+	Cover string
 	Text  string `gorm:"type:text"`
 }

@@ -88,16 +88,6 @@ func HandleRegister(c *gin.Context) {
 	})
 }
 
-func HandleAuthVK(c *gin.Context) {
-	//acf := NewAuthCodeFlowUser(oauth.UserParams{
-	//	ClientID:    123456,
-	//	RedirectURI: "https://example.com/callback",
-	//	Scope:       oauth.ScopeUserPhotos + oauth.ScopeUserDocs,
-	//}, clientSecret)
-
-	//c.JSON(200, )
-}
-
 func HandleLogin(c *gin.Context) {
 	var r requests.LoginRequest
 	err := c.BindJSON(&r)
