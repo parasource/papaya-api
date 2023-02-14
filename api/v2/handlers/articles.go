@@ -24,7 +24,7 @@ import (
 )
 
 func HandleGetArticle(c *gin.Context) {
-	slug := c.Param("")
+	slug := c.Param("slug")
 	if slug == "" {
 		c.AbortWithStatus(404)
 		return
