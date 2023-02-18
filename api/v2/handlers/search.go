@@ -175,7 +175,7 @@ func HandleSearchSuggestions(c *gin.Context) {
 	}
 
 	var sr []*models.SearchRecord
-	err = database.DB().Where("user_id = ?", user.ID).Where("visible = ?", true).Order("id desc").Limit(10).Find(&sr).Error
+	err = database.DB().Where("user_id = ?", user.ID).Where("visible = ?", true).Order("id desc").Limit(5).Find(&sr).Error
 	if err != nil {
 		logrus.Errorf("error getting search records: %v", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -186,7 +186,7 @@ func HandleSearchSuggestions(c *gin.Context) {
 
 	err = database.DB().Raw(`SELECT query, count(id) AS c FROM search_records
                              WHERE created_at >= NOW() - interval '7 day'
-                             GROUP BY search_records.query ORDER BY c DESC;`).Find(&suggestions).Error
+                             GROUP BY search_records.query ORDER BY c DESC LIMIT ?;`, 5).Find(&suggestions).Error
 	if err != nil {
 		logrus.Errorf("error getting search suggestions: %v", err)
 	}
