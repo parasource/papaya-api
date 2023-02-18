@@ -26,6 +26,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -91,7 +92,7 @@ func HandleSearch(c *gin.Context) {
 	}
 
 	sr := models.SearchRecord{
-		Query:   searchQuery,
+		Query:   strings.ToLower(searchQuery),
 		UserID:  user.ID,
 		Visible: true,
 	}
@@ -189,7 +190,6 @@ func HandleSearchSuggestions(c *gin.Context) {
 	}
 
 	var looks []*models.Look
-	var topics []*models.Topic
 
 	lookSlugs, err := gorse.RecommendPopular(user.Sex, 10)
 	if err != nil {
@@ -209,20 +209,12 @@ func HandleSearchSuggestions(c *gin.Context) {
 		}
 	}
 
-	err = database.DB().Order("RANDOM()").Limit(10).Find(&topics).Error
-	if err != nil {
-		logrus.Errorf("error getting popular topics: %v", err)
-		c.AbortWithStatus(500)
-		return
-	}
-
 	c.JSON(200, gin.H{
 		"search": gin.H{
 			"history":     sr,
 			"suggestions": suggestions,
 		},
-		"looks":  looks,
-		"topics": topics,
+		"looks": looks,
 	})
 }
 
@@ -253,12 +245,71 @@ func HandleSearchAutofill(c *gin.Context) {
 	}
 
 	var sr []*models.SearchRecord
-	err := database.DB().Raw("select query, count(id) as freq from search_records where query like ? group by query order by freq desc limit ?", q[0]+"%", 10).Find(&sr).Error
+	err := database.DB().Raw("select query, count(id) as freq from search_records where query like ? group by query order by freq desc limit ?", strings.ToLower(q[0])+"%", 10).Find(&sr).Error
 	if err != nil {
 		logrus.Errorf("erorr searching: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
 
-	c.JSON(200, sr)
+	tags := []string{}
+	counter := 0
+	for {
+		if counter >= len(sr) {
+			break
+		}
+		if len(tags) == 3 {
+			break
+		}
+		queryWordCount := len(strings.Split(strings.TrimSpace(q[0]), " "))
+
+		arr := strings.Split(sr[counter].Query, " ")
+		if len(arr)-queryWordCount < 1 {
+			continue
+		}
+
+		tmpTags := []string{}
+		for i := 0; i < len(arr); i++ {
+			var word string
+			if isSeparator(arr[i]) {
+				word = strings.Join([]string{arr[i], arr[i+1]}, " ")
+				i++
+			} else {
+				word = arr[i]
+			}
+			tmpTags = append(tmpTags, word)
+		}
+
+		if !inListAlready(strings.ToLower(tmpTags[queryWordCount]), tags) {
+			tags = append(tags, strings.ToLower(tmpTags[queryWordCount]))
+		}
+
+		counter++
+	}
+
+	c.JSON(200, gin.H{
+		"tags":        tags,
+		"suggestions": sr,
+	})
+}
+
+func inListAlready(s string, list []string) bool {
+	for _, s2 := range list {
+		if s == s2 {
+			return true
+		}
+	}
+	return false
+}
+
+func isSeparator(sep string) bool {
+	separatorsList := []string{
+		"в", "с", "без",
+	}
+	for _, s := range separatorsList {
+		if s == sep {
+			return true
+		}
+	}
+	return false
 }
