@@ -270,11 +270,23 @@ func HandleSearchAutofill(c *gin.Context) {
 		if counter >= len(wsr) {
 			break
 		}
-		if len(tags) == 3 {
+		if len(tags) == 15 {
 			break
 		}
+
+		tmpQueryWords := []string{}
 		queryWords := strings.Split(queryWardrobe, " ")
-		queryWordCount := len(queryWords)
+		for i := 0; i < len(queryWords); i++ {
+			var word string
+			if isSeparator(queryWords[i]) {
+				word = strings.Join([]string{queryWords[i], queryWords[i+1]}, " ")
+				i++
+			} else {
+				word = queryWords[i]
+			}
+			tmpQueryWords = append(tmpQueryWords, word)
+		}
+		queryWordCount := len(tmpQueryWords)
 
 		arr := strings.Split(wsr[counter].Name, " ")
 		if len(arr)-queryWordCount < 1 {
@@ -294,7 +306,7 @@ func HandleSearchAutofill(c *gin.Context) {
 			tmpQueryTags = append(tmpQueryTags, word)
 		}
 
-		if queryWords[len(queryWords)-1] != tmpQueryTags[len(queryWords)-1] {
+		if tmpQueryWords[len(tmpQueryWords)-1] != tmpQueryTags[len(tmpQueryWords)-1] {
 			break
 		}
 
