@@ -247,7 +247,32 @@ func HandleSearchAutofill(c *gin.Context) {
 	}
 	query := strings.ToLower(strings.TrimSpace(q[0]))
 
-	queryWardrobe := cases.Title(language.Russian).String(query)
+	// Splitting by tags
+	tmpQueryWords := []string{}
+	queryWords := strings.Split(query, " ")
+	for i := 0; i < len(queryWords); i++ {
+		var word string
+		if isSeparator(queryWords[i]) {
+			word = strings.Join([]string{queryWords[i], queryWords[i+1]}, " ")
+			i++
+		} else {
+			word = queryWords[i]
+		}
+		tmpQueryWords = append(tmpQueryWords, word)
+	}
+	queryWordCount := len(tmpQueryWords)
+
+	// Capitalizing first letter
+	capitalizedFirstWord := cases.Title(language.Russian).String(tmpQueryWords[0])
+	var queryWardrobe string
+	if len(tmpQueryWords) > 1 {
+		queryWardrobe = capitalizedFirstWord + " " + strings.Join(tmpQueryWords[1:], " ")
+		tmpQueryWords[0] = capitalizedFirstWord
+	} else {
+		queryWardrobe = capitalizedFirstWord
+		tmpQueryWords[0] = capitalizedFirstWord
+	}
+
 	var wsr []*models.WardrobeItem
 	err := database.DB().Raw("select * from wardrobe_items where name like ? limit ?", queryWardrobe+"%", 10).Find(&wsr).Error
 	if err != nil {
@@ -273,20 +298,6 @@ func HandleSearchAutofill(c *gin.Context) {
 		if len(tags) == 15 {
 			break
 		}
-
-		tmpQueryWords := []string{}
-		queryWords := strings.Split(queryWardrobe, " ")
-		for i := 0; i < len(queryWords); i++ {
-			var word string
-			if isSeparator(queryWords[i]) {
-				word = strings.Join([]string{queryWords[i], queryWords[i+1]}, " ")
-				i++
-			} else {
-				word = queryWords[i]
-			}
-			tmpQueryWords = append(tmpQueryWords, word)
-		}
-		queryWordCount := len(tmpQueryWords)
 
 		arr := strings.Split(wsr[counter].Name, " ")
 		if len(arr)-queryWordCount < 1 {
