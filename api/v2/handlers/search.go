@@ -32,13 +32,6 @@ import (
 )
 
 const (
-	suggestWardrobeItemsSql = `SELECT wardrobe_items.*, tsrank(wardrobe_items.tsv, plainto_tsquery('pg_catalog.russian', ?)) as rank
-		FROM wardrobe_items
-		WHERE wardrobe_items.tsv @@ plainto_tsquery('pg_catalog.russian', ?)
-		ORDER BY rank DESC
-		LIMIT ?
-	`
-
 	searchSql = `SELECT looks.*,
         ts_rank(looks.tsv, plainto_tsquery('russian', ?)) as rank
 FROM looks
@@ -129,6 +122,16 @@ order by rank desc limit 5;`
 		wardrobeIds = append(wardrobeIds, item.ID)
 	}
 
+	var wardrobeItems []models.WardrobeItem
+	if len(wardrobeIds) > 0 {
+		err = database.DB().Where("id", wardrobeIds).Find(&wardrobeItems).Error
+		if err != nil {
+			log.Error().Err(err).Msg("error searching wardrobe items")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+	}
+
 	dbQuery := fmt.Sprintf(searchSql, idsToInClauseWithOrdering(wardrobeIds))
 	if len(wardrobeIds) == 0 {
 		dbQuery = searchSqlNoWardrobeFound
@@ -151,7 +154,10 @@ order by rank desc limit 5;`
 		return
 	}
 
-	c.JSON(200, looks)
+	c.JSON(200, gin.H{
+		"looks":          looks,
+		"wardrobe_items": wardrobeItems,
+	})
 }
 
 func idsToInClauseWithOrdering(ids []int) string {
