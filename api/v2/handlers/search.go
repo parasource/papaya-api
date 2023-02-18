@@ -243,9 +243,10 @@ func HandleSearchAutofill(c *gin.Context) {
 		c.JSON(http.StatusNoContent, []int{})
 		return
 	}
+	query := strings.ToLower(strings.TrimSpace(q[0]))
 
 	var sr []*models.SearchRecord
-	err := database.DB().Raw("select query, count(id) as freq from search_records where query like ? group by query order by freq desc limit ?", strings.ToLower(q[0])+"%", 10).Find(&sr).Error
+	err := database.DB().Raw("select query, count(id) as freq from search_records where query like ? group by query order by freq desc limit ?", query+"%", 10).Find(&sr).Error
 	if err != nil {
 		logrus.Errorf("erorr searching: %v", err)
 		c.AbortWithStatus(500)
@@ -261,7 +262,7 @@ func HandleSearchAutofill(c *gin.Context) {
 		if len(tags) == 3 {
 			break
 		}
-		queryWords := strings.Split(strings.TrimSpace(q[0]), " ")
+		queryWords := strings.Split(query, " ")
 		queryWordCount := len(queryWords)
 
 		arr := strings.Split(sr[counter].Query, " ")
