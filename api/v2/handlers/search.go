@@ -24,6 +24,8 @@ import (
 	"github.com/parasource/papaya-api/pkg/gorse"
 	"github.com/rs/zerolog/log"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"net/http"
 	"strconv"
 	"strings"
@@ -245,10 +247,19 @@ func HandleSearchAutofill(c *gin.Context) {
 	}
 	query := strings.ToLower(strings.TrimSpace(q[0]))
 
-	var sr []*models.SearchRecord
-	err := database.DB().Raw("select query, count(id) as freq from search_records where query like ? group by query order by freq desc limit ?", query+"%", 10).Find(&sr).Error
+	queryWardrobe := cases.Title(language.Russian).String(query)
+	var wsr []*models.WardrobeItem
+	err := database.DB().Raw("select * from wardrobe_items where name like ? limit ?", queryWardrobe+"%", 10).Find(&wsr).Error
 	if err != nil {
-		logrus.Errorf("erorr searching: %v", err)
+		logrus.Errorf("error searching: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
+
+	var sr []*models.SearchRecord
+	err = database.DB().Raw("select query, count(id) as freq from search_records where query like ? group by query order by freq desc limit ?", query+"%", 10).Find(&sr).Error
+	if err != nil {
+		logrus.Errorf("error searching: %v", err)
 		c.AbortWithStatus(500)
 		return
 	}
@@ -256,16 +267,16 @@ func HandleSearchAutofill(c *gin.Context) {
 	tags := []string{}
 	counter := 0
 	for {
-		if counter >= len(sr) {
+		if counter >= len(wsr) {
 			break
 		}
 		if len(tags) == 3 {
 			break
 		}
-		queryWords := strings.Split(query, " ")
+		queryWords := strings.Split(queryWardrobe, " ")
 		queryWordCount := len(queryWords)
 
-		arr := strings.Split(sr[counter].Query, " ")
+		arr := strings.Split(wsr[counter].Name, " ")
 		if len(arr)-queryWordCount < 1 {
 			counter++
 			continue

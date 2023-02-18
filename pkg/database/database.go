@@ -36,6 +36,7 @@ const (
 	CREATE INDEX IF NOT EXISTS idx_tsv_wardrobe_items ON wardrobe_items USING gin(tsv);
 
 	CREATE INDEX IF NOT EXISTS idx_search_records ON search_records (lower(query) text_pattern_ops);
+	CREATE INDEX IF NOT EXISTS idx_wardrobe_items_name ON wardrobe_items (lower(wardrobe_items.name) text_pattern_ops);
 
 	/* ------------------- */
 	/* UPDATE TSV TRIGGERS */
