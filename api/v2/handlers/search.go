@@ -261,14 +261,16 @@ func HandleSearchAutofill(c *gin.Context) {
 		if len(tags) == 3 {
 			break
 		}
-		queryWordCount := len(strings.Split(strings.TrimSpace(q[0]), " "))
+		queryWords := strings.Split(strings.TrimSpace(q[0]), " ")
+		queryWordCount := len(queryWords)
 
 		arr := strings.Split(sr[counter].Query, " ")
 		if len(arr)-queryWordCount < 1 {
+			counter++
 			continue
 		}
 
-		tmpTags := []string{}
+		tmpQueryTags := []string{}
 		for i := 0; i < len(arr); i++ {
 			var word string
 			if isSeparator(arr[i]) {
@@ -277,11 +279,15 @@ func HandleSearchAutofill(c *gin.Context) {
 			} else {
 				word = arr[i]
 			}
-			tmpTags = append(tmpTags, word)
+			tmpQueryTags = append(tmpQueryTags, word)
 		}
 
-		if !inListAlready(strings.ToLower(tmpTags[queryWordCount]), tags) {
-			tags = append(tags, strings.ToLower(tmpTags[queryWordCount]))
+		if queryWords[len(queryWords)-1] != tmpQueryTags[len(queryWords)-1] {
+			break
+		}
+
+		if !inListAlready(strings.ToLower(tmpQueryTags[queryWordCount]), tags) {
+			tags = append(tags, strings.ToLower(tmpQueryTags[queryWordCount]))
 		}
 
 		counter++
