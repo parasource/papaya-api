@@ -89,12 +89,20 @@ func HandleFeed(c *gin.Context) {
 		return
 	}
 
+	// Alerts
+	var alerts []models.Alert
+	err = database.DB().Find(&alerts).Error
+	if err != nil {
+		log.Error().Err(err).Msg("error getting alerts")
+	}
+
 	result := gin.H{
 		"page":       page,
 		"topics":     topics,
 		"looks":      looks,
 		"categories": categories,
 		"articles":   articles,
+		"alerts":     alerts,
 	}
 	c.JSON(200, result)
 }
