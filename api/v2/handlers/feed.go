@@ -22,6 +22,7 @@ import (
 	database "github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/parasource/papaya-api/pkg/gorse"
+	"github.com/rs/zerolog/log"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -181,11 +182,20 @@ func HandleGetLook(c *gin.Context) {
 	var isSaved bool
 	database.DB().Raw("SELECT COUNT(1) FROM saved_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isSaved)
 
+	var similar []models.Look
+	err = database.DB().Limit(8).Order("random()").Find(&similar).Error
+	if err != nil {
+		log.Error().Err(err).Msg("error finding similar looks")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
 	c.JSON(200, gin.H{
 		"look":       look,
 		"isLiked":    isLiked,
 		"isDisliked": isDisliked,
 		"isSaved":    isSaved,
+		"similar":    similar,
 	})
 }
 
