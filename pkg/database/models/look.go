@@ -37,6 +37,8 @@ type Look struct {
 	UsersSaved   []*User         `json:"-" gorm:"many2many:saved_looks;"`
 	Tsv          string          `json:"-" gorm:"type:tsvector"`
 	Rank         float32         `gorm:"-" json:"rank"`
+	AuthorTag    string          `json:"authorTag"`
+	AuthorUrl    string          `json:"authorUrl"`
 
 	Status string `json:"status"`
 	UserID *uint
