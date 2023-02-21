@@ -183,7 +183,7 @@ func HandleGetLook(c *gin.Context) {
 	database.DB().Raw("SELECT COUNT(1) FROM saved_looks WHERE user_id = ? AND look_id = ?", user.ID, look.ID).Scan(&isSaved)
 
 	var similar []models.Look
-	err = database.DB().Limit(8).Order("random()").Find(&similar).Error
+	err = database.DB().Where("sex = ?", user.Sex).Limit(8).Order("random()").Find(&similar).Error
 	if err != nil {
 		log.Error().Err(err).Msg("error finding similar looks")
 		c.AbortWithStatus(http.StatusInternalServerError)
