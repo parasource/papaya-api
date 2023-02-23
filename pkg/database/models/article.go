@@ -24,4 +24,5 @@ type Article struct {
 	Slug  string
 	Cover string
 	Text  string `gorm:"type:text"`
+	Sex   string
 }

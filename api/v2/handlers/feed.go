@@ -82,7 +82,7 @@ func HandleFeed(c *gin.Context) {
 
 	// Articles
 	var articles []models.Article
-	err = database.DB().Order("RANDOM()").Limit(3).Find(&articles).Error
+	err = database.DB().Where("sex = ?", user.Sex).Order("RANDOM()").Limit(3).Find(&articles).Error
 	if err != nil {
 		logrus.Errorf("error getting articles: %v", err)
 		c.AbortWithStatus(500)
