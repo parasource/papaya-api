@@ -97,12 +97,13 @@ func HandleFeed(c *gin.Context) {
 	}
 
 	result := gin.H{
-		"page":       page,
-		"topics":     topics,
-		"looks":      looks,
-		"categories": categories,
-		"articles":   articles,
-		"alerts":     alerts,
+		"page":               page,
+		"topics":             topics,
+		"looks":              looks,
+		"categories":         categories,
+		"articles":           articles,
+		"alerts":             alerts,
+		"latest_app_version": "1.0.3",
 	}
 	c.JSON(200, result)
 }
