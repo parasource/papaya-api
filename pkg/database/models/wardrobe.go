@@ -29,16 +29,17 @@ type WardrobeCategory struct {
 }
 
 type WardrobeItem struct {
-	ID                 uint      `gorm:"primaryKey" json:"id"`
-	Image              string    `json:"image"`
-	Name               string    `json:"name"`
-	Slug               string    `json:"slug"`
-	Sex                string    `json:"sex"`
-	WardrobeCategoryID uint      `json:"category_id"`
-	Tags               string    `json:"tags"`
-	Tsv                string    `json:"-" gorm:"type:tsvector"`
-	Users              []*User   `json:"users" gorm:"many2many:users_wardrobe;"`
-	Urls               []ItemURL `json:"urls" gorm:"foreignKey:item_id"`
+	ID                 uint             `gorm:"primaryKey" json:"id"`
+	Image              string           `json:"image"`
+	Name               string           `json:"name"`
+	Slug               string           `json:"slug"`
+	Sex                string           `json:"sex"`
+	WardrobeCategoryID uint             `json:"category_id"`
+	WardrobeCategory   WardrobeCategory `json:"category"`
+	Tags               string           `json:"tags"`
+	Tsv                string           `json:"-" gorm:"type:tsvector"`
+	Users              []*User          `json:"users" gorm:"many2many:users_wardrobe;"`
+	Urls               []ItemURL        `json:"urls" gorm:"foreignKey:item_id"`
 
 	Status string `json:"status"`
 	UserID *uint

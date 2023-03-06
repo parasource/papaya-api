@@ -213,13 +213,6 @@ func HandleGetLookItem(c *gin.Context) {
 	var look models.Look
 	database.DB().First(&look, "slug = ?", slugLook)
 
-	user, err := GetUser(c)
-	if err != nil {
-		logrus.Errorf("error getting user: %v", err)
-		c.AbortWithStatus(403)
-		return
-	}
-
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -227,19 +220,15 @@ func HandleGetLookItem(c *gin.Context) {
 
 	itemId := c.Param("item")
 	var item models.WardrobeItem
-	database.DB().Preload("Urls.Brand").First(&item, "id = ?", itemId)
+	database.DB().Preload("Urls.Brand").Preload("WardrobeCategory").First(&item, "id = ?", itemId)
 
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
-	var looks []models.Look
-	database.DB().Raw("SELECT looks.* FROM looks JOIN look_items li on looks.id = li.look_id WHERE looks.sex = ? AND li.wardrobe_item_id = ? AND looks.id != ? LIMIT 20", user.Sex, item.ID, look.ID).Scan(&looks)
-
 	c.JSON(200, gin.H{
-		"item":  item,
-		"looks": looks,
+		"item": item,
 	})
 }
 
