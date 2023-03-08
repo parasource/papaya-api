@@ -124,7 +124,7 @@ order by rank desc limit 5;`
 
 	var wardrobeItems []models.WardrobeItem
 	if len(wardrobeIds) > 0 {
-		err = database.DB().Where("id", wardrobeIds).Preload("Category").Preload("Urls.Brand").Find(&wardrobeItems).Error
+		err = database.DB().Where("id", wardrobeIds).Preload("WardrobeCategory").Preload("Urls.Brand").Find(&wardrobeItems).Error
 		if err != nil {
 			log.Error().Err(err).Msg("error searching wardrobe items")
 			c.AbortWithStatus(http.StatusInternalServerError)
