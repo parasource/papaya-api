@@ -163,7 +163,7 @@ func HandleGetLook(c *gin.Context) {
 	slug := c.Param("look")
 
 	var look models.Look
-	database.DB().Preload("Items.Urls.Brand").Preload("Categories").First(&look, "slug = ?", slug)
+	database.DB().Preload("Items.Urls.Brand").Preload("Items.WardrobeCategory").Preload("Categories").First(&look, "slug = ?", slug)
 
 	if look.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
