@@ -52,16 +52,17 @@ FROM looks
 		LEFT JOIN look_items li on looks.id = li.look_id JOIN wardrobe_items wi on wi.id = li.wardrobe_item_id
 		WHERE looks.tsv @@ plainto_tsquery('russian', ?)
 		AND looks.sex = ?
+		GROUP BY looks.id
 		ORDER BY rank desc
 		OFFSET ? LIMIT ?
 `
 
-	searchSqlWardrobe = `select wardrobe_items.id, ts_rank(wardrobe_items.tsv, plainto_tsquery('pg_catalog.russian', ?)) as rank,
-       count(li.id) as items_count
-    from wardrobe_items join look_items li on wardrobe_items.id = li.wardrobe_item_id
-    where wardrobe_items.tsv @@ plainto_tsquery('pg_catalog.russian', ?) and sex = ?
-    group by wardrobe_items.id, rank
-order by rank, items_count desc limit 5;`
+	searchSqlWardrobe = `SELECT wardrobe_items.id, ts_rank(wardrobe_items.tsv, plainto_tsquery('pg_catalog.russian', ?)) AS rank,
+       count(li.id) AS items_count
+    FROM wardrobe_items JOIN look_items li on wardrobe_items.id = li.wardrobe_item_id
+    WHERE wardrobe_items.tsv @@ plainto_tsquery('pg_catalog.russian', ?) and sex = ?
+    GROUP BY wardrobe_items.id, rank
+	ORDER BY rank, items_count DESC LIMIT 5;`
 )
 
 type SearchSuggestion struct {
