@@ -55,6 +55,13 @@ FROM looks
 		ORDER BY rank desc
 		OFFSET ? LIMIT ?
 `
+
+	searchSqlWardrobe = `select wardrobe_items.id, ts_rank(wardrobe_items.tsv, plainto_tsquery('pg_catalog.russian', ?)) as rank,
+       count(li.id) as items_count
+    from wardrobe_items join look_items li on wardrobe_items.id = li.wardrobe_item_id
+    where wardrobe_items.tsv @@ plainto_tsquery('pg_catalog.russian', ?) and sex = ?
+    group by wardrobe_items.id, rank
+order by rank, items_count desc limit 5;`
 )
 
 type SearchSuggestion struct {
@@ -106,12 +113,8 @@ func HandleSearch(c *gin.Context) {
 
 	// First we need to query wardrobe matches,
 	// as it is our main goal
-	sqlQueryWardrobe := `select wardrobe_items.id, ts_rank(tsv, plainto_tsquery('pg_catalog.russian', ?)) as rank
-from wardrobe_items
-where tsv @@ plainto_tsquery('pg_catalog.russian', ?) and sex = ?
-order by rank desc limit 5;`
 	var wardrobeSearchResult []SearchDBWardrobe
-	err = database.DB().Debug().Raw(sqlQueryWardrobe, searchQuery, searchQuery, user.Sex).Scan(&wardrobeSearchResult).Error
+	err = database.DB().Debug().Raw(searchSqlWardrobe, searchQuery, searchQuery, user.Sex).Scan(&wardrobeSearchResult).Error
 	if err != nil {
 		log.Error().Err(err).Msg("error querying wardrobe")
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -152,7 +155,10 @@ order by rank desc limit 5;`
 	}
 
 	if len(looks) == 0 {
-		c.JSON(200, gin.H{})
+		c.JSON(200, gin.H{
+			"looks":          []interface{}{},
+			"wardrobe_items": wardrobeItems,
+		})
 		return
 	}
 
