@@ -108,10 +108,10 @@ func HandleSearch(c *gin.Context) {
 	// as it is our main goal
 	sqlQueryWardrobe := `select wardrobe_items.id, ts_rank(tsv, plainto_tsquery('pg_catalog.russian', ?)) as rank
 from wardrobe_items
-where tsv @@ plainto_tsquery('pg_catalog.russian', ?)
+where tsv @@ plainto_tsquery('pg_catalog.russian', ?) and sex = ?
 order by rank desc limit 5;`
 	var wardrobeSearchResult []SearchDBWardrobe
-	err = database.DB().Debug().Raw(sqlQueryWardrobe, searchQuery, searchQuery).Scan(&wardrobeSearchResult).Error
+	err = database.DB().Debug().Raw(sqlQueryWardrobe, searchQuery, searchQuery, user.Sex).Scan(&wardrobeSearchResult).Error
 	if err != nil {
 		log.Error().Err(err).Msg("error querying wardrobe")
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -130,6 +130,8 @@ order by rank desc limit 5;`
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
+	} else {
+		log.Warn().Str("query", searchQuery).Msg("did not found any wardrobe items")
 	}
 
 	dbQuery := fmt.Sprintf(searchSql, idsToInClauseWithOrdering(wardrobeIds))

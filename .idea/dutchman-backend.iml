@@ -8,5 +8,6 @@
     <orderEntry type="module" module-name="dutchman-app" />
     <orderEntry type="module" module-name="deployment" />
     <orderEntry type="module" module-name="papaya-jobs" />
+    <orderEntry type="module" module-name="papaya-landing" />
   </component>
 </module>
