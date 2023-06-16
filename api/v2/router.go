@@ -63,7 +63,10 @@ func Routes(r *gin.Engine) {
 	apiV2.GET("/feed/:category", middleware.AuthMiddleware, handlers.HandleFeedByCategory)
 
 	// Articles
-	apiV2.GET("/articles/:slug", middleware.AuthMiddleware, handlers.HandleGetArticle)
+	// I'll make it open because we have an articles site,
+	// and we don't need to close it
+	apiV2.GET("/articles", handlers.HandleGetArticles)
+	apiV2.GET("/articles/:slug", handlers.HandleGetArticle)
 
 	/// Wardrobe
 	apiV2.GET("/wardrobe", middleware.AuthMiddleware, handlers.HandleGetWardrobeCategories)

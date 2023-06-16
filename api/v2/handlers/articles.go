@@ -20,8 +20,52 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/pkg/database"
 	"github.com/parasource/papaya-api/pkg/database/models"
+	"github.com/rs/zerolog/log"
 	"github.com/sirupsen/logrus"
+	"net/http"
+	"strconv"
 )
+
+func HandleGetArticles(c *gin.Context) {
+	var err error
+	params := c.Request.URL.Query()
+
+	var page int64
+	if _, ok := params["page"]; !ok {
+		page = 0
+	} else {
+		page, err = strconv.ParseInt(params["page"][0], 10, 64)
+		if err != nil {
+			c.AbortWithStatus(400)
+			return
+		}
+	}
+	offset := 4 + int(page*8)
+
+	var pinned, articles []models.Article
+	err = database.DB().Raw(`select * from articles
+         where deleted_at is null
+         order by id desc limit 4 offset 0`).Scan(&pinned).Error
+	if err != nil {
+		log.Error().Err(err).Msg("error getting pinned articles")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	err = database.DB().Raw(`select * from articles 
+         where deleted_at is null 
+         order by id desc
+         limit 8 offset ?`, offset).Scan(&articles).Error
+	if err != nil {
+		log.Error().Err(err).Msg("error getting articles")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"pinned":   pinned,
+		"articles": articles,
+	})
+}
 
 func HandleGetArticle(c *gin.Context) {
 	slug := c.Param("slug")
