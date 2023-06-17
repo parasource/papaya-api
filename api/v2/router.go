@@ -17,9 +17,11 @@
 package v2
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/api/v2/handlers"
 	"github.com/parasource/papaya-api/api/v2/middleware"
+	"strings"
 )
 
 func Routes(r *gin.Engine) {
@@ -78,4 +80,11 @@ func Routes(r *gin.Engine) {
 	apiV2.POST("/profile/update-settings", middleware.AuthMiddleware, handlers.HandleProfileUpdateSettings)
 	apiV2.GET("/profile/get-wardrobe", middleware.AuthMiddleware, handlers.HandleProfileGetWardrobe)
 	apiV2.POST("/profile/set-apns-token", middleware.AuthMiddleware, handlers.HandleSetAPNSToken)
+
+	apiV2.Use(cors.New(cors.Config{
+		AllowCredentials: true,
+		AllowOriginFunc: func(origin string) bool {
+			return strings.HasSuffix(origin, "papaya.pw")
+		},
+	}))
 }
