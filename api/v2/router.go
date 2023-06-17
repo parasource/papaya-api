@@ -21,7 +21,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/api/v2/handlers"
 	"github.com/parasource/papaya-api/api/v2/middleware"
-	"strings"
 )
 
 func Routes(r *gin.Engine) {
@@ -82,9 +81,6 @@ func Routes(r *gin.Engine) {
 	apiV2.POST("/profile/set-apns-token", middleware.AuthMiddleware, handlers.HandleSetAPNSToken)
 
 	apiV2.Use(cors.New(cors.Config{
-		AllowCredentials: true,
-		AllowOriginFunc: func(origin string) bool {
-			return strings.Contains(origin, "papaya.pw")
-		},
+		AllowAllOrigins: true,
 	}))
 }
