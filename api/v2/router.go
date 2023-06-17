@@ -84,7 +84,7 @@ func Routes(r *gin.Engine) {
 	apiV2.Use(cors.New(cors.Config{
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
-			return strings.HasSuffix(origin, "papaya.pw")
+			return strings.Contains(origin, "papaya.pw")
 		},
 	}))
 }
