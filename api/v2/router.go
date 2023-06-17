@@ -26,9 +26,6 @@ import (
 func Routes(r *gin.Engine) {
 	apiV2 := r.Group("/api/v2")
 
-	apiV2.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-	})
 	apiV2.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
 	}))
@@ -86,11 +83,4 @@ func Routes(r *gin.Engine) {
 	apiV2.POST("/profile/update-settings", middleware.AuthMiddleware, handlers.HandleProfileUpdateSettings)
 	apiV2.GET("/profile/get-wardrobe", middleware.AuthMiddleware, handlers.HandleProfileGetWardrobe)
 	apiV2.POST("/profile/set-apns-token", middleware.AuthMiddleware, handlers.HandleSetAPNSToken)
-
-	apiV2.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-	})
-	apiV2.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
-	}))
 }
