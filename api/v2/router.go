@@ -21,14 +21,33 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/parasource/papaya-api/api/v2/handlers"
 	"github.com/parasource/papaya-api/api/v2/middleware"
+	"github.com/rs/zerolog/log"
+	"net/http"
+	"strings"
 )
 
 func Routes(r *gin.Engine) {
 	apiV2 := r.Group("/api/v2")
 
 	apiV2.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
+		AllowOriginFunc: func(origin string) bool {
+			return strings.Contains(origin, "papaya.pw")
+		},
 	}))
+
+	apiV2.POST("/frontend/error-logs", func(c *gin.Context) {
+		type FrontendError struct {
+			Error   string `json:"error"`
+			IsFatal bool   `json:"isFatal"`
+		}
+		var err FrontendError
+		if jsonErr := c.ShouldBindJSON(&err); jsonErr != nil {
+			log.Error().Err(jsonErr).Msg("invalid format")
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+		log.Error().Str("error", err.Error).Bool("is_fatal", err.IsFatal).Msg("received fronted error")
+	})
 
 	/// Authentication & Authorization
 	apiV2.POST("/auth/register", handlers.HandleRegister)
