@@ -28,9 +28,9 @@ import (
 )
 
 const (
-	articlesSearchSql = `SELECT * FROM articles 
+	articlesSearchSql = `SELECT *, ts_rank(articles.tsv, plainto_tsquery('russian', ?)) as rank FROM articles 
          WHERE articles.tsv @@ plainto_tsquery('russian', ?)
-         AND deleted_at IS NULL ORDER BY id DESC
+         AND deleted_at IS NULL ORDER BY rank DESC
          LIMIT 20`
 )
 
