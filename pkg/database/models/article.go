@@ -24,5 +24,6 @@ type Article struct {
 	Slug  string
 	Cover string
 	Text  string `gorm:"type:text"`
+	Tsv   string `json:"-" gorm:"type:tsvector"`
 	Sex   string
 }

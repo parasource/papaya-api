@@ -91,6 +91,7 @@ func Routes(r *gin.Engine) {
 	// and we don't need to close it
 	apiV2.GET("/articles", handlers.HandleGetArticles)
 	apiV2.GET("/articles/:slug", handlers.HandleGetArticle)
+	apiV2.GET("/articles/search", handlers.HandleSearchArticles)
 
 	/// Wardrobe
 	apiV2.GET("/wardrobe", middleware.AuthMiddleware, handlers.HandleGetWardrobeCategories)

@@ -27,6 +27,13 @@ import (
 	"strconv"
 )
 
+const (
+	articlesSearchSql = `SELECT * FROM articles 
+         WHERE articles.tsv @@ plainto_tsquery('russian', ?)
+         AND deleted_at IS NULL ORDER BY id DESC
+         LIMIT 20`
+)
+
 func HandleGetArticles(c *gin.Context) {
 	var err error
 	params := c.Request.URL.Query()
@@ -76,6 +83,25 @@ func HandleGetArticles(c *gin.Context) {
 		"articles":   articles,
 		"pagesCount": math.Ceil(float64(articlesCount-4) / 8),
 	})
+}
+
+func HandleSearchArticles(c *gin.Context) {
+	params := c.Request.URL.Query()
+	q, ok := params["q"]
+	if !ok {
+		c.JSON(204, []interface{}{})
+		return
+	}
+
+	var articles []models.Article
+	err := database.DB().Raw(articlesSearchSql, q).Scan(&articles).Error
+	if err != nil {
+		log.Error().Err(err).Msg("error searching articles")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(200, articles)
 }
 
 func HandleGetArticle(c *gin.Context) {
