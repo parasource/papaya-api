@@ -94,7 +94,7 @@ func HandleSearchArticles(c *gin.Context) {
 	}
 
 	var articles []models.Article
-	err := database.DB().Raw(articlesSearchSql, q).Scan(&articles).Error
+	err := database.DB().Raw(articlesSearchSql, q, q).Scan(&articles).Error
 	if err != nil {
 		log.Error().Err(err).Msg("error searching articles")
 		c.AbortWithStatus(http.StatusInternalServerError)
