@@ -74,7 +74,7 @@ func HandleGetArticles(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"pinned":     pinned,
 		"articles":   articles,
-		"pagesCount": math.Ceil(float64((articlesCount - 4) / 8)),
+		"pagesCount": math.Ceil(float64(articlesCount-4) / 8),
 	})
 }
 
