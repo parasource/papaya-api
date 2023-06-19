@@ -20,10 +20,11 @@ import "gorm.io/gorm"
 
 type Article struct {
 	gorm.Model
-	Title string
-	Slug  string
-	Cover string
-	Text  string `gorm:"type:text"`
-	Tsv   string `json:"-" gorm:"type:tsvector"`
-	Sex   string
+	Author string
+	Title  string
+	Slug   string
+	Cover  string
+	Text   string `gorm:"type:text"`
+	Tsv    string `json:"-" gorm:"type:tsvector"`
+	Sex    string
 }
