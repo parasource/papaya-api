@@ -22,6 +22,7 @@ import (
 	"github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/rs/zerolog/log"
 	"github.com/sirupsen/logrus"
+	"math"
 	"net/http"
 	"strconv"
 )
@@ -61,9 +62,19 @@ func HandleGetArticles(c *gin.Context) {
 		return
 	}
 
+	var articlesCount int
+	err = database.DB().
+		Raw("select count(id) from articles where deleted_at is null").Scan(&articlesCount).Error
+	if err != nil {
+		log.Error().Err(err).Msg("error getting articles count")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"pinned":   pinned,
-		"articles": articles,
+		"pinned":     pinned,
+		"articles":   articles,
+		"pagesCount": math.Ceil(float64((articlesCount - 4) / 8)),
 	})
 }
 
