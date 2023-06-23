@@ -23,16 +23,13 @@ import (
 	"github.com/parasource/papaya-api/api/v2/middleware"
 	"github.com/rs/zerolog/log"
 	"net/http"
-	"strings"
 )
 
 func Routes(r *gin.Engine) {
 	apiV2 := r.Group("/api/v2")
 
 	apiV2.Use(cors.New(cors.Config{
-		AllowOriginFunc: func(origin string) bool {
-			return strings.Contains(origin, "papaya.pw")
-		},
+		AllowAllOrigins: true,
 	}))
 
 	apiV2.POST("/frontend/error-logs", func(c *gin.Context) {
