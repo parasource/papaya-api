@@ -30,6 +30,7 @@ func Routes(r *gin.Engine) {
 
 	apiV2.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
+		AllowMethods:    []string{"*"},
 	}))
 
 	apiV2.POST("/frontend/error-logs", func(c *gin.Context) {
