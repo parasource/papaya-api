@@ -47,7 +47,7 @@ const (
     FOR EACH ROW EXECUTE PROCEDURE
     tsvector_update_trigger(tsv, 'pg_catalog.russian', name, "desc");
 
-	DROP TRIGGER IF EXISTS articles_tsv_insert on looks;
+	DROP TRIGGER IF EXISTS articles_tsv_insert on articles;
 	CREATE TRIGGER articles_tsv_insert BEFORE INSERT OR UPDATE
     ON articles
     FOR EACH ROW EXECUTE PROCEDURE

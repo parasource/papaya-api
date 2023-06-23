@@ -22,6 +22,7 @@ import (
 	"github.com/parasource/papaya-api/pkg/database/models"
 	"github.com/rs/zerolog/log"
 	"net/http"
+	"strings"
 )
 
 type EmailSubscribeRequest struct {
@@ -31,21 +32,27 @@ type EmailSubscribeRequest struct {
 func HandleEmailSubscribe(c *gin.Context) {
 	var r EmailSubscribeRequest
 	err := c.ShouldBindJSON(&r)
-	if err != nil {
+	if err != nil || strings.TrimSpace(r.Email) == "" {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
+	}
+
+	var exists bool
+	database.DB().Raw("select exists(select 1 from email_subscriptions where email = ?)", r.Email).Scan(&exists)
+	if exists {
+		c.JSON(http.StatusNoContent, gin.H{})
 	}
 
 	sub := models.EmailSubscription{
 		Email:    r.Email,
 		IsActive: true,
 	}
-	err = database.DB().Create(sub).Error
+	err = database.DB().Create(&sub).Error
 	if err != nil {
 		log.Error().Err(err).Msg("error creating email subscription")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	c.JSON(200, gin.H{})
+	c.JSON(http.StatusNoContent, gin.H{})
 }
