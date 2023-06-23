@@ -196,6 +196,7 @@ func migrate(db *gorm.DB) error {
 		&models.SearchRecord{},
 		&models.Article{},
 		&models.Alert{},
+		&models.EmailSubscription{},
 	)
 	if err != nil {
 		return err

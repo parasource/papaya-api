@@ -115,8 +115,18 @@ func HandleGetArticle(c *gin.Context) {
 	err := database.DB().Where("slug = ?", slug).Find(&article).Error
 	if err != nil {
 		logrus.Errorf("error getting articles: %v", err)
-		c.AbortWithStatus(500)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
+	}
+
+	if article.ID == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	err = database.DB().Exec("update articles set views = ? where id = ?", article.Views+1, article.ID).Error
+	if err != nil {
+		log.Error().Err(err).Msg("error updating number of views on article")
 	}
 
 	c.JSON(200, article)

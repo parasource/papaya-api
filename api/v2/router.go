@@ -97,6 +97,9 @@ func Routes(r *gin.Engine) {
 	apiV2.GET("/wardrobe", middleware.AuthMiddleware, handlers.HandleGetWardrobeCategories)
 	apiV2.GET("/wardrobe/:category", middleware.AuthMiddleware, handlers.HandleGetWardrobeItems)
 
+	// Email Subscriptions
+	apiV2.POST("/email/subscribe", handlers.HandleEmailSubscribe)
+
 	/// Profile
 	apiV2.POST("/profile/set-wardrobe", middleware.AuthMiddleware, handlers.HandleProfileSetWardrobe)
 	apiV2.POST("/profile/set-mood", middleware.AuthMiddleware, handlers.HandleProfileSetMood)

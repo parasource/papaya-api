@@ -18,14 +18,8 @@ package models
 
 import "gorm.io/gorm"
 
-type Article struct {
+type EmailSubscription struct {
 	gorm.Model
-	Author string
-	Title  string
-	Views  int
-	Slug   string
-	Cover  string
-	Text   string `gorm:"type:text"`
-	Tsv    string `json:"-" gorm:"type:tsvector"`
-	Sex    string
+	Email    string
+	IsActive bool
 }
